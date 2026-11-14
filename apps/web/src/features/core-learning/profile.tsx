@@ -4,7 +4,6 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTryoutSummary } from './tryout-queries';
 import { Button, Card, Dialog, Icon, Input, Skeleton } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AppShell } from '@/components/shell';
@@ -14,6 +13,7 @@ import { ProfileEditor } from '@/features/onboarding/profile-editor';
 import { useProfilePhoto } from '@/features/onboarding/user-avatar';
 import { DataState, StudentGate } from './ui';
 import { learningApi } from './api';
+import { useTryoutSummary } from './tryout-queries';
 import {
   ProfileIdentity,
   ProfileStats,
@@ -185,11 +185,11 @@ function ProfileContent({ token }: { token: string }) {
             <Card>
               <DataState pending={false} error={tryout.error} retry={() => void tryout.refetch()} />
             </Card>
-          ) : tryout.data && (
+          ) : tryout.data ? (
             <ProfileTryout data={tryout.data} />
-          )}
+          ) : null}
           <Link className="button-link student-profile-report" href="/student/assessment">
-            Lihat Rapor & Statistik Lengkap <Icon name="arrow" width={18} height={18} />
+            Lihat progres & riwayat <Icon name="arrow" width={18} height={18} />
           </Link>
         </section>
         <div className="student-profile-account">
@@ -253,18 +253,6 @@ function ProfileContent({ token }: { token: string }) {
                 <p>Belajar mandiri. Gabung kelas bersifat opsional.</p>
               )}
             </ProfileSetting>
-            <ProfileSetting
-              icon="clock"
-              title="Riwayat Drill & Pembahasan"
-              description="Lihat hasil dan riwayat latihanmu."
-              href="/student/assessment"
-            />
-            <ProfileSetting
-              icon="clipboard"
-              title="Jadwal dan hasil Tryout"
-              description="Lihat jadwal pengerjaan dan hasil yang sudah dirilis."
-              href="/student/tryout"
-            />
             <ProfileSetting
               icon="chat"
               title="Feedback dari Guru"

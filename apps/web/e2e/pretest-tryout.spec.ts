@@ -358,7 +358,11 @@ test('delegated Tryout asks multi-school students to choose one school before st
   await expect(rules).toBeVisible();
   const closeBox = await rules.getByRole('button', { name: 'Tutup dialog' }).boundingBox();
   const dialogBox = await rules.boundingBox();
-  expect(closeBox!.x - dialogBox!.x).toBeLessThan(24);
+  const closeRightGap = dialogBox!.x + dialogBox!.width - closeBox!.x - closeBox!.width;
+  expect(closeRightGap).toBeGreaterThanOrEqual(0);
+  expect(closeRightGap).toBeLessThan(24);
+  expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
   expect(closeBox!.y - dialogBox!.y).toBeLessThan(24);
   await expect(rules.locator('.numora-dialog__actions button')).toHaveText([
     'Mulai pengerjaan',
@@ -871,7 +875,7 @@ for (const width of [390, 1280]) {
     await expect(page.getByRole('radio', { name: /^A\s*\./ })).toBeChecked();
     await expect(page.getByText('Tanpa batas waktu', { exact: true })).toBeVisible();
     await screenshot(page, `pretest-attempt-${width}`);
-    await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+    await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
     await expect(page).toHaveURL('/student/learn');
     await page.locator(`a[href="/student/learn/${chapter}"]`).click();
     await page.getByRole('button', { name: 'Skip untuk sekarang', exact: true }).click();

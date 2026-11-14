@@ -1,3 +1,4 @@
+import { formatStudentNumber } from './student-format';
 import Link from 'next/link';
 import { Icon, ProgressBar } from '@tka/ui';
 import type { DashboardDrillDto } from './generated-types';
@@ -62,7 +63,7 @@ export function RecentActivity({
               {score != null && (
                 <div className="recent-activity__score">
                   <ProgressBar value={score} max={100} size="sm" label="Nilai aktivitas" />
-                  <strong>{score}%</strong>
+                  <strong>{formatStudentNumber(score)}%</strong>
                 </div>
               )}
               {stars != null && (
@@ -70,7 +71,9 @@ export function RecentActivity({
                   <Icon name="star" width={18} height={18} /> {stars}/3 bintang
                 </span>
               )}
-              {item.xpState === 'ready' && item.xp != null && <span>{item.xp} XP</span>}
+              {item.xpState === 'ready' && item.xp != null && (
+                <span>{formatStudentNumber(item.xp)} XP</span>
+              )}
             </div>
           )}
           {(item.xpState === 'legacy' ||

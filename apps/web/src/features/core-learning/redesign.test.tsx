@@ -718,7 +718,11 @@ describe('responsive learning composition', () => {
         { timeout: 5000 },
       ),
     ).toBeTruthy();
-    vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
+    vi.mocked(request).mockImplementation(async (_token, path) =>
+      path === '/tryout/batches'
+        ? { routingActive: false, items: [] }
+        : { unreadCount: 0, latest: [] },
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Coba muat catatan lagi' }));
     expect(await screen.findByText('Belum ada catatan dari Guru.')).toBeTruthy();
     expect(vi.mocked(request).mock.calls.every(([, path]) => !path.endsWith('/read'))).toBe(true);

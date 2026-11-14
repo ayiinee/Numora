@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StudentAccess } from './student-session';
 import { FeedbackScreen } from './feedback-inbox';
@@ -161,6 +161,7 @@ describe('Student account and feedback', () => {
     let failed = true;
     const next = { ...note, id: 'note-b', body: 'Halaman kedua', readAt };
     vi.mocked(request).mockImplementation(async (_token, path) => {
+      if (path === '/tryout/batches') return { routingActive: false, items: [] };
       if (path.endsWith('/summary')) return { unreadCount: 1, latest: [note] };
       if (path.includes('offset=20')) {
         if (failed) throw new LearningApiError('Halaman kedua gagal.', 403);
@@ -242,7 +243,9 @@ describe('Student account and feedback', () => {
     await screen.findByText('Kode tidak valid.');
     expect((screen.getByLabelText(/Kode kelas/) as HTMLInputElement).value).toBe('BAD999');
     expect(auth.refresh).not.toHaveBeenCalled();
-    expect(screen.getByText('User Mandiri')).toBeTruthy();
+    expect(
+      within(screen.getByRole('region', { name: 'Profil dan progres' })).getByText('Siswa mandiri'),
+    ).toBeTruthy();
   });
   it('keeps the profile and retry available after logout fails', async () => {
     auth.logout.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(undefined);

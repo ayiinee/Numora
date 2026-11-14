@@ -194,7 +194,7 @@ export function PvpScreen() {
             href={`/student/leaderboards?difficulty=${difficulty}`}
           >
             <Icon name="trophy" />
-            Lihat leaderboard PvP
+            Lihat peringkat PvP
             <Icon name="chevron" />
           </Link>
           {availability.data?.available === true && (

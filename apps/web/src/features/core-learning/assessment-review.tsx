@@ -305,7 +305,7 @@ export function AssessmentExplanation({
             progress={(100 * (index + 1)) / questions.length}
           />
           <p className="practice-save-notice">
-            Pembahasan mengikuti versi soal pada attempt ini. Jawaban dan hasil tersimpan tidak
+            Pembahasan mengikuti versi soal saat kamu mengerjakan. Jawaban dan hasil tersimpan tidak
             dapat diubah.
           </p>
         </>
@@ -358,11 +358,6 @@ export function AssessmentExplanation({
             {previous}
             {next}
           </div>
-          {!tryout && (
-            <Link className="button-link button-link--secondary" href={resultHref}>
-              Kembali ke hasil
-            </Link>
-          )}
         </aside>
       </div>
       {tryout && (
@@ -526,7 +521,7 @@ function ExplanationData({
   if (!query.data || !available)
     return (
       <Status title="Pembahasan tidak tersedia">
-        Akses mengikuti kebijakan historis attempt ini. Nilai tetap tersimpan.
+        Akses mengikuti aturan saat latihan ini dikerjakan. Nilai tetap tersimpan.
         <Link className="button-link button-link--secondary" href={resultHref}>
           Kembali ke hasil
         </Link>

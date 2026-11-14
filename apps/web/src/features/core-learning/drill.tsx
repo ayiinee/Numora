@@ -1,4 +1,5 @@
 'use client';
+import { formatStudentNumber } from './student-format';
 
 import { StudentMascot } from '@/components/student-mascot';
 
@@ -88,7 +89,7 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
               {resume.isPending ? 'Membuka latihan…' : 'Lanjutkan latihan'}
             </PrimaryButton>
             {resume.error && <p role="alert">{resume.error.message}</p>}
-            <Link href="/student/learn">Kembali ke materi</Link>
+            <Link href="/student/learn">Kembali ke latihan</Link>
           </div>
         </Panel>
       </section>
@@ -262,8 +263,8 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
               </>
             ) : (
               <p>
-                Akses pembahasan tidak tersedia untuk attempt ini sesuai kebijakan tersimpan di
-                server. Nilai dan riwayat hasil tetap tersimpan.
+                Pembahasan tidak tersedia untuk latihan ini. Nilai dan riwayat hasil tetap
+                tersimpan.
               </p>
             )}
           </Card>
@@ -274,9 +275,6 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
         <StartDrill token={token} levelId={result.levelId} retry />
         {result.unlockedLevelId && <ContinueDrill token={token} levelId={result.unlockedLevelId} />}
       </div>
-      <Link className="drill-result__back" href="/student/learn">
-        Kembali ke materi
-      </Link>
     </div>
   );
 }
@@ -346,7 +344,7 @@ export function ResultSummary({ result }: { result: DrillResult }) {
       <StudentMascot pose={result.mastered ? 'mastered' : 'practice'} />
       <p className="result-mastery">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
       <div className="result-score">
-        {result.score}
+        {formatStudentNumber(result.score)}
         <small>/ 100</small>
       </div>
       <p className="result-level-title">{result.levelTitle}</p>
@@ -372,7 +370,7 @@ export function ResultSummary({ result }: { result: DrillResult }) {
       )}
       <div className="result-threshold">
         <span>Skor minimal tuntas: 80</span>
-        <strong>Capaian: {result.score}%</strong>
+        <strong>Capaian: {formatStudentNumber(result.score)}%</strong>
       </div>
       <ProgressBar
         value={result.score}

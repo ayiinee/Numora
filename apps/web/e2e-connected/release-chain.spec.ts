@@ -367,7 +367,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
     student.removeAllListeners('dialog');
-    await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await student.getByRole('link', { name: 'Kembali ke latihan', exact: true }).click();
     const exitDialog = student.getByRole('dialog', { name: 'Jeda latihan dulu?' });
     await expect(exitDialog).toBeVisible();
     await expect(exitDialog).toContainText('Timer akan dijeda');
@@ -377,7 +377,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     student.on('dialog', (dialog) => void dialog.accept());
     await reloadAndResumeDrill(student, request, 'student', attempt.id);
     await expect(option(student, 'B')).toBeChecked();
-    await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await student.getByRole('link', { name: 'Kembali ke latihan', exact: true }).click();
     await expect(exitDialog).toBeVisible();
     await exitDialog.getByRole('button', { name: 'Ya, keluar dulu', exact: true }).click();
     await expect(student).toHaveURL(/\/student\/learn$/);

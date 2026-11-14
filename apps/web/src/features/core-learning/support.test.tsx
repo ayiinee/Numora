@@ -9,6 +9,46 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Student support', () => {
+  it('restores the modal trigger on cancel and focuses confirmation after a successful report', async () => {
+    const show = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+    const close = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: {
+        configurable: true,
+        value: function (this: HTMLDialogElement) {
+          this.open = true;
+        },
+      },
+      close: {
+        configurable: true,
+        value: function (this: HTMLDialogElement) {
+          this.open = false;
+        },
+      },
+    });
+    try {
+      const submit = vi.fn().mockResolvedValue({ id: 'report' });
+      render(<ReportForm modal label="Laporkan soal" submit={submit} />);
+      const trigger = screen.getByRole('button', { name: 'Laporkan soal' });
+      trigger.focus();
+      fireEvent.click(trigger);
+      fireEvent.click(screen.getByRole('button', { name: 'Batal' }));
+      expect(document.activeElement).toBe(trigger);
+      expect(submit).not.toHaveBeenCalled();
+      fireEvent.click(trigger);
+      fireEvent.change(screen.getByLabelText('Jenis masalah'), { target: { value: 'TEST' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Kirim laporan' }));
+      const confirmation = await screen.findByRole('status');
+      await waitFor(() => expect(document.activeElement).toBe(confirmation));
+      expect(submit).toHaveBeenCalledTimes(1);
+    } finally {
+      cleanup();
+      if (show) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', show);
+      else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+      if (close) Object.defineProperty(HTMLDialogElement.prototype, 'close', close);
+      else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+    }
+  });
   it('keeps failed reports retryable and confirms server success', async () => {
     const submit = vi
       .fn()

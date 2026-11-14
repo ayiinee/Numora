@@ -12,6 +12,7 @@ import {
   TryoutSchedule,
   TryoutStartRules,
   TryoutStatusBadge,
+  releaseDate,
 } from './tryout-presentation';
 import { refreshTryoutStatus, scheduledTryouts } from './tryout-queries';
 export function TryoutBatchList({
@@ -177,6 +178,11 @@ function StudentBatch({
       >
         <div className="tryout-student-batch__rules">
           <TryoutStartRules questionCount={30} durationSeconds={600} closeAt={b.closesAt} batch />
+          <p>
+            Pilihan sekolah dan paket dikunci setelah mulai. Hanya jawaban yang sudah tersimpan yang
+            ikut dikumpulkan; perhatikan status penyimpanan sebelum berpindah atau keluar.
+          </p>
+          <p>Hasil dan pembahasan tersedia paling lambat {releaseDate(b.resultDueAt)}.</p>
           {(b.state !== 'OPEN' || b.attemptId) && (
             <p role="alert">
               {b.attemptId

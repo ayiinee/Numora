@@ -1,5 +1,5 @@
 'use client';
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Input, SectionHeader } from '@tka/ui';
 import { deleteProfilePhoto, updateProfileName, uploadProfilePhoto } from '@/lib/api';
@@ -9,6 +9,7 @@ import './profile-editor.css';
 export function ProfileEditor({ embedded = false }: { embedded?: boolean }) {
   const { state, refresh } = useAuth();
   const cache = useQueryClient();
+  const photoId = useId();
   const [name, setName] = useState(state.status === 'ready' ? state.profile.displayName : '');
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -68,30 +69,40 @@ export function ProfileEditor({ embedded = false }: { embedded?: boolean }) {
           if (file) void mutate(() => uploadProfilePhoto(token, file), 'Foto profil disimpan.');
         }}
       >
-        <Input
-          label="Foto profil"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          disabled={busy}
-          onChange={(event) => {
-            const selected = event.target.files?.[0] ?? null;
-            setError('');
-            setNotice('');
-            setFile(null);
-            if (
-              selected &&
-              (!['image/png', 'image/jpeg', 'image/webp'].includes(selected.type) ||
-                selected.size > 2 * 1024 * 1024 ||
-                !selected.size)
-            ) {
-              setError('Gunakan foto PNG, JPEG, atau WebP berukuran maksimal 2 MB.');
-              event.target.value = '';
-              return;
-            }
-            setFile(selected);
-          }}
-        />
-        <p>PNG, JPEG, atau WebP, maksimal 2 MB. Tanpa foto, aplikasi memakai avatar inisial.</p>
+        <span>Foto profil</span>
+        <label className="profile-editor__file" htmlFor={photoId}>
+          <span className="button-link button-link--secondary">Pilih foto</span>
+          <span aria-live="polite">{file?.name ?? 'Belum ada foto dipilih'}</span>
+          <input
+            id={photoId}
+            className="sr-only"
+            aria-label="Foto profil"
+            aria-describedby={`${photoId}-help`}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            disabled={busy}
+            onChange={(event) => {
+              const selected = event.target.files?.[0] ?? null;
+              setError('');
+              setNotice('');
+              setFile(null);
+              if (
+                selected &&
+                (!['image/png', 'image/jpeg', 'image/webp'].includes(selected.type) ||
+                  selected.size > 2 * 1024 * 1024 ||
+                  !selected.size)
+              ) {
+                setError('Gunakan foto PNG, JPEG, atau WebP berukuran maksimal 2 MB.');
+                event.target.value = '';
+                return;
+              }
+              setFile(selected);
+            }}
+          />
+        </label>
+        <p id={`${photoId}-help`}>
+          PNG, JPEG, atau WebP, maksimal 2 MB. Tanpa foto, aplikasi memakai avatar inisial.
+        </p>
         <Button type="submit" disabled={busy || !file}>
           Unggah foto
         </Button>

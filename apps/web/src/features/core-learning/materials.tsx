@@ -1,4 +1,5 @@
 'use client';
+import { formatStudentNumber } from './student-format';
 
 import { Suspense, useEffect } from 'react';
 import Link from 'next/link';
@@ -228,9 +229,9 @@ export function MaterialSubchapterList({ chapter }: { chapter: MaterialChapterDt
                 {sub.latestScore !== null ? (
                   <strong
                     className="material-sub-score"
-                    aria-label={`Nilai terakhir ${sub.latestScore}%`}
+                    aria-label={`Nilai terakhir ${formatStudentNumber(sub.latestScore)}%`}
                   >
-                    {sub.latestScore}%
+                    {formatStudentNumber(sub.latestScore)}%
                   </strong>
                 ) : (
                   <span className="material-sub-ready">

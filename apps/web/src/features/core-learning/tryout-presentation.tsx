@@ -225,7 +225,7 @@ export function TryoutStartRules({
           ? 'Durasi belum tersedia'
           : `${Math.ceil(durationSeconds / 60)} menit`}
       </li>
-      <li>Satu kesempatan per {batch ? 'batch' : 'paket'}.</li>
+      <li>Satu kesempatan per {batch ? 'jadwal Tryout' : 'paket'}.</li>
       <li>
         <strong>
           {closeAt ? `Ditutup ${releaseDate(closeAt)}` : 'Waktu tutup belum tersedia'}.

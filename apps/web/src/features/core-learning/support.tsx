@@ -1,11 +1,11 @@
 'use client';
 
-import { useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog } from '@tka/ui';
+import { Button, Dialog } from '@tka/ui';
 import { learningApi } from './api';
 import { recordLearningInteraction } from './learning-interactions';
-import { DataState, Panel, PrimaryButton } from './ui';
+import { DataState, Panel } from './ui';
 
 export const QUESTION_REPORT_CATEGORIES = [
   { value: 'QUESTION', label: 'Soal' },
@@ -32,7 +32,11 @@ export function ReportForm<T extends string = string>({
   const [state, setState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
   const sending = useRef(false);
+  const successRef = useRef<HTMLParagraphElement>(null);
   const request = useRef<{ payload: string; id: string } | null>(null);
+  useEffect(() => {
+    if (modal && state === 'success') successRef.current?.focus();
+  }, [modal, state]);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sending.current || !category.trim()) return;
@@ -53,22 +57,52 @@ export function ReportForm<T extends string = string>({
   }
   if (state === 'success')
     return (
-      <p className="mt-4 text-sm" role="status">
+      <p className="mt-4 text-sm" role="status" ref={successRef} tabIndex={modal ? -1 : undefined}>
         Laporan terkirim untuk ditinjau Admin.
       </p>
     );
-  if (!open)
-    return (
-      <button
-        type="button"
-        className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
-        onClick={() => setOpen(true)}
+  const trigger = (
+    <button
+      type="button"
+      className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
+      onClick={() => setOpen(true)}
+    >
+      {label}
+    </button>
+  );
+  if (!open && !modal) return trigger;
+  const actions = (
+    <>
+      <Button
+        type="submit"
+        form={`${id}-form`}
+        fullWidth
+        disabled={state === 'saving' || !category.trim()}
       >
-        {label}
-      </button>
-    );
+        {state === 'saving'
+          ? 'Mengirim…'
+          : state === 'error'
+            ? 'Kirim ulang laporan'
+            : 'Kirim laporan'}
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        fullWidth
+        disabled={state === 'saving'}
+        onClick={() => setOpen(false)}
+      >
+        Batal
+      </Button>
+    </>
+  );
   const form = (
-    <form onSubmit={(event) => void send(event)} className="mt-4 space-y-3" aria-label={label}>
+    <form
+      id={`${id}-form`}
+      onSubmit={(event) => void send(event)}
+      className="mt-4 space-y-3"
+      aria-label={label}
+    >
       <label className="block text-sm font-semibold" htmlFor={`${id}-category`}>
         Jenis masalah
       </label>
@@ -116,29 +150,23 @@ export function ReportForm<T extends string = string>({
           {error}
         </p>
       )}
-      <div className="flex flex-wrap gap-4">
-        <PrimaryButton type="submit" disabled={state === 'saving' || !category.trim()}>
-          {state === 'saving'
-            ? 'Mengirim…'
-            : state === 'error'
-              ? 'Kirim ulang laporan'
-              : 'Kirim laporan'}
-        </PrimaryButton>
-        <button
-          type="button"
-          className="min-h-11 underline"
-          disabled={state === 'saving'}
-          onClick={() => setOpen(false)}
-        >
-          Batal
-        </button>
-      </div>
+      {!modal && <div className="student-feedback-actions">{actions}</div>}
     </form>
   );
   return modal ? (
-    <Dialog open={open} onClose={() => setOpen(false)} title={label} pending={state === 'saving'}>
-      {form}
-    </Dialog>
+    <>
+      {trigger}
+      <Dialog
+        className="student-feedback-dialog"
+        open={open}
+        onClose={() => setOpen(false)}
+        title={label}
+        pending={state === 'saving'}
+        actions={actions}
+      >
+        {form}
+      </Dialog>
+    </>
   ) : (
     form
   );

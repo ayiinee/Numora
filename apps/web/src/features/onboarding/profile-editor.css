@@ -14,6 +14,20 @@
   overflow-wrap: anywhere;
 }
 
+.profile-editor__file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.profile-editor__file:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+
 .profile-editor--embedded {
   padding: var(--space-4);
   margin-bottom: var(--space-4);
