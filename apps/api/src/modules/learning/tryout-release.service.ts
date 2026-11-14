@@ -19,8 +19,11 @@ export class TryoutReleaseService {
   releasedPackageIds(packageIds: string[], now = new Date(), reader?: AssessmentReader) {
     return releasedTryoutPackageIds(packageIds, now, reader);
   }
-  publishedResults(attemptIds: string[], now = new Date(), reader?: AssessmentReader) {
-    return publishedTryoutAttemptResults(attemptIds, now, reader);
+  async publishedResults(attemptIds: string[], now = new Date()) {
+    const results = await publishedTryoutAttemptResults(attemptIds, now);
+    return new Map(
+      [...results].map(([id, { score, mode, version }]) => [id, { score, mode, version }]),
+    );
   }
 
   async studentPublications(
@@ -33,7 +36,7 @@ export class TryoutReleaseService {
     );
     const [packages, canonical] = await Promise.all([
       this.releasedPackageIds([...new Set(completed.map(({ packageId }) => packageId))], now, reader),
-      this.publishedResults(
+      publishedTryoutAttemptResults(
         completed.map(({ id }) => id),
         now,
         reader,
