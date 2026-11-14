@@ -17,6 +17,7 @@ import {
 import { eq, inArray } from 'drizzle-orm';
 import { PvpEngineService } from './pvp-engine.service';
 import { PVP_POLICY, type PvpPolicy } from './pvp.policy';
+import type { PvpSnapshotDto } from './pvp.dto';
 
 @Injectable()
 export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
@@ -26,7 +27,8 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
   private worker?: Worker;
   private timer?: ReturnType<typeof setInterval>;
   private busy: Promise<void> | undefined;
-  notify: (matchId: string) => Promise<void> = async () => {};
+  notify: (matchId: string, includeCreator?: boolean) => Promise<PvpSnapshotDto | void> =
+    async () => {};
   constructor(
     private readonly engine: PvpEngineService,
     @Inject(PVP_POLICY) private readonly policy: PvpPolicy | null,
@@ -69,8 +71,7 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       'pvp-deadlines',
       async (job) => {
         await this.engine.tick(String(job.data.matchId));
-        await this.reschedule(String(job.data.matchId));
-        await this.notify(String(job.data.matchId));
+        await this.refresh(String(job.data.matchId));
       },
       { connection: this.redis, prefix },
     );
@@ -105,12 +106,22 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     gaugeRuntime('numora_pvp_active_matches', matches.length);
     for (const match of matches) {
       await this.engine.tick(match.id);
-      if (this.redis?.status === 'ready') await this.reschedule(match.id);
-      await this.notify(match.id).catch(() => {
-        this.logger.warn('PvP deadline notification delayed; durable state retained.');
-      });
+      await this.refresh(match.id);
     }
     this.engine.setSchedulerReady(true);
+  }
+  private async refresh(matchId: string) {
+    const caching = this.redis?.status === 'ready';
+    let prepared: PvpSnapshotDto | void = undefined;
+    try {
+      prepared = caching ? await this.notify(matchId, true) : await this.notify(matchId);
+    } catch {
+      this.logger.warn('PvP deadline notification delayed; durable state retained.');
+    }
+    if (caching) {
+      if (prepared) await this.schedule(matchId, prepared.creatorStudentId, prepared);
+      else await this.reschedule(matchId);
+    }
   }
   private async reschedule(matchId: string) {
     const [match] = await getDatabase()
@@ -119,11 +130,11 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       .where(eq(pvpMatches.id, matchId));
     if (match) await this.schedule(matchId, match.creator);
   }
-  async schedule(matchId: string, studentId: string) {
+  async schedule(matchId: string, studentId: string, prepared?: PvpSnapshotDto | null) {
     if (!this.policy) return;
     try {
       if (!this.redis || this.redis.status !== 'ready' || !this.queue) return;
-      const snapshot = await this.engine.snapshot(studentId, matchId);
+      const snapshot = prepared ?? (await this.engine.snapshot(studentId, matchId));
       if (snapshot.status === 'FINISHED' || snapshot.status === 'CANCELLED') return;
       await this.bounded(
         this.redis.set(

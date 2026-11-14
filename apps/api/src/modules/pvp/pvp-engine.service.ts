@@ -1003,23 +1003,48 @@ export class PvpEngineService implements OnModuleDestroy {
   }
 
   async snapshot(studentId: string, matchId: string): Promise<PvpSnapshotDto> {
+    return (await this.snapshotViews(matchId, [studentId])).views.get(studentId)!;
+  }
+
+  async snapshotViews(matchId: string, studentIds: readonly string[], includeCreator = false) {
     const { db } = getDatabase();
     // Consistent snapshot prevents a transition from mixing two question states.
     return db.transaction(async (tx) => {
-      await this.member(tx, matchId, studentId, false);
+      const ids = [...new Set(studentIds)];
+      if (ids.length) {
+        const allowed = await tx
+          .selectDistinct({ studentId: pvpPlayers.studentId })
+          .from(pvpPlayers)
+          .where(and(eq(pvpPlayers.matchId, matchId), inArray(pvpPlayers.studentId, ids)));
+        if (allowed.length !== ids.length)
+          throw new ForbiddenException({
+            code: 'MATCH_ACCESS_DENIED',
+            detail: 'Pertandingan bukan milikmu.',
+          });
+      }
       const match = await this.locked(tx, matchId);
       const [pack] = await tx
         .select({ isDemo: assessmentPackages.isDemo })
         .from(assessmentPackages)
         .where(eq(assessmentPackages.id, match.packageId));
-      const players = await tx
+      const members = await tx
         .select({ player: pvpPlayers, name: users.displayName })
         .from(pvpPlayers)
         .innerJoin(users, eq(users.id, pvpPlayers.studentId))
-        .where(and(eq(pvpPlayers.matchId, matchId), isNull(pvpPlayers.leftAt)))
+        .where(eq(pvpPlayers.matchId, matchId))
         .orderBy(asc(pvpPlayers.playerSlot));
+      const requested = [
+        ...new Set([...studentIds, ...(includeCreator ? [match.creatorStudentId] : [])]),
+      ];
+      if (requested.some((id) => !members.some((p) => p.player.studentId === id)))
+        throw new ForbiddenException({
+          code: 'MATCH_ACCESS_DENIED',
+          detail: 'Pertandingan bukan milikmu.',
+        });
+      const players = members.filter((p) => !p.player.leftAt);
+      const recipients = players.filter((p) => requested.includes(p.player.studentId));
       const [active] =
-        match.status === 'RUNNING' && players.some((p) => p.player.studentId === studentId)
+        match.status === 'RUNNING' && recipients.length > 0
           ? await tx
               .select({
                 question: {
@@ -1044,61 +1069,74 @@ export class PvpEngineService implements OnModuleDestroy {
                 and(eq(pvpMatchQuestions.matchId, matchId), eq(pvpMatchQuestions.status, 'ACTIVE')),
               )
           : [];
-      const self = players.find((p) => p.player.studentId === studentId);
-      const [answer] =
-        active && self
+      const answers =
+        active && recipients.length
           ? await tx
-              .select({ answer: pvpAnswers.answer })
+              .select({ playerId: pvpAnswers.playerId, answer: pvpAnswers.answer })
               .from(pvpAnswers)
               .where(
                 and(
-                  eq(pvpAnswers.playerId, self.player.id),
+                  inArray(
+                    pvpAnswers.playerId,
+                    recipients.map((p) => p.player.id),
+                  ),
                   eq(pvpAnswers.matchQuestionId, active.question.id),
                 ),
               )
           : [];
       const content = active ? decodeSingleChoice(active.version) : null;
-      if (active && content)
-        await tx.execute(
-          sql`select public.record_pvp_delivery(${studentId}::uuid, ${active.question.id}::uuid)`,
-        );
-      const value = answer?.answer as { optionId?: string | null } | undefined;
-      return {
-        matchId,
-        roomCode: match.roomCode,
-        creatorStudentId: match.creatorStudentId,
-        difficulty: match.difficulty as Difficulty,
-        status: match.status,
-        serverTime: this.now().toISOString(),
-        isDemo: pack!.isDemo,
-        participantActive: !!self,
-        expiresAt: match.expiresAt?.toISOString() ?? null,
-        recordEligible: match.recordEligible,
-        endReason: match.endReason,
-        players: players.map(({ player: p, name }) => ({
-          studentId: p.studentId,
-          displayName: name,
-          slot: p.playerSlot,
-          ready: p.ready,
-          connectionStatus: p.connectionStatus,
-          reconnectDeadlineAt: p.reconnectDeadlineAt?.toISOString() ?? null,
-          points: Number(p.totalPoints ?? 0),
-          result: p.result,
-        })),
-        question:
-          active && content
-            ? {
-                id: active.question.id,
-                order: active.question.displayOrder,
-                stem: content.stem,
-                options: content.options,
-                deadlineAt: active.question.deadlineAt!.toISOString(),
-                durationSeconds: this.pinnedDuration(match),
-                answered: !!answer,
-                selectedOptionId: value?.optionId ?? null,
-              }
-            : null,
-      };
+      if (active && content && recipients.length) {
+        const ids = [...new Set(recipients.map((p) => p.player.studentId))].sort();
+        await tx.execute(sql`select public.record_pvp_delivery(recipient, ${active.question.id}::uuid)
+          from unnest(array[${sql.join(
+            ids.map((id) => sql`${id}::uuid`),
+            sql`,`,
+          )}]) as recipient`);
+      }
+      const views = new Map<string, PvpSnapshotDto>();
+      for (const studentId of requested) {
+        const self = players.find((p) => p.player.studentId === studentId);
+        const answer = self ? answers.find((row) => row.playerId === self.player.id) : undefined;
+        const value = answer?.answer as { optionId?: string | null } | undefined;
+        const state: PvpSnapshotDto = {
+          matchId,
+          roomCode: match.roomCode,
+          creatorStudentId: match.creatorStudentId,
+          difficulty: match.difficulty as Difficulty,
+          status: match.status,
+          serverTime: this.now().toISOString(),
+          isDemo: pack!.isDemo,
+          participantActive: !!self,
+          expiresAt: match.expiresAt?.toISOString() ?? null,
+          recordEligible: match.recordEligible,
+          endReason: match.endReason,
+          players: players.map(({ player: p, name }) => ({
+            studentId: p.studentId,
+            displayName: name,
+            slot: p.playerSlot,
+            ready: p.ready,
+            connectionStatus: p.connectionStatus,
+            reconnectDeadlineAt: p.reconnectDeadlineAt?.toISOString() ?? null,
+            points: Number(p.totalPoints ?? 0),
+            result: p.result,
+          })),
+          question:
+            active && content && self
+              ? {
+                  id: active.question.id,
+                  order: active.question.displayOrder,
+                  stem: content.stem,
+                  options: content.options,
+                  deadlineAt: active.question.deadlineAt!.toISOString(),
+                  durationSeconds: this.pinnedDuration(match),
+                  answered: !!answer,
+                  selectedOptionId: value?.optionId ?? null,
+                }
+              : null,
+        };
+        views.set(studentId, state);
+      }
+      return { views, creatorStudentId: match.creatorStudentId };
     });
   }
 }
