@@ -120,6 +120,7 @@ async function setup(page: Page) {
           pendingPolicies: ['OPEN-07', 'OPEN-11'],
         },
       };
+    else if (path === '/tryout/batches') data = { routingActive: false, items: [] };
     else if (path === '/tryout/packages/current')
       data = {
         state: 'resultReady',
