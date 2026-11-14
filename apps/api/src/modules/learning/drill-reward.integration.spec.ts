@@ -263,10 +263,69 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
       await db.execute(sql.raw(`DROP TRIGGER ${trigger} ON analytics_outbox`));
       await db.execute(sql.raw(`DROP FUNCTION ${trigger}()`));
     }
-    const [result, replay] = await Promise.all([
-      service.submit('student', attempt.id),
-      service.submit('student', attempt.id),
-    ]);
+    const savedAnswers = await db
+      .select()
+      .from(attemptAnswers)
+      .innerJoin(attemptItems, eq(attemptItems.id, attemptAnswers.attemptItemId))
+      .where(eq(attemptItems.attemptId, attempt.id));
+    const measure = `test_grade_statements_${suffix.replaceAll('-', '')}`;
+    await db.execute(sql.raw(`CREATE TABLE ${measure}(id integer)`));
+    await db.execute(
+      sql.raw(
+        `CREATE FUNCTION ${measure}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO ${measure} VALUES(1); RETURN NULL; END $$`,
+      ),
+    );
+    await db.execute(
+      sql.raw(
+        `CREATE TRIGGER ${measure} AFTER INSERT ON attempt_answers FOR EACH STATEMENT EXECUTE FUNCTION ${measure}()`,
+      ),
+    );
+    let pair: Awaited<ReturnType<typeof service.submit>>[];
+    let statementCount = 0;
+    try {
+      pair = await Promise.all([
+        service.submit('student', attempt.id),
+        service.submit('student', attempt.id),
+      ]);
+      const [count] = await db.execute<{ total: number }>(
+        sql.raw(`SELECT count(*)::integer AS total FROM ${measure}`),
+      );
+      statementCount = count!.total;
+    } finally {
+      await db.execute(sql.raw(`DROP TRIGGER ${measure} ON attempt_answers`));
+      await db.execute(sql.raw(`DROP FUNCTION ${measure}()`));
+      await db.execute(sql.raw(`DROP TABLE ${measure}`));
+    }
+    const [result, replay] = pair as [
+      Awaited<ReturnType<typeof service.submit>>,
+      Awaited<ReturnType<typeof service.submit>>,
+    ];
+    console.info(
+      JSON.stringify({
+        measurement: 'drill_grading_write_statements',
+        items: 10,
+        concurrentSubmits: 2,
+        statements: statementCount,
+      }),
+    );
+    expect(statementCount).toBe(1);
+    const finalAnswers = await db
+      .select()
+      .from(attemptAnswers)
+      .innerJoin(attemptItems, eq(attemptItems.id, attemptAnswers.attemptItemId))
+      .where(eq(attemptItems.attemptId, attempt.id));
+    expect(finalAnswers).toHaveLength(10);
+    for (const saved of savedAnswers) {
+      const final = finalAnswers.find(
+        (row) => row.attempt_answers.id === saved.attempt_answers.id,
+      )!.attempt_answers;
+      expect(final).toMatchObject({
+        answer: saved.attempt_answers.answer,
+        savedAt: saved.attempt_answers.savedAt,
+        revision: saved.attempt_answers.revision,
+      });
+      expect(final.gradedAt).not.toBeNull();
+    }
     expect(result.reward).toEqual(replay.reward);
     expect(result).toMatchObject({ score: 80, stars: 2, reward: { baseXp: 80, policyVersion: 2 } });
     // Auth is a fixture here: count only the result projection and delivery statement.
