@@ -1235,7 +1235,7 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
       classRequests.push(request.url());
   });
   await page.goto('/student');
-  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(page.locator('.sh-identity:visible').getByText('Siswa mandiri', { exact: true })).toBeVisible();
   await page.goto(`/student/drill/${attemptId}`);
   await expect(page.getByText('Fixture: 1 + 1?')).toBeVisible();
   await page.goto('/student/pvp');
@@ -1261,9 +1261,9 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profil dan progres' }).getByText('Siswa mandiri', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profil dan progres' }).getByText('Siswa mandiri', { exact: true })).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {

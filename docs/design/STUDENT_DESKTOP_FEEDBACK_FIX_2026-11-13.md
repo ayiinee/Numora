@@ -79,3 +79,14 @@ tujuan navigasi, konfirmasi jeda, serta persistensi jawaban dan timer.
 Verifikasi lokal: 103 tes dalam lima file lulus dan ESLint area terkait lulus.
 CI penuh pada SHA rekonsiliasi tetap menjadi gate sebelum merge; verifikasi lokal
 ini tidak dinyatakan sebagai acceptance terintegrasi atau bukti QA cloud.
+
+Run CI `43629591453` meluluskan validate, unit/integration, connected, dan build.
+Kegagalan browser yang tersisa adalah selector afiliasi yang cocok dengan sidebar
+dan kartu profil sekaligus. Selector kini dibatasi ke region Profil dan progres
+atau header beranda yang terlihat, tanpa mengubah assertion afiliasi. Pengujian
+carousel tetap memeriksa jeda/lanjut serta target 44 px, dialog memeriksa X kanan
+atas, dan alur Mandiri memeriksa tidak adanya request peringkat kelas tanpa kelas.
+
+Retest lima skenario browser lokal dihentikan setelah navigasi timeout dan target
+Chromium crash. Run ini bukan bukti lulus; trace/screenshot sintetis tetap di
+direktori ignored. Timeout dan assertion CI tidak dinaikkan untuk menutupinya.
