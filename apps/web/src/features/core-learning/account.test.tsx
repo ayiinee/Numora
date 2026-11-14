@@ -78,6 +78,7 @@ beforeEach(() => {
     title: 'Tryout Mingguan #03',
   });
   vi.mocked(request).mockImplementation(async (_token, path) => {
+    if (path === '/tryout/batches') return { routingActive: false, items: [] };
     if (path.endsWith('/summary'))
       return { unreadCount: notes.filter((n) => !n.readAt).length, latest: notes };
     if (path.endsWith('/read')) {
@@ -220,7 +221,7 @@ describe('Student account and feedback', () => {
   });
   it('keeps zero score, pending IRT and optional Join Class on the profile', async () => {
     mount(<ProfileScreen />);
-    await screen.findByText('Menunggu hasil IRT');
+    await screen.findByText('Menunggu hasil');
     expect(screen.getAllByText('0').length).toBeGreaterThan(0);
     expect(screen.queryByText(/Skor IRT:/)).toBeNull();
     expect(screen.getByLabelText(/Kode kelas/)).toBeTruthy();

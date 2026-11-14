@@ -20,6 +20,7 @@ import {
 } from './dashboard-presentation';
 import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
+import { useTryoutSummary } from './tryout-queries';
 import './student-home.css';
 
 export function NewStudentDashboard() {
@@ -62,10 +63,7 @@ function DashboardReady({
   const photo = useProfilePhoto(state.status === 'ready' ? state.profile.id : undefined);
   const avatarUrl = photo.data?.url ?? undefined;
   const recent = data.activities[0];
-  const tryout = useQuery({
-    queryKey: ['current-tryout'],
-    queryFn: () => learningApi.currentTryout(token),
-  });
+  const tryout = useTryoutSummary(token);
   const header = (
     <StudentHomeIdentityHeader data={data} avatarUrl={avatarUrl} tryout={tryout.data} />
   );

@@ -194,7 +194,7 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
     expect((await request()).status).toBe(401);
     for (const role of ['teacher', 'admin', 'disabled'])
       expect((await request('', role)).status).toBe(403);
-    for (const query of ['?cursor=invalid', '?levelId=invalid'])
+    for (const query of ['?cursor=invalid', '?levelId=invalid', '?activity=drill'])
       expect((await request(query, 'student')).status).toBe(400);
     expect(await (await request('', 'stranger')).json()).toEqual({ records: [], nextCursor: null });
   });
@@ -230,10 +230,21 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, tryoutId));
     expect(saved[0]!.score).toBe('99.00');
+    for (let index = 0; index < 21; index++) {
+      await addAttempt({ finishedAt: new Date('2026-10-02T12:00:00Z') });
+    }
+    const filtered = await request('?activity=tryout', 'student');
+    expect(filtered.status).toBe(200);
+    expect(await filtered.json()).toMatchObject({
+      records: [{ attemptId: tryoutId, activity: 'tryout', score: null, resultState: 'waitingIrt' }],
+      nextCursor: null,
+    });
+    expect((await request(`?activity=tryout&cursor=${zeroId}`, 'student')).status).toBe(404);
     const pretestId = await addAttempt({
       packageId: pretestPackageId,
       assessmentType: 'PRETEST',
       levelIdAtStart: null,
+      finishedAt: new Date('2026-10-03T12:00:00Z'),
     });
     expect(
       (await history.list('Bearer student')).records.find((r) => r.attemptId === pretestId),

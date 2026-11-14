@@ -36,6 +36,10 @@ it('anchors to server time and monotonic elapsed time, including device-clock ch
     vi.advanceTimersByTime(1000);
   });
   expect(expire).toHaveBeenCalledOnce();
+  hook.rerender({ server: '2026-10-02T00:00:59Z' });
+  expect(hook.result.current.expired).toBe(true);
+  hook.rerender({ server: '2026-10-02T00:01:01Z' });
+  expect(expire).toHaveBeenCalledOnce();
 });
 it('does not auto-finalize without an authoritative clock reference', () => {
   const expire = vi.fn();

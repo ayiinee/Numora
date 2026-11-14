@@ -23,6 +23,7 @@ import { readApprovedPolicy } from '@tka/assessment-engine';
 import { scoringPolicyVersions } from '@tka/database';
 import { getIrtResearchDatabaseV1, tryoutDeliveryReadinessV1 } from '@tka/irt-orchestration';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
+import { TryoutReleaseService, tryoutResultState } from './tryout-release.service';
 import type {
   UpdateTryoutDelegationsDto,
   ExtendTryoutBatchDto,
@@ -561,7 +562,7 @@ export class TryoutBatchesService {
       )
       .orderBy(asc(classes.id));
   }
-  async studentList(studentId: string) {
+  async studentList(studentId: string, releases = new TryoutReleaseService()) {
     return getDatabase().db.transaction(async (tx) => {
       const memberships = await this.studentSchools(tx, studentId);
       const batches = await tx
@@ -576,17 +577,24 @@ export class TryoutBatchesService {
         )
         .orderBy(desc(tryoutBatches.startsAt));
       const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+      const now = new Date(clock!.now);
+      const attempts = await tx
+        .select({
+          id: assessmentAttempts.id,
+          packageId: assessmentAttempts.packageId,
+          batchId: assessmentAttempts.tryoutBatchId,
+          status: assessmentAttempts.status,
+          deadlineAt: assessmentAttempts.deadlineAt,
+          isDemo: assessmentPackages.isDemo,
+        })
+        .from(assessmentAttempts)
+        .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
+        .where(and(eq(assessmentAttempts.studentId, studentId), isNotNull(assessmentAttempts.tryoutBatchId)));
+      const byBatch = new Map(attempts.map((attempt) => [attempt.batchId, attempt]));
+      const { ready } = await releases.studentPublications(attempts, now, tx);
       const items = [];
       for (const b of batches) {
-        const [attempt] = await tx
-          .select()
-          .from(assessmentAttempts)
-          .where(
-            and(
-              eq(assessmentAttempts.tryoutBatchId, b.id),
-              eq(assessmentAttempts.studentId, studentId),
-            ),
-          );
+        const attempt = byBatch.get(b.id);
         const delegated = [
           ...new Map(
             memberships
@@ -602,11 +610,14 @@ export class TryoutBatchesService {
           startsAt: b.startsAt.toISOString(),
           closesAt: b.closesAt.toISOString(),
           resultDueAt: b.resultDueAt.toISOString(),
-          state: batchState(b, new Date(clock!.now)),
+          state: batchState(b, now),
           schools: delegated,
           mandiri,
           attemptId: attempt?.id ?? null,
           attemptStatus: attempt?.status ?? null,
+          resultState: tryoutResultState(attempt?.status, !!attempt && ready.has(attempt.id), b.resultDueAt, now),
+          canResume: attempt?.status === 'IN_PROGRESS' && now < b.closesAt &&
+            !!attempt.deadlineAt && now < attempt.deadlineAt,
         });
       }
       return { routingActive: await this.routingActive(tx), items };
