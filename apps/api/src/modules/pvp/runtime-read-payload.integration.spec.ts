@@ -223,6 +223,29 @@ describe.skipIf(!testUrl)(
         answered: false,
         selectedOptionId: null,
       });
+      const separate = await measured(async () => [
+        await engine.snapshot(student(0), matchId),
+        await engine.snapshot(student(1), matchId),
+      ]);
+      const batch = await measured(() =>
+        engine.snapshotViews(matchId, [student(0), student(1), student(0)], true),
+      );
+      expect([...batch.value.views.values()]).toEqual(separate.value);
+      expect(batch.value.views.size).toBe(2);
+      expect(batch.bytes).toBeLessThan(separate.bytes);
+      expect(batch.queries).toBeLessThan(separate.queries);
+      console.info(
+        JSON.stringify({
+          measurement: 'pvp_snapshot_batch',
+          separateBytes: separate.bytes,
+          batchBytes: batch.bytes,
+          separateQueries: separate.queries,
+          batchQueries: batch.queries,
+        }),
+      );
+      await expect(engine.snapshotViews(matchId, [student(0), student(2)])).rejects.toMatchObject({
+        status: 403,
+      });
       now = new Date(before.question!.deadlineAt);
       await engine.tick(matchId);
       const next = await engine.snapshot(student(1), matchId);
@@ -239,6 +262,9 @@ describe.skipIf(!testUrl)(
       expect(players.some((p) => Number(p.totalPoints) > 0)).toBe(true);
       await engine.leave(student(0), matchId);
       expect((await engine.snapshot(student(1), matchId)).question).toBeNull();
+      expect(
+        (await engine.snapshotViews(matchId, [student(0), student(1)])).views.get(student(0)),
+      ).toEqual(await engine.snapshot(student(0), matchId));
     });
     it('keeps notification fan-out output and durable cursor while reducing package presentation bytes', async () => {
       const [pack] = await getDatabase()
