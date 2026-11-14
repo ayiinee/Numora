@@ -1,20 +1,24 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { CurriculumCache, sharedCurriculumCache } from './curriculum-cache';
 import {
   assessmentAttempts,
-  chapters,
   getDatabase,
   levelProgress,
   levels,
+  chapters,
   subchapters,
 } from '@tka/database';
-import { and, asc, count, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 
 @Injectable()
 export class LearningCatalogService {
-  constructor(private readonly identity: IdentityService) {}
+  constructor(
+    private readonly identity: IdentityService,
+    @Optional() private readonly curriculum: CurriculumCache = sharedCurriculumCache,
+  ) {}
 
   private async student(authorization?: string) {
     const user = await this.identity.me(authorization);
@@ -25,17 +29,7 @@ export class LearningCatalogService {
 
   async catalog(authorization?: string) {
     await this.student(authorization);
-    const { db } = getDatabase();
-    const rows = await db
-      .select({
-        id: chapters.id,
-        slug: chapters.slug,
-        name: chapters.name,
-        displayOrder: chapters.displayOrder,
-      })
-      .from(chapters)
-      .where(eq(chapters.status, 'READY'))
-      .orderBy(asc(chapters.displayOrder));
+    const { chapterRows: rows } = await this.curriculum.get();
     return {
       chapters: rows.map((row) => ({
         id: row.id,
@@ -48,29 +42,10 @@ export class LearningCatalogService {
 
   async chapter(authorization: string | undefined, chapterId: string) {
     await this.student(authorization);
-    const { db } = getDatabase();
-    const [chapter] = await db
-      .select({
-        id: chapters.id,
-        slug: chapters.slug,
-        name: chapters.name,
-        displayOrder: chapters.displayOrder,
-      })
-      .from(chapters)
-      .where(and(eq(chapters.id, chapterId), eq(chapters.status, 'READY')))
-      .limit(1);
+    const { chapterRows, subRows } = await this.curriculum.get();
+    const chapter = chapterRows.find((row) => row.id === chapterId);
     if (!chapter) throw new NotFoundException(problem('CHAPTER_NOT_FOUND', 'Bab tidak ditemukan.'));
-    const children = await db
-      .select({
-        id: subchapters.id,
-        slug: subchapters.slug,
-        chapterId: subchapters.chapterId,
-        name: subchapters.name,
-        displayOrder: subchapters.displayOrder,
-      })
-      .from(subchapters)
-      .where(and(eq(subchapters.chapterId, chapterId), eq(subchapters.status, 'READY')))
-      .orderBy(asc(subchapters.displayOrder));
+    const children = subRows.filter((row) => row.chapterId === chapterId);
     return {
       chapter: {
         id: chapter.id,
@@ -91,31 +66,11 @@ export class LearningCatalogService {
   async subchapter(authorization: string | undefined, subchapterId: string) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
-    const [subchapter] = await db
-      .select({
-        id: subchapters.id,
-        slug: subchapters.slug,
-        chapterId: subchapters.chapterId,
-        title: subchapters.name,
-        sortOrder: subchapters.displayOrder,
-      })
-      .from(subchapters)
-      .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
-      .where(
-        and(
-          eq(subchapters.id, subchapterId),
-          eq(subchapters.status, 'READY'),
-          eq(chapters.status, 'READY'),
-        ),
-      )
-      .limit(1);
+    const { subRows, levelRows } = await this.curriculum.get();
+    const subchapter = subRows.find((row) => row.id === subchapterId);
     if (!subchapter)
       throw new NotFoundException(problem('SUBCHAPTER_NOT_FOUND', 'Subbab tidak ditemukan.'));
-    const rows = await db
-      .select({ id: levels.id, levelNumber: levels.levelNumber, description: levels.description })
-      .from(levels)
-      .where(and(eq(levels.subchapterId, subchapterId), eq(levels.status, 'READY')))
-      .orderBy(asc(levels.levelNumber));
+    const rows = levelRows.filter((row) => row.subchapterId === subchapterId);
     const levelIds = rows.map((row) => row.id);
     const progress = levelIds.length
       ? await db
@@ -153,8 +108,8 @@ export class LearningCatalogService {
         id: subchapter.id,
         slug: subchapter.slug,
         chapterId: subchapter.chapterId,
-        title: subchapter.title,
-        order: subchapter.sortOrder,
+        title: subchapter.name,
+        order: subchapter.displayOrder,
       },
       levels: rows.map((row) => {
         const state = byLevel.get(row.id);
