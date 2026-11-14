@@ -18,6 +18,7 @@ import { createClient, type SupabaseClient, type User } from '@supabase/supabase
 import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 import { adminCapabilities } from './admin-capabilities';
+import { authenticateForRequest } from './authentication-request';
 
 const bearerToken = (authorization?: string) => /^Bearer ([^\s]+)$/.exec(authorization ?? '')?.[1];
 
@@ -53,9 +54,11 @@ export class IdentityService {
   async authenticate(authorization?: string): Promise<User> {
     const token = bearerToken(authorization);
     if (!token) throw new UnauthorizedException('Bearer token is required.');
-    const { data, error } = await this.authClient().auth.getUser(token);
-    if (error || !data.user) throw new UnauthorizedException('Invalid or expired token.');
-    return data.user;
+    return authenticateForRequest(this, token, async () => {
+      const { data, error } = await this.authClient().auth.getUser(token);
+      if (error || !data.user) throw new UnauthorizedException('Invalid or expired token.');
+      return data.user;
+    });
   }
 
   async getProfile(authorization?: string): Promise<IdentityProfileDto> {
