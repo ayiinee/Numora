@@ -109,7 +109,11 @@ beforeEach(() => {
   vi.mocked(learningApi.catalog).mockResolvedValue({ chapters: [] });
   vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [], nextCursor: null });
   vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable' });
-  vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
+  vi.mocked(request).mockImplementation(async (_token, path) =>
+    path === '/tryout/batches'
+      ? { routingActive: false, items: [] }
+      : { unreadCount: 0, latest: [] },
+  );
 });
 afterEach(() => {
   cleanup();
@@ -231,7 +235,7 @@ describe('Student Home carousel and server-driven actions', () => {
     ['unavailable', undefined, 'Lihat Tryout', '/student/tryout'],
     ['open', undefined, 'Lihat aturan', '/student/tryout'],
     ['inProgress', 'attempt-1', 'Lanjutkan Tryout', '/student/tryout/attempt-1'],
-    ['waitingIrt', 'attempt-1', 'Lihat status', '/student/tryout'],
+    ['waitingIrt', 'attempt-1', 'Lihat status hasil', '/student/tryout/attempt-1/result'],
     ['resultReady', 'attempt-1', 'Lihat hasil', '/student/tryout/attempt-1/result'],
   ] as const)(
     'maps %s to an existing route without starting an assessment',
@@ -846,7 +850,7 @@ describe('responsive learning composition', () => {
     expect(link.getAttribute('href')).toBe('/student/learn');
     expect(screen.getByText('Paket belum tersedia')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Gabung kelas' })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Mulai TryOut/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Mulai pengerjaan/ })).toBeNull();
   });
   it('starts a free Tryout for a Mandiri Student', async () => {
     vi.mocked(learningApi.currentTryout).mockResolvedValue({
@@ -870,7 +874,7 @@ describe('responsive learning composition', () => {
     renderStudent(<TryoutScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Detail dan aturan paket' }));
     fireEvent.click(screen.getByLabelText('Saya memahami aturan pengerjaan.'));
-    const startButton = screen.getByRole('button', { name: 'Mulai TryOut' });
+    const startButton = screen.getByRole('button', { name: 'Mulai pengerjaan' });
     fireEvent.click(startButton);
     fireEvent.click(startButton);
     await waitFor(() =>
@@ -881,7 +885,7 @@ describe('responsive learning composition', () => {
     expect(screen.getByText(/TryOut gratis untuk seluruh siswa/)).toBeTruthy();
   });
   it.each(['inProgress', 'waitingIrt', 'resultReady'] as const)(
-    'shows the existing %s attempt without a class warning or new start action',
+    'routes the existing %s attempt without a class warning or new start action',
     async (state) => {
       vi.mocked(learningApi.currentTryout).mockResolvedValue({
         id: 'package-test',
@@ -892,20 +896,21 @@ describe('responsive learning composition', () => {
         attemptId: 'attempt-test',
       });
       renderStudent(<TryoutScreen />);
-      await screen.findByRole('heading', { name: 'Paket Fiktif' });
-      expect(screen.queryByRole('button', { name: /Mulai TryOut/ })).toBeNull();
+      if (state === 'inProgress') await screen.findByRole('heading', { name: 'Paket Fiktif' });
+      else await screen.findByRole('heading', {
+        name: state === 'waitingIrt' ? 'Jawaban terkirim · Menunggu hasil' : 'Hasil tersedia',
+      });
+      expect(screen.queryByRole('button', { name: /Mulai pengerjaan/ })).toBeNull();
       expect(screen.queryByText(/sudah bergabung ke kelas/)).toBeNull();
       if (state === 'inProgress') {
         expect(screen.getByRole('link', { name: 'Lanjutkan TryOut' }).getAttribute('href')).toBe(
           '/student/tryout/attempt-test',
         );
-      } else if (state === 'resultReady') {
-        expect(
-          screen.getByRole('link', { name: 'Lihat hasil simulasi' }).getAttribute('href'),
-        ).toBe('/student/tryout/attempt-test/result');
       } else {
-        expect(screen.getByRole('status').textContent).toContain('pembahasan belum tersedia');
-        expect(screen.queryByRole('link', { name: 'Lihat hasil simulasi' })).toBeNull();
+        expect(
+          screen.getByRole('link', { name: state === 'waitingIrt' ? 'Lihat status hasil' : 'Lihat hasil' })
+            .getAttribute('href'),
+        ).toBe('/student/tryout/attempt-test/result');
       }
     },
   );
@@ -929,7 +934,7 @@ describe('responsive learning composition', () => {
       });
     renderStudent(<TryoutScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Detail dan aturan paket' }));
-    const startButton = screen.getByRole('button', { name: 'Mulai TryOut' });
+    const startButton = screen.getByRole('button', { name: 'Mulai pengerjaan' });
     expect(startButton.hasAttribute('disabled')).toBe(true);
     fireEvent.click(startButton);
     expect(learningApi.startTryout).not.toHaveBeenCalled();
@@ -938,7 +943,7 @@ describe('responsive learning composition', () => {
     fireEvent.click(startButton);
     await screen.findByRole('alert');
     expect(learningApi.startTryout).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Mulai TryOut' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mulai pengerjaan' }));
     await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/tryout/attempt-test'));
     expect(learningApi.startTryout).toHaveBeenCalledTimes(2);
   });
@@ -981,13 +986,13 @@ describe('responsive learning composition', () => {
     expect(screen.queryByRole('button', { name: 'Tryout Saya' })).toBeNull();
     expect(screen.getByRole('tab', { name: 'Terlewat' })).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: 'Riwayat' }));
-    await screen.findByText(/Belum ada Tryout pada aktivitas yang dimuat/);
+    await screen.findByText(/Muat halaman berikutnya untuk mencari riwayat Tryout/);
     expect(screen.queryByText('Drill only fixture')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Muat riwayat lainnya' }));
     await screen.findByRole('alert', {}, { timeout: 5000 });
     fireEvent.click(screen.getByRole('button', { name: 'Muat riwayat lainnya' }));
     await screen.findByRole('link', { name: /Historical Tryout fixture/ });
-    expect(learningApi.assessmentHistory).toHaveBeenLastCalledWith('test-token', 'cursor-test');
+    expect(learningApi.assessmentHistory).toHaveBeenLastCalledWith('test-token', 'cursor-test', undefined, 'tryout');
     expect(screen.getByText('0', { exact: true })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Muat riwayat lainnya' })).toBeNull();
   });

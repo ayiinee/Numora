@@ -4,6 +4,7 @@ const assets = {
   start: ['start-learning', 344, 345],
   calendar: ['tryout-calendar', 364, 345],
   history: ['tryout-history', 340, 363],
+  'tryout-record': ['tryout-record', 380, 360],
   submitted: ['answers-submitted', 368, 363],
   mastered: ['drill-mastered', 361, 365],
   practice: ['drill-practice', 324, 331],

@@ -15,7 +15,6 @@ import {
   tryoutStudentAssignments,
   tryoutBatches,
   tryoutBatchCloseAt,
-  publishedTryoutAttemptResults,
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
@@ -50,7 +49,7 @@ import {
 } from '@tka/assessment-engine';
 import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
-import { TryoutReleaseService } from './tryout-release.service';
+import { TryoutReleaseService, tryoutResultState } from './tryout-release.service';
 import { tryoutAttemptDeadline } from './tryout.policy';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -179,7 +178,11 @@ export class TryoutService {
     if (!current) return { state: 'unavailable' as const };
     const { db } = getDatabase();
     let [attempt] = await db
-      .select({ id: assessmentAttempts.id, status: assessmentAttempts.status })
+      .select({
+        id: assessmentAttempts.id,
+        status: assessmentAttempts.status,
+        packageId: assessmentAttempts.packageId,
+      })
       .from(assessmentAttempts)
       .where(
         and(
@@ -194,9 +197,13 @@ export class TryoutService {
       attempt = await this.forStudent(studentId, attempt.id);
     }
     const released =
-      attempt?.status === 'GRADED'
-        ? (await this.releases.releasedPackageIds([current.id])).has(current.id)
-        : false;
+      !!attempt &&
+      (
+        await this.releases.studentPublications(
+          [{ ...attempt, isDemo: current.isDemo }],
+          await databaseTime(db),
+        )
+      ).ready.has(attempt.id);
     const [count] = await db
       .select({ total: sql<number>`count(*)::integer` })
       .from(packageItems)
@@ -285,12 +292,20 @@ export class TryoutService {
       for (const attempt of pending) byPackage.delete(attempt.packageId);
       for (const attempt of refreshed) byPackage.set(attempt.packageId, attempt);
     }
-    const gradedIds = [...byPackage.values()]
-      .filter((attempt) => attempt.status === 'GRADED')
-      .map((attempt) => attempt.packageId);
-    const releasedIds = gradedIds.length
-      ? await this.releases.releasedPackageIds(gradedIds)
-      : new Set<string>();
+    // Keep batched metadata reads and the publication contract used by the student UI.
+    const demoByPackage = new Map(packs.map((pack) => [pack.id, pack.isDemo]));
+    const { ready } = await this.releases.studentPublications(
+      [...byPackage.values()].map((attempt) => ({
+        ...attempt,
+        isDemo: demoByPackage.get(attempt.packageId)!,
+      })),
+      now,
+    );
+    const releasedIds = new Set(
+      [...byPackage.values()]
+        .filter((attempt) => ready.has(attempt.id))
+        .map((attempt) => attempt.packageId),
+    );
     const statistics = await this.itemStatistics(packageIds);
     const reasons = await this.pendingReasons(
       packageIds.filter((id) => !releasedIds.has(id)),
@@ -303,7 +318,7 @@ export class TryoutService {
         pack.status === 'ARCHIVED' ||
         (pack.closeAt ?? tryoutBatchCloseAt(pack.releaseAt!)) <= now;
       const ongoing = !past && current?.id === pack.id;
-      const released = attempt?.status === 'GRADED' && releasedIds.has(pack.id);
+      const released = !!attempt && ready.has(attempt.id);
       const reason = reasons.get(pack.id);
       const pendingReason = released ? null : reason === undefined ? 'CONTENT_PENDING' : reason;
       return {
@@ -442,6 +457,7 @@ export class TryoutService {
         packageId: assessmentAttempts.packageId,
         title: sql<string>`coalesce(${tryoutBatches.adminTitle}, ${assessmentPackages.name})`,
         managedBatch: sql<boolean>`${tryoutBatches.adminTitle} is not null`,
+        batchResultDueAt: tryoutBatches.resultDueAt,
         closeAt:
           sql<Date | null>`case when ${tryoutBatches.adminTitle} is not null then ${tryoutBatches.closesAt} else ${assessmentPackages.closeAt} end`.mapWith(
             (v) => (v ? new Date(v) : null),
@@ -466,6 +482,10 @@ export class TryoutService {
       await this.finalizeForStudent(studentId, attemptId, 'automatic');
       attempt = await this.forStudent(studentId, attemptId);
     }
+    if (attempt.status === 'CANCELLED')
+      throw new ConflictException(
+        problem('ATTEMPT_NOT_ACTIVE', 'Sesi Tryout ini sudah dibatalkan.'),
+      );
     const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId) : [];
     if (rows.length)
       await getDatabase().db.execute(
@@ -476,20 +496,26 @@ export class TryoutService {
       : (await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
         ? null
         : await this.pendingReason(attempt.packageId);
+    const now = await databaseTime(getDatabase().db);
+    const resultDueAt =
+      attempt.batchResultDueAt ??
+      (attempt.closeAt ? new Date(attempt.closeAt.getTime() + 72 * 3600_000) : null);
+    const waitState = tryoutResultState(attempt.status, false, resultDueAt, now);
+    const isPublished =
+      waitState === 'overdue' &&
+      (await this.releases.studentPublications([attempt], now)).ready.has(attemptId);
     return {
       id: attempt.id,
       packageId: attempt.packageId,
       packageTitle: presentFixtureText(attempt.packageId, 'name', attempt.title),
       closeAt: attempt.closeAt?.toISOString() ?? null,
-      resultDueAt:
-        !pendingReason && attempt.closeAt
-          ? new Date(attempt.closeAt.getTime() + 72 * 3600_000).toISOString()
-          : null,
+      resultDueAt: resultDueAt?.toISOString() ?? null,
+      resultWaitState: isPublished ? null : waitState,
       isDemo: attempt.isDemo,
       resultPendingReason: pendingReason,
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
-      serverTime: (await databaseTime(getDatabase().db)).toISOString(),
+      serverTime: now.toISOString(),
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
       questions: rows.map((row) => ({
@@ -508,7 +534,7 @@ export class TryoutService {
   }
 
   async batches(authorization?: string) {
-    return this.batchService.studentList(await this.student(authorization));
+    return this.batchService.studentList(await this.student(authorization), this.releases);
   }
   async startBatch(authorization: string | undefined, batchId: string, schoolId?: string) {
     return this.start(authorization, '', { batchId, ...(schoolId ? { schoolId } : {}) });
@@ -843,29 +869,21 @@ export class TryoutService {
   async result(authorization: string | undefined, attemptId: string) {
     const studentId = await this.student(authorization);
     const attempt = await this.forStudent(studentId, attemptId);
-    if (
-      !['SUBMITTED', 'GRADED'].includes(attempt.status) ||
-      !(await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
-    )
+    const { db } = getDatabase();
+    const { ready, canonical: published } = await this.releases.studentPublications(
+      [attempt],
+      await databaseTime(db),
+    );
+    if (!ready.has(attemptId))
       throw new ConflictException(
         problem('TRYOUT_RESULT_PENDING', 'Hasil Tryout menunggu rilis IRT.'),
       );
-    const { db } = getDatabase();
     const [score] = await db
       .select({ rawPoints: assessmentAttempts.rawPoints, score: assessmentAttempts.score0To100 })
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
-    const [packageRow] = await db
-      .select({ isDemo: assessmentPackages.isDemo })
-      .from(assessmentPackages)
-      .where(eq(assessmentPackages.id, attempt.packageId))
-      .limit(1);
-    const canonical = (await publishedTryoutAttemptResults([attemptId])).get(attemptId);
-    if (!packageRow?.isDemo && !canonical)
-      throw new ConflictException(
-        problem('TRYOUT_RESULT_PENDING', 'Finalisasi hasil peserta belum dipublikasikan.'),
-      );
+    const canonical = published.get(attemptId);
     const rows = await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);

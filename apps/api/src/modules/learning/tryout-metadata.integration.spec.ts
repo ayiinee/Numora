@@ -5,7 +5,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { and, eq, sql } from 'drizzle-orm';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
 import {
   assessmentAttempts,
@@ -547,6 +547,29 @@ describe.skipIf(!testUrl)(
       expect(JSON.stringify(first)).not.toMatch(
         /answerKey|explanation|configuration|sourceReference/,
       );
+    });
+    it('requires the attempt publication gate even when its package has released results', async () => {
+      const publications = vi.spyOn(TryoutReleaseService.prototype, 'studentPublications');
+      try {
+        publications.mockResolvedValue({ ready: new Set(), canonical: new Map() });
+        const waiting = (await service.packages('student')).packages.find(
+          (pack) => pack.id === readyId,
+        );
+        expect(waiting).toMatchObject({ attemptId: readyAttemptId, state: 'waitingIrt' });
+        expect(publications).toHaveBeenCalledTimes(1);
+        expect(publications.mock.calls[0]![0]).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ id: readyAttemptId, packageId: readyId, isDemo: true }),
+          ]),
+        );
+        publications.mockResolvedValue({ ready: new Set([readyAttemptId]), canonical: new Map() });
+        const released = (await service.packages('student')).packages.find(
+          (pack) => pack.id === readyId,
+        );
+        expect(released).toMatchObject({ attemptId: readyAttemptId, state: 'resultReady' });
+      } finally {
+        publications.mockRestore();
+      }
     });
     it('bounds full-page SQL count and bytes and reads one target rather than 200 students', async () => {
       const page = await measured(() => service.packages('student'));

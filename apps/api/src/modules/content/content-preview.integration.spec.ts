@@ -3142,6 +3142,8 @@ describe.skipIf(!testUrl)(
       expect(attempts[0].packageId).toBe(assignment!.package_id);
       expect(attempts[0].questions).toHaveLength(30);
       expect(JSON.stringify(attempts[0])).not.toContain('answerKey');
+      expect((await service.studentList(student!.id as string)).items.find((batch) => batch.id === activeId))
+        .toMatchObject({ attemptId: attempts[0].id, canResume: true, resultState: null });
       for (const question of attempts[0].questions)
         await ok(
           `tryout/attempts/${attempts[0].id}/answers/${question.questionInstanceId}`,
@@ -3258,6 +3260,10 @@ describe.skipIf(!testUrl)(
       expect(submissions.map((value) => value.xp)).toEqual([300, 300]);
       const ledger = await owner`SELECT * FROM xp_ledger WHERE attempt_id=${attempts[0].id}`;
       expect(ledger).toHaveLength(1);
+      const submittedBatch = (await service.studentList(student!.id as string)).items.find((batch) => batch.id === activeId);
+      expect(submittedBatch).toMatchObject({
+        attemptId: attempts[0].id, canResume: false, resultState: 'waiting',
+      });
       await expect(tryout.result('Bearer student', attempts[0].id)).rejects.toThrow();
       const detail = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
       expect(detail.resultBlockers).toContain('IRT_DELIVERY_DISABLED');

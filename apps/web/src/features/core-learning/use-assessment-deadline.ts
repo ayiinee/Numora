@@ -9,6 +9,7 @@ export function useAssessmentDeadline(
 ) {
   const [remaining, setRemaining] = useState<number | null>(null);
   const callback = useRef(onExpired);
+  const expiredDeadline = useRef<number | null>(null);
   useEffect(() => {
     callback.current = onExpired;
   }, [onExpired]);
@@ -20,15 +21,19 @@ export function useAssessmentDeadline(
       return;
     }
     const received = performance.now();
-    let fired = false;
+    if (expiredDeadline.current !== deadline) expiredDeadline.current = null;
     function tick() {
       const seconds = Math.max(
         0,
         Math.ceil((deadline - serverAtReceipt - (performance.now() - received)) / 1000),
       );
+      if (expiredDeadline.current === deadline) {
+        setRemaining(0);
+        return;
+      }
       setRemaining(seconds);
-      if (seconds === 0 && !fired) {
-        fired = true;
+      if (seconds === 0) {
+        expiredDeadline.current = deadline;
         callback.current();
       }
     }

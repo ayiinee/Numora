@@ -3,16 +3,10 @@
 import Link from 'next/link';
 import { useNotificationSummary } from './notification-queries';
 import { Avatar, Icon, ProgressBar, Skeleton } from '@tka/ui';
-import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
+import type { StudentDashboardDto } from './generated-types';
 import { StudentIllustratedHero } from './student-illustrated-hero';
-
-const tryoutLabels: Record<CurrentTryoutDto['state'], string> = {
-  unavailable: 'Belum tersedia',
-  open: 'Telah dibuka',
-  inProgress: 'Sedang dikerjakan',
-  waitingIrt: 'Menunggu hasil',
-  resultReady: 'Hasil tersedia',
-};
+import { type TryoutSummary, tryoutSummaryHref, tryoutSummaryLabels } from './tryout-queries';
+import { releaseDate } from './tryout-presentation';
 
 export function StudentHomeIdentityHeader({
   data,
@@ -21,7 +15,7 @@ export function StudentHomeIdentityHeader({
 }: {
   data: StudentDashboardDto;
   avatarUrl?: string | undefined;
-  tryout?: CurrentTryoutDto | undefined;
+  tryout?: TryoutSummary | undefined;
 }) {
   const notifications = useNotificationSummary();
   const xp = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 6 }).format(data.totalXp ?? 0);
@@ -138,7 +132,7 @@ export function StudentIdentityHeader({
 }: {
   data: StudentDashboardDto;
   avatarUrl?: string | undefined;
-  tryout?: CurrentTryoutDto | undefined;
+  tryout?: TryoutSummary | undefined;
 }) {
   const notifications = useNotificationSummary();
   return (
@@ -231,27 +225,32 @@ export function HomeTryoutSkeleton() {
   );
 }
 
-export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
-  const action =
-    data.state === 'open' && data.eligible
-      ? { label: 'Lihat aturan', href: '/student/tryout' }
-      : data.state === 'inProgress' && data.attemptId
-        ? { label: 'Lanjutkan Tryout', href: `/student/tryout/${data.attemptId}` }
-        : data.state === 'resultReady' && data.attemptId
-          ? { label: 'Lihat hasil', href: `/student/tryout/${data.attemptId}/result` }
-          : {
-              label: data.state === 'waitingIrt' ? 'Lihat status' : 'Lihat Tryout',
-              href: '/student/tryout',
-            };
+export function HomeTryoutHero({ data }: { data: TryoutSummary }) {
+  const actions: Record<TryoutSummary['state'], string> = {
+    unavailable: 'Lihat Tryout',
+    open: data.eligible ? 'Lihat aturan' : 'Lihat Tryout',
+    inProgress: 'Lanjutkan Tryout',
+    resultReady: 'Lihat hasil',
+    waitingIrt: 'Lihat status hasil',
+    overdue: 'Lihat status hasil',
+    scheduled: 'Lihat jadwal',
+    checking: 'Periksa status sesi',
+  };
   const description =
     data.state === 'unavailable'
       ? 'Paket belum tersedia. Sambil menunggu, kamu bisa lanjut berlatih.'
+      : data.state === 'overdue'
+        ? 'Hasil belum tersedia dan melewati tenggat.'
+      : data.state === 'scheduled'
+        ? `Dibuka ${releaseDate(data.releaseAt)}.`
+      : data.state === 'checking'
+        ? 'Periksa apakah sesi masih bisa dilanjutkan.'
       : data.state === 'waitingIrt'
         ? 'Jawaban sudah terkirim. Hasil dan pembahasan menunggu rilis.'
         : data.state === 'resultReady'
           ? 'Hasil dan pembahasan paketmu sudah tersedia.'
           : data.state === 'inProgress'
-            ? 'Pengerjaanmu masih berlangsung. Lanjutkan dari soal terakhir.'
+            ? 'Pengerjaanmu masih berlangsung. Lanjutkan sesi Tryout.'
             : data.eligible
               ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
               : 'Paket belum dapat dimulai. Ketersediaan mengikuti status server.';
@@ -263,7 +262,7 @@ export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
         <>
           <span>TRYOUT</span>
           <span>
-            {tryoutLabels[data.state]}
+            {tryoutSummaryLabels[data.state]}
             {data.isDemo ? ' · Demo' : ''}
           </span>
           {(data.questionCount != null || data.durationSeconds != null) && (
@@ -278,8 +277,8 @@ export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
       title={data.title ?? 'Tryout Matematika'}
       description={description}
     >
-      <Link className="sh-hero__action" href={action.href}>
-        {action.label}
+      <Link className="sh-hero__action" href={tryoutSummaryHref(data)}>
+        {actions[data.state]}
         <Icon name="chevron" width={14} height={14} />
       </Link>
     </StudentIllustratedHero>

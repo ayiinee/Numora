@@ -134,6 +134,10 @@ export class StudentTryoutBatchDto {
   @ApiProperty() mandiri!: boolean;
   @ApiProperty({ nullable: true, type: String }) attemptId!: string | null;
   @ApiProperty({ nullable: true, type: String }) attemptStatus!: string | null;
+  @ApiProperty({ enum: ['waiting', 'overdue', 'ready'], nullable: true, required: false })
+  resultState?: 'waiting' | 'overdue' | 'ready' | null;
+  @ApiPropertyOptional()
+  canResume?: boolean;
 }
 export class StudentTryoutBatchesDto {
   @ApiProperty() routingActive!: boolean;

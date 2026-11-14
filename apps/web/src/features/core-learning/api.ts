@@ -212,12 +212,12 @@ export const learningApi = {
     }),
   tryoutResult: (token: string, attemptId: string) =>
     request<TryoutResult>(token, `/tryout/attempts/${id(attemptId)}/result`),
-  assessmentHistory: (token: string, cursor?: string, levelId?: string) =>
+  assessmentHistory: (token: string, cursor?: string, levelId?: string, activity?: 'tryout') =>
     request<AssessmentHistory>(
       token,
       `/students/me/assessment-results${
-        cursor || levelId
-          ? `?${[cursor ? `cursor=${id(cursor)}` : '', levelId ? `levelId=${id(levelId)}` : '']
+        cursor || levelId || activity
+          ? `?${[cursor ? `cursor=${id(cursor)}` : '', levelId ? `levelId=${id(levelId)}` : '', activity ? `activity=${activity}` : '']
               .filter(Boolean)
               .join('&')}`
           : ''

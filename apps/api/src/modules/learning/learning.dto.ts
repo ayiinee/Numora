@@ -270,6 +270,8 @@ export class AssessmentRecordDto {
   @ApiPropertyOptional({ type: Number, nullable: true }) tryoutXpPolicyVersion?: number | null;
   @ApiProperty({ format: 'date-time' }) submittedAt!: string;
   @ApiProperty({ enum: ['ready', 'waitingIrt'] }) resultState!: string;
+  @ApiPropertyOptional({ enum: ['waiting', 'overdue', 'ready'] })
+  tryoutResultState?: 'waiting' | 'overdue' | 'ready';
   @ApiProperty({ type: Number, nullable: true }) score!: number | null;
 }
 
