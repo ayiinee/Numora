@@ -340,63 +340,6 @@
         ]
       }
     ],
-    "comparisons": [
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000190",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      },
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000191",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      },
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000192",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      },
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000193",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      },
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000194",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      },
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000195",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      },
-      {
-        "comparisonId": "10000000-0000-4000-8000-000000000196",
-        "decision": "INSUFFICIENT",
-        "reasonCodes": [
-          "INSUFFICIENT_SAMPLE"
-        ],
-        "metrics": []
-      }
-    ]
+    "comparisons": []
   }
 }

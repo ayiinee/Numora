@@ -93,6 +93,7 @@ def validate_input(value):
     arms = unique(value['packages'], 'armId')
     people = unique(value['respondents'], 'respondentId')
     unique(value['respondents'], 'attemptId')
+    ensure(not value['comparisons'] if drill else True, 'IRT_INPUT_INVALID')
     unique(value['responses'], 'attemptItemId')
     unique(value['comparisons'], 'comparisonId')
     ensure(len(value['anchorQuestionVersionIds']) == (3 if drill else 5), 'IRT_ANCHOR_INVALID')
