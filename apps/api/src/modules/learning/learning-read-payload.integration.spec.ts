@@ -24,6 +24,7 @@ import type { IdentityService } from '../identity/identity.service';
 import { LearningCatalogService } from './learning-catalog.service';
 import { MaterialsService } from './materials.service';
 import { PretestService } from './pretest.service';
+import { CurriculumCache, sharedCurriculumCache } from './curriculum-cache';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 describe.skipIf(!testUrl)(
@@ -47,7 +48,7 @@ describe.skipIf(!testUrl)(
     let initialEmpty: Awaited<ReturnType<LearningCatalogService['progress']>>;
     const actors = new Map<string, string>();
 
-    async function transfer<T>(run: () => Promise<T>) {
+    async function transfer<T>(run: () => Promise<T>, warmCurriculum = false) {
       await closeDatabaseConnection();
       const runtimeUrl = process.env.DATABASE_URL!;
       const previousPool = process.env.DB_POOL_MAX;
@@ -84,6 +85,7 @@ describe.skipIf(!testUrl)(
         url.port = String(address.port);
         process.env.DATABASE_URL = url.toString();
         await getDatabase().client`select 1`;
+        if (warmCurriculum) await sharedCurriculumCache.get();
         bytes = 0;
         const value = await run();
         return { value, responseBytes: bytes };
@@ -518,8 +520,8 @@ describe.skipIf(!testUrl)(
     it('bounds PostgreSQL responses for result, global progress, subchapter and materials reads', async () => {
       const result = await transfer(() => pretest.result('student', attemptId));
       const progress = await transfer(() => catalog.progress('student'));
-      const subchapter = await transfer(() => catalog.subchapter('student', targetSub));
-      const material = await transfer(() => materials.list('student'));
+      const subchapter = await transfer(() => catalog.subchapter('student', targetSub), true);
+      const material = await transfer(() => materials.list('student'), true);
       console.info(
         JSON.stringify({
           measurement: 'learning_read_response_bytes',
@@ -537,6 +539,97 @@ describe.skipIf(!testUrl)(
       expect(progress.responseBytes).toBeLessThan(3000);
       expect(subchapter.responseBytes).toBeLessThan(6500);
       expect(material.responseBytes).toBeLessThan(45000);
+    });
+    it('shares metadata, coalesces misses and invalidates committed hierarchy changes only', async () => {
+      const cache = new CurriculumCache();
+      try {
+        await owner`UPDATE chapters SET name=name WHERE id=${fixture.chapterId}`;
+        const before = cache.metrics.refreshes;
+        const results = await Promise.all(Array.from({ length: 12 }, () => cache.get()));
+        expect(cache.metrics.refreshes - before).toBe(1);
+        expect(cache.metrics.coalesced).toBeGreaterThan(0);
+        results[0]!.chapterRows.length = 0;
+        expect((await cache.get()).chapterRows.length).toBeGreaterThan(0);
+        const chapter = (await cache.get()).chapterRows.find((c) => c.id === fixture.chapterId)!;
+        await expect(
+          owner.begin(async (tx) => {
+            await tx`UPDATE chapters SET name='TEST ONLY rolled back' WHERE id=${chapter.id}`;
+            throw new Error('rollback');
+          }),
+        ).rejects.toThrow('rollback');
+        expect((await cache.get()).chapterRows.find((c) => c.id === chapter.id)?.name).toBe(
+          chapter.name,
+        );
+        await owner`UPDATE chapters SET name='TEST ONLY changed' WHERE id=${chapter.id}`;
+        expect((await cache.get()).chapterRows.find((c) => c.id === chapter.id)?.name).toBe(
+          'TEST ONLY changed',
+        );
+        await owner`UPDATE subchapters SET status='ARCHIVED' WHERE id=${emptySub}`;
+        expect((await cache.get()).subRows.some((s) => s.id === emptySub)).toBe(false);
+        await owner`UPDATE subchapters SET status='READY' WHERE id=${emptySub}`;
+        expect((await cache.get()).subRows.some((s) => s.id === emptySub)).toBe(true);
+        // A second independent instance can read Redis; a Redis outage still uses live DB metadata.
+        const second = new CurriculumCache();
+        try {
+          expect(await second.get()).toEqual(await cache.get());
+          if (process.env.REDIS_URL) {
+            expect(second.metrics.hits).toBe(1);
+            expect(second.metrics.refreshes).toBe(0);
+          }
+        } finally {
+          second.onModuleDestroy();
+        }
+        console.info(JSON.stringify({ measurement: 'curriculum_cache', ...cache.metrics }));
+      } finally {
+        cache.onModuleDestroy();
+        sharedCurriculumCache.onModuleDestroy();
+      }
+    });
+    it('measures revision-row contention and preserves atomic invalidation across concurrent writers', async () => {
+      const url = new URL(testUrl!);
+      url.pathname = '/' + database;
+      const concurrent = postgres(url.toString(), { max: 1, onnotice: () => {} });
+      let release!: () => void, locked!: () => void;
+      const gate = new Promise<void>((done) => {
+        release = done;
+      });
+      const acquired = new Promise<void>((done) => {
+        locked = done;
+      });
+      try {
+        const first = owner.begin(async (tx) => {
+          await tx`UPDATE chapters SET name=name WHERE id=${fixture.chapterId}`;
+          locked();
+          await gate;
+        });
+        await acquired;
+        const started = Date.now();
+        const second = concurrent`UPDATE subchapters SET name=name WHERE id=${targetSub}`.execute();
+        let blocked = false;
+        for (let i = 0; i < 40; i++) {
+          const [row] = await admin<
+            { blocked: boolean }[]
+          >`SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=${database} AND wait_event_type='Lock') AS blocked`;
+          if (row?.blocked) {
+            blocked = true;
+            break;
+          }
+          await new Promise((done) => setTimeout(done, 10));
+        }
+        release();
+        await Promise.all([first, second]);
+        expect(blocked).toBe(true);
+        console.info(
+          JSON.stringify({
+            measurement: 'content_revision_contention',
+            observedLockWait: blocked,
+            controlledWaitMs: Date.now() - started,
+          }),
+        );
+      } finally {
+        release?.();
+        await concurrent.end();
+      }
     });
   },
 );
