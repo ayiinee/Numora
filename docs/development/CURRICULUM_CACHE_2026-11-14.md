@@ -8,8 +8,9 @@ One process-local metadata entry is capped at 512 KiB; Redis shares it between p
 
 ## Local evidence
 
-Eight integration tests pass using dedicated non-owner PostgreSQL and real Redis 7.4. They cover decimal/zero progress across students, authorization, hidden hierarchy, cloned results, coalescing, cross-instance Redis reuse, committed changes and rollback. The warm subchapter read transfers 899 protocol bytes; materials 22,849 bytes on a 209-level fixture. Cold loading transfers the shared hierarchy once and can cost more than a narrow one-off subchapter query. Warm measurement explicitly primes metadata before counting; it is not a cold-start claim or Supabase billed egress.
+Nine integration tests pass using dedicated non-owner PostgreSQL and real Redis 7.4. They cover decimal/zero progress across students, authorization, hidden hierarchy, cloned results, coalescing, cross-instance Redis reuse, corrupted Redis/outage fallback, committed changes and rollback. The warm subchapter read transfers 899 protocol bytes; materials 22,849 bytes on a 209-level fixture. Cold loading transfers the shared hierarchy once and can cost more than a narrow one-off subchapter query. Warm measurement explicitly primes metadata before counting; it is not a cold-start claim or Supabase billed egress.
 
 A controlled pair of concurrent content transactions observes an actual PostgreSQL Lock wait on revision invalidation (93 ms including deliberate hold and test scheduling). This demonstrates serialization, not a production contention rate. Keep the ledger lock algorithm unchanged pending real traffic evidence. Batch import reduces trigger invocations from 603 to 6 for 201 new questions (three content layers, chunks of 200), while preserving atomic invalidation.
 
 No required env/schema change. Existing `REDIS_URL` and `BULLMQ_PREFIX` enable cross-process reuse; without them only bounded in-process reuse applies. Production cache hit rates and revision waits require the instrumented release and representative traffic.
+

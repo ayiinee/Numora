@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { Redis } from 'ioredis';
 import { connect, createServer, type Socket } from 'node:net';
 import { resolve } from 'node:path';
 import postgres from 'postgres';
@@ -583,6 +584,55 @@ describe.skipIf(!testUrl)(
       } finally {
         cache.onModuleDestroy();
         sharedCurriculumCache.onModuleDestroy();
+      }
+    });
+    it('recovers from corrupt Redis values and a disconnected cache without stale hierarchy', async () => {
+      const previousRedis = process.env.REDIS_URL;
+      const cache = new CurriculumCache();
+      let redis: Redis | undefined;
+      try {
+        await owner`UPDATE chapters SET name=name WHERE id=${fixture.chapterId}`;
+        const expected = await cache.get();
+        if (previousRedis) {
+          if (!/^redis:\/\/(localhost|127\.0\.0\.1):/.test(previousRedis))
+            throw Error('localhost Redis required');
+          redis = new Redis(previousRedis, { maxRetriesPerRequest: 0, commandTimeout: 500 });
+          const [revision] = await owner`select revision from pvp_content_revision where singleton`;
+          const [, keys] = await redis.scan(
+            '0',
+            'MATCH',
+            `${process.env.BULLMQ_PREFIX}:curriculum:*:${revision!.revision}`,
+            'COUNT',
+            1000,
+          );
+          expect(keys.length).toBe(1);
+          expect(await redis.ttl(keys[0]!)).toBeGreaterThan(0);
+          expect(await redis.ttl(keys[0]!)).toBeLessThanOrEqual(60);
+          await redis.set(keys[0]!, 'invalid JSON', 'EX', 60);
+          const second = new CurriculumCache();
+          try {
+            expect(await second.get()).toEqual(expected);
+            expect(second.metrics.refreshes).toBe(1);
+          } finally {
+            second.onModuleDestroy();
+          }
+        }
+        process.env.REDIS_URL = 'redis://127.0.0.1:6396';
+        await owner`UPDATE chapters SET name='TEST ONLY outage fresh' WHERE id=${fixture.chapterId}`;
+        const offline = new CurriculumCache();
+        try {
+          expect(
+            (await offline.get()).chapterRows.find((c) => c.id === fixture.chapterId)?.name,
+          ).toBe('TEST ONLY outage fresh');
+          expect(offline.metrics.redisErrors).toBeGreaterThan(0);
+        } finally {
+          offline.onModuleDestroy();
+        }
+      } finally {
+        cache.onModuleDestroy();
+        redis?.disconnect();
+        if (previousRedis === undefined) delete process.env.REDIS_URL;
+        else process.env.REDIS_URL = previousRedis;
       }
     });
     it('measures revision-row contention and preserves atomic invalidation across concurrent writers', async () => {
