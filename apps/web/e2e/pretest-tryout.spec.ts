@@ -8,7 +8,12 @@ const attempt = '33333333-3333-4333-8333-333333333333';
 const past = '44444444-4444-4444-8444-444444444444';
 const sub = '55555555-5555-4555-8555-555555555555';
 
-async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false, longStem = false) {
+async function fixture(
+  page: Page,
+  mixedTryout = false,
+  alreadySubmitted = false,
+  longStem = false,
+) {
   const jwt = [
     Buffer.from('{"alg":"HS256"}').toString('base64url'),
     Buffer.from(
@@ -339,10 +344,7 @@ test('delegated Tryout asks multi-school students to choose one school before st
     });
   });
   await page.goto('/student/tryout');
-  await expect(page.getByRole('tab', { name: 'Jadwal' })).toHaveAttribute(
-    'aria-selected',
-    'true',
-  );
+  await expect(page.getByRole('tab', { name: 'Jadwal' })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('tab', { name: 'Terlewat' }).click();
   await expect(page.getByText('Belum ada Tryout terlewat')).toBeVisible();
   await page.getByRole('tab', { name: 'Jadwal' }).click();
@@ -358,7 +360,11 @@ test('delegated Tryout asks multi-school students to choose one school before st
   await expect(rules).toBeVisible();
   const closeBox = await rules.getByRole('button', { name: 'Tutup dialog' }).boundingBox();
   const dialogBox = await rules.boundingBox();
-  expect(closeBox!.x - dialogBox!.x).toBeLessThan(24);
+  const closeRightGap = dialogBox!.x + dialogBox!.width - closeBox!.x - closeBox!.width;
+  expect(closeRightGap).toBeGreaterThanOrEqual(0);
+  expect(closeRightGap).toBeLessThan(24);
+  expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
   expect(closeBox!.y - dialogBox!.y).toBeLessThan(24);
   await expect(rules.locator('.numora-dialog__actions button')).toHaveText([
     'Mulai pengerjaan',
@@ -387,31 +393,73 @@ test('delegated Tryout asks multi-school students to choose one school before st
   await expect(page.getByRole('combobox', { name: 'Sekolah untuk Tryout ini' })).toHaveValue(sub);
 });
 
-test('Tryout keeps completed batches in Riwayat and shows delayed results consistently', async ({ page }) => {
+test('Tryout keeps completed batches in Riwayat and shows delayed results consistently', async ({
+  page,
+}) => {
   await fixture(page, false, true);
   const batch = {
-    id: past, title: 'Tryout sudah dikirim', state: 'CLOSED', mandiri: true, schools: [],
-    startsAt: '2026-10-01T00:00:00Z', closesAt: '2026-10-08T00:00:00Z',
-    resultDueAt: '2026-10-11T00:00:00Z', attemptId: attempt, attemptStatus: 'GRADED',
+    id: past,
+    title: 'Tryout sudah dikirim',
+    state: 'CLOSED',
+    mandiri: true,
+    schools: [],
+    startsAt: '2026-10-01T00:00:00Z',
+    closesAt: '2026-10-08T00:00:00Z',
+    resultDueAt: '2026-10-11T00:00:00Z',
+    attemptId: attempt,
+    attemptStatus: 'GRADED',
     resultState: 'waiting',
   };
-  await page.route('**/api/v1/tryout/batches', (route) => route.fulfill({
-    json: { routingActive: true, items: [batch, {
-      ...batch, id: chapter, title: 'Tryout belum dikerjakan', attemptId: null,
-      attemptStatus: null, resultState: null,
-    }] },
-  }));
-  await page.route('**/api/v1/students/me/assessment-results?activity=tryout', (route) => route.fulfill({
-    json: { records: [{
-      attemptId: attempt, activity: 'tryout', title: batch.title,
-      resultState: 'waitingIrt', score: null, submittedAt: batch.closesAt,
-      xpState: 'ready', xp: 112.5,
-    }], nextCursor: null },
-  }));
-  await page.route(`**/api/v1/tryout/attempts/${attempt}`, (route) => route.fulfill({
-    json: { id: attempt, packageTitle: batch.title, status: 'submitted', questions: [],
-      resultDueAt: batch.resultDueAt, resultWaitState: 'overdue', deadlineAt: null },
-  }));
+  await page.route('**/api/v1/tryout/batches', (route) =>
+    route.fulfill({
+      json: {
+        routingActive: true,
+        items: [
+          batch,
+          {
+            ...batch,
+            id: chapter,
+            title: 'Tryout belum dikerjakan',
+            attemptId: null,
+            attemptStatus: null,
+            resultState: null,
+          },
+        ],
+      },
+    }),
+  );
+  await page.route('**/api/v1/students/me/assessment-results?activity=tryout', (route) =>
+    route.fulfill({
+      json: {
+        records: [
+          {
+            attemptId: attempt,
+            activity: 'tryout',
+            title: batch.title,
+            resultState: 'waitingIrt',
+            score: null,
+            submittedAt: batch.closesAt,
+            xpState: 'ready',
+            xp: 112.5,
+          },
+        ],
+        nextCursor: null,
+      },
+    }),
+  );
+  await page.route(`**/api/v1/tryout/attempts/${attempt}`, (route) =>
+    route.fulfill({
+      json: {
+        id: attempt,
+        packageTitle: batch.title,
+        status: 'submitted',
+        questions: [],
+        resultDueAt: batch.resultDueAt,
+        resultWaitState: 'overdue',
+        deadlineAt: null,
+      },
+    }),
+  );
   await page.goto('/student/tryout');
   await page.getByRole('tab', { name: 'Terlewat' }).click();
   const missedCard = page.locator('.tryout-catalog-card').filter({
@@ -425,9 +473,13 @@ test('Tryout keeps completed batches in Riwayat and shows delayed results consis
     'rgb(243, 231, 249)',
   );
   await expect(missedCard.locator('.tryout-card-icon')).toHaveAttribute(
-    'src', '/illustrations/tryout-card/missed.webp',
+    'src',
+    '/illustrations/tryout-card/missed.webp',
   );
-  await expect.poll(() => missedCard.locator('.tryout-card-icon').evaluate((img: HTMLImageElement) => img.naturalWidth))
+  await expect
+    .poll(() =>
+      missedCard.locator('.tryout-card-icon').evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
     .toBeGreaterThan(0);
   await expect(page.getByRole('heading', { name: batch.title })).toHaveCount(0);
   await page.goto('/student/tryout/history');
@@ -451,21 +503,27 @@ test('Tryout keeps completed batches in Riwayat and shows delayed results consis
   await expect(statusBadge).toHaveCSS('border-radius', '4px');
   expect((await statusBadge.boundingBox())!.height).toBeLessThanOrEqual(22);
   await expect(card.locator('.tryout-catalog-card__heading img')).toHaveAttribute(
-    'src', /tryout-record\.webp$/,
+    'src',
+    /tryout-record\.webp$/,
   );
   const historyIcon = card.locator('.tryout-card-icon');
   await expect(historyIcon).toHaveAttribute('src', '/illustrations/tryout-card/history.webp');
-  await expect.poll(() => historyIcon.evaluate((img: HTMLImageElement) => img.naturalWidth))
+  await expect
+    .poll(() => historyIcon.evaluate((img: HTMLImageElement) => img.naturalWidth))
     .toBeGreaterThan(0);
   await expect(card.getByText('112,5 XP')).toBeVisible();
   await expect(card.locator('time')).toContainText('WIB');
   await page.reload();
   await expect(card).toBeVisible();
-  await expect(history.getByRole('button', { name: /Periksa status hasil|Memeriksa status/ })).toHaveCount(0);
+  await expect(
+    history.getByRole('button', { name: /Periksa status hasil|Memeriksa status/ }),
+  ).toHaveCount(0);
   await expect(card.getByRole('link', { name: /Lihat status hasil/ })).toHaveCount(1);
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 740 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
   }
   await page.setViewportSize({ width: 1440, height: 740 });
   await screenshot(page, 'tryout-riwayat-1440');
@@ -478,10 +536,14 @@ test('Tryout keeps completed batches in Riwayat and shows delayed results consis
   await expect(recovery).toBeVisible();
   await expect(card).toBeVisible();
   let releaseRefresh!: () => void;
-  const refresh = new Promise<void>((resolve) => { releaseRefresh = resolve; });
+  const refresh = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
   await page.route(batchesPath, async (route) => {
     await refresh;
-    await route.fulfill({ json: { routingActive: true, items: [{ ...batch, resultState: 'overdue' }] } });
+    await route.fulfill({
+      json: { routingActive: true, items: [{ ...batch, resultState: 'overdue' }] },
+    });
   });
   await retry.focus();
   try {
@@ -496,7 +558,9 @@ test('Tryout keeps completed batches in Riwayat and shows delayed results consis
   await expect(recovery).toHaveCount(0);
   await expect(retry).toHaveCount(0);
   await page.setViewportSize({ width: 320, height: 740 });
-  expect(await statusBadge.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  expect(await statusBadge.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+    true,
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await card.getByRole('link', { name: /Lihat status hasil/ }).click();
   await expect(page.getByText(/Hasil belum tersedia dan melewati tenggat/)).toBeVisible();
@@ -527,7 +591,10 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
     .getByRole('radio', { name: 'Genap' })
     .check();
   await expect.poll(() => raw.get('1')).toEqual({ categoryByStatementId: { s1: 'even' } });
-  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute(
+    'aria-valuetext',
+    '1 dari 30 soal terisi lengkap dan tersimpan',
+  );
   await page.getByLabel('Tandai Ragu-ragu').check();
   await page.reload();
   await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
@@ -540,10 +607,15 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await allQuestions.click();
   const map = page.getByRole('dialog', { name: 'Semua Soal' });
   await expect(map.getByRole('navigation').getByRole('button')).toHaveCount(30);
-  await expect(map.getByRole('button', { name: 'Soal 2, kategori belum lengkap, ragu-ragu' })).toBeVisible();
+  await expect(
+    map.getByRole('button', { name: 'Soal 2, kategori belum lengkap, ragu-ragu' }),
+  ).toBeVisible();
   await map.getByRole('button', { name: 'Soal 30, kosong', exact: true }).click();
   await expect(page.getByText('Soal 30 dari 30', { exact: true })).toBeVisible();
-  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute(
+    'aria-valuetext',
+    '1 dari 30 soal terisi lengkap dan tersimpan',
+  );
   await allQuestions.click();
   await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
   await page.getByRole('button', { name: 'Ke soal belum lengkap' }).click();
@@ -552,21 +624,27 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await allQuestions.click();
   await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
   await page.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Menunggu hasil', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Menunggu hasil', exact: true })).toBeVisible();
   await expect(page.getByText(/Nilai dan pembahasan tersedia setelah hasil dirilis/)).toBeVisible();
   await expect(page.getByText(/XP sudah tercatat/)).toHaveCount(0);
   await screenshot(page, 'tryout-pgk-waiting-390');
 });
 
-test('Tryout keeps a failed answer visible across questions and confirms exit after recovery', async ({ page }) => {
+test('Tryout keeps a failed answer visible across questions and confirms exit after recovery', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await fixture(page, true, false, true);
   const attemptUrl = `/student/tryout/${attempt}`;
-  await page.route('**/api/v1/tryout/attempts/*/answers/*', (route) => route.fulfill({
-    status: 503, json: { detail: 'Koneksi terputus.' },
-  }), { times: 1 });
+  await page.route(
+    '**/api/v1/tryout/attempts/*/answers/*',
+    (route) =>
+      route.fulfill({
+        status: 503,
+        json: { detail: 'Koneksi terputus.' },
+      }),
+    { times: 1 },
+  );
   await page.goto('/student/tryout');
   await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
   await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
@@ -590,7 +668,10 @@ test('Tryout keeps a failed answer visible across questions and confirms exit af
   await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Coba simpan lagi' })).toBeInViewport();
   await page.getByRole('button', { name: 'Coba simpan lagi' }).click();
-  await expect(progress).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await expect(progress).toHaveAttribute(
+    'aria-valuetext',
+    '1 dari 30 soal terisi lengkap dan tersimpan',
+  );
   await page.getByRole('link', { name: 'Kembali ke Tryout' }).click();
   const exit = page.getByRole('dialog', { name: 'Keluar dari sesi?' });
   await expect(exit.getByText(/Waktu tetap berjalan/)).toBeVisible();
@@ -611,20 +692,31 @@ async function screenshot(page: Page, name: string) {
   ).toBe(true);
 }
 
-test('Tryout Jadwal groups upcoming batches and moves a batch after refreshing', async ({ page }) => {
+test('Tryout Jadwal groups upcoming batches and moves a batch after refreshing', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await fixture(page, true);
   const legacyCard = page.locator('.tryout-catalog-card');
   await page.goto('/student/tryout');
   await expect(legacyCard.getByText('Tryout PGK', { exact: true })).toHaveCount(1);
   await expect(legacyCard.locator('.tryout-card-icon')).toHaveAttribute(
-    'src', '/illustrations/tryout-card/schedule.webp',
+    'src',
+    '/illustrations/tryout-card/schedule.webp',
   );
   await expect(legacyCard.locator('dt')).toHaveText(['Dibuka', 'Ditutup']);
   await expect(legacyCard.locator('time').first()).toContainText('28 Sep 2026');
-  await page.route('**/api/v1/tryout/packages/current', (route) => route.fulfill({
-    json: { id: past, title: 'Paket tanpa tanggal', state: 'open', eligible: true, closeAt: 'invalid' },
-  }));
+  await page.route('**/api/v1/tryout/packages/current', (route) =>
+    route.fulfill({
+      json: {
+        id: past,
+        title: 'Paket tanpa tanggal',
+        state: 'open',
+        eligible: true,
+        closeAt: 'invalid',
+      },
+    }),
+  );
   await page.reload();
   await expect(legacyCard.locator('dd')).toHaveText(['Belum tersedia', 'Belum tersedia']);
 
@@ -636,14 +728,35 @@ test('Tryout Jadwal groups upcoming batches and moves a batch after refreshing',
     attemptId: null,
     attemptStatus: null,
   };
-  const active = { ...base, id: past, title: 'Sesi aktif', state: 'OPEN',
-    startsAt: '2026-11-01T00:00:00Z', attemptId: attempt, attemptStatus: 'IN_PROGRESS', canResume: true };
-  const soon = { ...base, id: chapter, title: 'Jadwal terdekat dengan judul paket yang panjang',
-    state: 'SCHEDULED', startsAt: '2026-11-14T17:00:00Z' };
-  const later = { ...base, id: sub, title: 'Jadwal berikutnya', state: 'SCHEDULED', startsAt: '2026-12-18T17:00:00Z' };
-  await page.route('**/api/v1/tryout/batches', (route) => route.fulfill({
-    json: { routingActive: true, items: [later, soon, active] },
-  }));
+  const active = {
+    ...base,
+    id: past,
+    title: 'Sesi aktif',
+    state: 'OPEN',
+    startsAt: '2026-11-01T00:00:00Z',
+    attemptId: attempt,
+    attemptStatus: 'IN_PROGRESS',
+    canResume: true,
+  };
+  const soon = {
+    ...base,
+    id: chapter,
+    title: 'Jadwal terdekat dengan judul paket yang panjang',
+    state: 'SCHEDULED',
+    startsAt: '2026-11-14T17:00:00Z',
+  };
+  const later = {
+    ...base,
+    id: sub,
+    title: 'Jadwal berikutnya',
+    state: 'SCHEDULED',
+    startsAt: '2026-12-18T17:00:00Z',
+  };
+  await page.route('**/api/v1/tryout/batches', (route) =>
+    route.fulfill({
+      json: { routingActive: true, items: [later, soon, active] },
+    }),
+  );
   await page.goto('/student/tryout');
   const titles = page.getByRole('tabpanel', { name: 'Jadwal' }).getByRole('heading', { level: 2 });
   await expect(titles).toHaveText([active.title, 'Akan datang', soon.title, later.title]);
@@ -653,7 +766,13 @@ test('Tryout Jadwal groups upcoming batches and moves a batch after refreshing',
   await expect(statusBadges.first()).toHaveCSS('background-color', 'rgb(232, 245, 240)');
   await expect(statusBadges.nth(1)).toHaveClass(/numora-badge--secondary/);
   await expect(page.locator('.tryout-card-icon[src$="/schedule.webp"]')).toHaveCount(3);
-  await expect.poll(() => page.locator('.tryout-card-icon').first().evaluate((img: HTMLImageElement) => img.naturalWidth))
+  await expect
+    .poll(() =>
+      page
+        .locator('.tryout-card-icon')
+        .first()
+        .evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
     .toBeGreaterThan(0);
   await expect(page.getByRole('button', { name: 'Mulai Tryout' })).toHaveCount(0);
   await expect(page.locator('.tryout-catalog-card time').nth(2)).toContainText('15 Nov 2026');
@@ -676,35 +795,114 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     const explanation = Array.from({ length: 30 }, (_, index) => ({
       questionInstanceId: `review-${index}`,
       stem: index === 1 ? 'Kategori bilangan' : `Soal tinjauan ${index + 1}`,
-      type: index === 0 ? 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' : index === 1 ? 'CATEGORY' : 'SINGLE_CHOICE',
-      options: index === 1
-        ? [{ id: 's1', text: 'Dua' }, { id: 's2', text: 'Tiga' }]
-        : [{ id: 'A', text: 'Pilihan $\\frac{8}{4}$' }, { id: 'B', text: 'Empat' }, { id: 'C', text: 'Lima' }],
-      categories: index === 1 ? [{ id: 'even', text: 'Genap' }, { id: 'odd', text: 'Ganjil' }] : undefined,
-      answer: index === 0 ? { optionIds: ['A', 'C'] } : index === 1 ? { categoryByStatementId: { s1: 'even' } } : index === 2 ? { optionId: 'C' } : index === 3 ? { optionId: 'A' } : null,
-      answerKey: index === 0 ? { optionIds: ['A', 'B'] } : index === 1 ? { categoryByStatementId: { s1: 'even', s2: 'odd' } } : { optionId: 'A' },
+      type:
+        index === 0
+          ? 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
+          : index === 1
+            ? 'CATEGORY'
+            : 'SINGLE_CHOICE',
+      options:
+        index === 1
+          ? [
+              { id: 's1', text: 'Dua' },
+              { id: 's2', text: 'Tiga' },
+            ]
+          : [
+              { id: 'A', text: 'Pilihan $\\frac{8}{4}$' },
+              { id: 'B', text: 'Empat' },
+              { id: 'C', text: 'Lima' },
+            ],
+      categories:
+        index === 1
+          ? [
+              { id: 'even', text: 'Genap' },
+              { id: 'odd', text: 'Ganjil' },
+            ]
+          : undefined,
+      answer:
+        index === 0
+          ? { optionIds: ['A', 'C'] }
+          : index === 1
+            ? { categoryByStatementId: { s1: 'even' } }
+            : index === 2
+              ? { optionId: 'C' }
+              : index === 3
+                ? { optionId: 'A' }
+                : null,
+      answerKey:
+        index === 0
+          ? { optionIds: ['A', 'B'] }
+          : index === 1
+            ? { categoryByStatementId: { s1: 'even', s2: 'odd' } }
+            : { optionId: 'A' },
       selectedOptionId: null,
       correctOptionId: null,
       reviewStatus: ['partial', 'partial', 'incorrect', 'correct', 'unanswered', null][index % 6],
-      statementReview: index === 1 ? [{ statementId: 's1', status: 'correct' }, { statementId: 's2', status: 'unanswered' }] : undefined,
+      statementReview:
+        index === 1
+          ? [
+              { statementId: 's1', status: 'correct' },
+              { statementId: 's2', status: 'unanswered' },
+            ]
+          : undefined,
       awardedPoints: index === 0 ? 1.5 : null,
       maximumPoints: index === 0 ? 3 : null,
       explanation: 'Pembahasan sintetis.',
-      richExplanation: index === 0 ? { text: 'Perhatikan [[asset:sample]] dan $\\sqrt{4}$. ' + 'Kalimat penjelasan yang panjang. '.repeat(16) + '\n\n$$' + Array(20).fill('x^2').join('+') + '$$' } : undefined,
+      richExplanation:
+        index === 0
+          ? {
+              text:
+                'Perhatikan [[asset:sample]] dan $\\sqrt{4}$. ' +
+                'Kalimat penjelasan yang panjang. '.repeat(16) +
+                '\n\n$$' +
+                Array(20).fill('x^2').join('+') +
+                '$$',
+            }
+          : undefined,
     }));
-    await page.route('**/api/v1/students/me/assessment-results?activity=tryout', (route) => route.fulfill({
-      json: { records: [{ attemptId: attempt, activity: 'tryout', title, resultState: 'ready', score: 87.5, submittedAt: '2026-11-12T17:00:00Z' }], nextCursor: null },
-    }));
-    await page.route(`**/api/v1/tryout/attempts/${attempt}/result`, (route) => route.fulfill({
-      json: { attemptId: attempt, packageTitle: title, score: 87.5, xp: 0, correctCount: 12, questionCount: 30, explanation },
-    }));
-    await page.route('**/api/v1/assessment-attempts/**/media**', (route) => route.fulfill({
-      json: { media: [{ assetId: 'sample', altText: 'Gambar sintetis', url: '/p2-fixture-image.svg' }] },
-    }));
-    await page.route('**/p2-fixture-image.svg', (route) => route.fulfill({
-      contentType: 'image/svg+xml',
-      body: '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="48"><rect width="96" height="48" fill="purple"/></svg>',
-    }));
+    await page.route('**/api/v1/students/me/assessment-results?activity=tryout', (route) =>
+      route.fulfill({
+        json: {
+          records: [
+            {
+              attemptId: attempt,
+              activity: 'tryout',
+              title,
+              resultState: 'ready',
+              score: 87.5,
+              submittedAt: '2026-11-12T17:00:00Z',
+            },
+          ],
+          nextCursor: null,
+        },
+      }),
+    );
+    await page.route(`**/api/v1/tryout/attempts/${attempt}/result`, (route) =>
+      route.fulfill({
+        json: {
+          attemptId: attempt,
+          packageTitle: title,
+          score: 87.5,
+          xp: 0,
+          correctCount: 12,
+          questionCount: 30,
+          explanation,
+        },
+      }),
+    );
+    await page.route('**/api/v1/assessment-attempts/**/media**', (route) =>
+      route.fulfill({
+        json: {
+          media: [{ assetId: 'sample', altText: 'Gambar sintetis', url: '/p2-fixture-image.svg' }],
+        },
+      }),
+    );
+    await page.route('**/p2-fixture-image.svg', (route) =>
+      route.fulfill({
+        contentType: 'image/svg+xml',
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="48"><rect width="96" height="48" fill="purple"/></svg>',
+      }),
+    );
     await page.goto('/student/tryout/history');
     const historyCard = page.locator('.tryout-catalog-card').filter({
       has: page.getByRole('heading', { name: title }),
@@ -727,7 +925,9 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     await expect(page.getByRole('checkbox')).toHaveCount(0);
     await expect(page.getByRole('img', { name: 'Gambar sintetis' })).toBeVisible();
     await expect(page.locator('.drill-review__explanation math msqrt')).toHaveText('4');
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
     const open = page.getByRole('button', { name: 'Semua Soal' });
     const map = page.getByRole('navigation', { name: 'Navigasi pembahasan' });
     await expect(page.getByRole('button', { name: 'Sebelumnya' })).toBeDisabled();
@@ -742,8 +942,16 @@ for (const width of [320, 390, 768, 1280, 1440]) {
       await expect(open).toBeHidden();
     }
     await expect(map.getByRole('button')).toHaveCount(30);
-    for (const [number, state] of [[1, 'sebagian benar'], [3, 'salah'], [4, 'benar'], [5, 'kosong'], [6, 'penilaian tidak tersedia']]) {
-      await expect(map.getByRole('button', { name: `Pembahasan soal ${number}, ${state}` })).toBeVisible();
+    for (const [number, state] of [
+      [1, 'sebagian benar'],
+      [3, 'salah'],
+      [4, 'benar'],
+      [5, 'kosong'],
+      [6, 'penilaian tidak tersedia'],
+    ]) {
+      await expect(
+        map.getByRole('button', { name: `Pembahasan soal ${number}, ${state}` }),
+      ).toBeVisible();
     }
     const target = map.getByRole('button', { name: 'Pembahasan soal 2, sebagian benar' });
     const size = await target.boundingBox();
@@ -752,17 +960,22 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     if (width === 390) {
       const contrast = await map.getByRole('button').evaluateAll((buttons) => {
         const luminance = (color: string) => {
-          const rgb = color.match(/[\d.]+/g)!.slice(0, 3).map((value) => {
-            const channel = Number(value) / 255;
-            return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-          });
+          const rgb = color
+            .match(/[\d.]+/g)!
+            .slice(0, 3)
+            .map((value) => {
+              const channel = Number(value) / 255;
+              return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+            });
           return 0.2126 * rgb[0]! + 0.7152 * rgb[1]! + 0.0722 * rgb[2]!;
         };
-        return Math.min(...buttons.map((button) => {
-          const { color, backgroundColor } = getComputedStyle(button);
-          const values = [luminance(color), luminance(backgroundColor)];
-          return (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05);
-        }));
+        return Math.min(
+          ...buttons.map((button) => {
+            const { color, backgroundColor } = getComputedStyle(button);
+            const values = [luminance(color), luminance(backgroundColor)];
+            return (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05);
+          }),
+        );
       });
       expect(contrast).toBeGreaterThanOrEqual(4.5);
     }
@@ -771,7 +984,9 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     await expect(page.getByRole('heading', { name: 'Kategori bilangan' })).toBeFocused();
     await expect(page.getByText('Jawabanmu:', { exact: true })).toHaveCount(2);
     await expect(page.getByText('Kunci:', { exact: true })).toHaveCount(2);
-    await expect(page.locator('.category-review-list section').nth(1)).toContainText('Jawabanmu: Kosong');
+    await expect(page.locator('.category-review-list section').nth(1)).toContainText(
+      'Jawabanmu: Kosong',
+    );
     await screenshot(page, `p2-pembahasan-${width}`);
     if (width < 960) await open.click();
     await map.getByRole('button', { name: /^Pembahasan soal 30,/ }).click();
@@ -782,7 +997,9 @@ for (const width of [320, 390, 768, 1280, 1440]) {
       await page.setViewportSize({ width: 640, height: 480 });
       await expect(open).toBeVisible();
       await expect(page.getByRole('button', { name: 'Sebelumnya' })).toBeVisible();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
     }
     if (width === 390) {
       // A failed background refresh keeps the released question in view.
@@ -795,9 +1012,19 @@ for (const width of [320, 390, 768, 1280, 1440]) {
       await expect(page.getByText('Pembahasan belum dapat diperbarui.')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Soal tinjauan 30' })).toBeVisible();
       await page.unroute(resultPath);
-      await page.route(resultPath, (route) => route.fulfill({
-        json: { attemptId: attempt, packageTitle: title, score: 87.5, xp: 0, correctCount: 12, questionCount: 30, explanation },
-      }));
+      await page.route(resultPath, (route) =>
+        route.fulfill({
+          json: {
+            attemptId: attempt,
+            packageTitle: title,
+            score: 87.5,
+            xp: 0,
+            correctCount: 12,
+            questionCount: 30,
+            explanation,
+          },
+        }),
+      );
       await page.getByRole('button', { name: 'Coba lagi' }).click();
       await expect(page.getByText('Pembahasan belum dapat diperbarui.')).toBeHidden();
       await expect(page.getByRole('heading', { name: 'Soal tinjauan 30' })).toBeVisible();
@@ -805,7 +1032,10 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     await page.getByRole('link', { name: 'Kembali ke hasil' }).click();
     await expect(page).toHaveURL(`/student/tryout/${attempt}/result`);
     await page.getByRole('link', { name: 'Lihat riwayat Tryout' }).click();
-    await expect(page.getByRole('tab', { name: 'Riwayat' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Riwayat' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 }
 

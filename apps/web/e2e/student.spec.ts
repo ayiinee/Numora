@@ -617,7 +617,21 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.locator('.sh-shortcuts__grid > a')).toHaveCount(3);
     await expect(page.locator('.sh-shortcuts .sh-section__heading a')).toHaveCount(0);
     await expect(page.locator('.sh-shortcut__arrow')).toHaveCount(0);
-    await expect(page.locator('.sh-carousel__arrow, .sh-carousel__pause')).toHaveCount(0);
+    await expect(page.locator('.sh-carousel__arrow')).toHaveCount(0);
+    const pauseBanner = page.getByRole('button', { name: 'Jeda pergantian banner', exact: true });
+    await expect(pauseBanner).toHaveAttribute('aria-pressed', 'false');
+    const pauseBox = await pauseBanner.boundingBox();
+    expect(pauseBox!.width).toBeGreaterThanOrEqual(44);
+    expect(pauseBox!.height).toBeGreaterThanOrEqual(44);
+    await pauseBanner.click();
+    const resumeBanner = page.getByRole('button', {
+      name: 'Lanjutkan pergantian banner',
+      exact: true,
+    });
+    await expect(resumeBanner).toHaveAttribute('aria-pressed', 'true');
+    await resumeBanner.click();
+    await expect(pauseBanner).toHaveAttribute('aria-pressed', 'false');
+    expect(mutations).toEqual([]);
     await expect(page.locator('.sh-identity__xp:visible svg')).toHaveCount(1);
     await expect(page.locator('.student-identity__affiliation')).toHaveCount(0);
     await expect(
@@ -1218,6 +1232,11 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
   page,
 }) => {
   await fixtures(page);
+  const classRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/leaderboards/class')
+      classRequests.push(request.url());
+  });
   await page.goto('/student');
   await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
   await page.goto(`/student/drill/${attemptId}`);
@@ -1231,8 +1250,13 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
   );
   await expect(page.getByRole('heading', { name: 'Peringkat belum tersedia' })).toBeVisible();
   await page.getByRole('button', { name: 'Kelas', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
-  await page.goto('/student/profile');
+  await expect(
+    page.getByRole('heading', { name: 'Gabung kelas untuk melihat peringkat' }),
+  ).toBeVisible();
+  expect(classRequests).toEqual([]);
+  const joinClass = page.getByRole('link', { name: 'Gabung kelas', exact: true });
+  await expect(joinClass).toHaveAttribute('href', '/student/profile#gabung-kelas');
+  await joinClass.click();
   await expect(page.getByLabel('Kode kelas')).toBeVisible();
 });
 
@@ -1862,7 +1886,10 @@ test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and re
     page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
   ).toHaveCount(30);
   await page.getByRole('radio').first().check();
-  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute(
+    'aria-valuetext',
+    '1 dari 30 soal terisi lengkap dan tersimpan',
+  );
   const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
   const beforeSeconds = before[0]! * 60 + before[1]!;
   await page.reload();
