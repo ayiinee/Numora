@@ -1021,7 +1021,20 @@ export class PvpEngineService implements OnModuleDestroy {
       const [active] =
         match.status === 'RUNNING' && players.some((p) => p.player.studentId === studentId)
           ? await tx
-              .select({ question: pvpMatchQuestions, version: questionVersions })
+              .select({
+                question: {
+                  id: pvpMatchQuestions.id,
+                  displayOrder: pvpMatchQuestions.displayOrder,
+                  deadlineAt: pvpMatchQuestions.deadlineAt,
+                },
+                version: {
+                  questionType: questionVersions.questionType,
+                  stem: questionVersions.stem,
+                  optionsOrStatements: questionVersions.optionsOrStatements,
+                  answerKey: questionVersions.answerKey,
+                  explanation: questionVersions.explanation,
+                },
+              })
               .from(pvpMatchQuestions)
               .innerJoin(
                 questionVersions,
@@ -1035,7 +1048,7 @@ export class PvpEngineService implements OnModuleDestroy {
       const [answer] =
         active && self
           ? await tx
-              .select()
+              .select({ answer: pvpAnswers.answer })
               .from(pvpAnswers)
               .where(
                 and(
