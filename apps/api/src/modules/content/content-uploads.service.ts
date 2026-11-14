@@ -5,9 +5,10 @@ import {
   HttpException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   auditLogs,
@@ -40,15 +41,59 @@ import type {
 } from './content-uploads.dto';
 import type { AdminTransaction } from '../audit/admin-mutation';
 
+type UploadSummaryRow = Pick<
+  typeof contentUploadSessions.$inferSelect,
+  'id' | 'fileName' | 'createdAt' | 'revision' | 'state' | 'packageId' | 'error'
+> & {
+  questionCount: number;
+  previewTitle: string | null;
+  previewType: string | null;
+  contentIssues: number;
+  mappingIssues: number;
+  parsingIssues: number;
+  hasReport: boolean;
+  canImportDraft: boolean;
+};
 const sessionNamespace = (id: string) => `UPLOAD_${id.replaceAll('-', '')}`;
+type WorkbookSource = Pick<
+  typeof contentUploadSessions.$inferSelect,
+  'id' | 'revision' | 'fileSha256' | 'objectKey' | 'preview'
+>;
 @Injectable()
 export class ContentUploadsService {
+  private readonly logger = new Logger(ContentUploadsService.name);
+
   constructor(
     @Inject(ContentImportService) private readonly importer: ContentImportService,
     @Inject(ContentService) private readonly content: ContentService,
     @Inject(ContentPackagesService) private readonly packages: ContentPackagesService,
     @Inject(R2MediaStorage) private readonly storage: R2MediaStorage,
   ) {}
+  private async transaction<T>(
+    operation: 'validate' | 'save',
+    write: (tx: AdminTransaction) => Promise<T>,
+  ) {
+    const requestedAt = performance.now();
+    let startedAt: number | undefined;
+    let outcome: 'success' | 'error' = 'error';
+    try {
+      const result = await getDatabase().db.transaction((tx) => {
+        startedAt = performance.now();
+        return write(tx);
+      });
+      outcome = 'success';
+      return result;
+    } finally {
+      const finishedAt = performance.now();
+      this.logger.debug({
+        event: 'content_upload_transaction',
+        operation,
+        outcome,
+        acquireMs: Math.round((startedAt ?? finishedAt) - requestedAt),
+        transactionMs: startedAt === undefined ? null : Math.round(finishedAt - startedAt),
+      });
+    }
+  }
   async receive(
     actor: string,
     key: string | undefined,
@@ -209,7 +254,27 @@ export class ContentUploadsService {
   }
   async validate(id: string, body: UpdateUploadPreviewDto) {
     this.importer.enabled();
-    await getDatabase().db.transaction(async (tx) => {
+    // Only legacy rows need preparation. Modern previews do not transfer their JSON twice.
+    const [source] = await getDatabase()
+      .db.select({
+        id: contentUploadSessions.id,
+        revision: contentUploadSessions.revision,
+        fileSha256: contentUploadSessions.fileSha256,
+        objectKey: contentUploadSessions.objectKey,
+        preview: contentUploadSessions.preview,
+      })
+      .from(contentUploadSessions)
+      .where(
+        and(
+          eq(contentUploadSessions.id, id),
+          eq(contentUploadSessions.revision, body.expectedRevision),
+          isNotNull(contentUploadSessions.objectKey),
+          isNotNull(contentUploadSessions.preview),
+          sql`${contentUploadSessions.preview}->>'intakeVersion' is null`,
+        ),
+      );
+    const restored = source ? await this.restore(source, false) : null;
+    await this.transaction('validate', async (tx) => {
       const row = await this.locked(tx, id, body.expectedRevision);
       if (!row.preview)
         throw new ConflictException({
@@ -217,8 +282,20 @@ export class ContentUploadsService {
           detail: 'Perbaiki masalah pada Excel lalu upload ulang.',
         });
       this.importer.size({ sourceNamespace: sessionNamespace(id), questions: body.questions });
-      const restored = await this.restore(row, false);
-      const original = new Map(restored.preview!.questions.map((q) => [q.externalId, q]));
+      const needsRestore = row.objectKey && !row.preview.intakeVersion;
+      if (
+        needsRestore &&
+        (!source ||
+          source.fileSha256 !== row.fileSha256 ||
+          source.objectKey !== row.objectKey ||
+          digest(source.preview) !== digest(row.preview))
+      )
+        throw new ConflictException({
+          code: 'UPLOAD_REVISION_CONFLICT',
+          detail: 'Unggahan sudah berubah. Muat ulang riwayat.',
+        });
+      const preview = needsRestore ? restored!.preview! : row.preview;
+      const original = new Map(preview.questions.map((q) => [q.externalId, q]));
       const input = body.questions as IntakeQuestion[];
       if (
         input.length !== original.size ||
@@ -284,23 +361,22 @@ export class ContentUploadsService {
         delete q.metadata.sourceQuestionId;
       }
       const destination =
-        body.destination === undefined ? (restored.preview!.destination ?? null) : body.destination;
+        body.destination === undefined ? (preview.destination ?? null) : body.destination;
       if (
         row.packageId &&
         destination &&
-        restored.preview!.destination &&
-        digest({ ...destination, title: '' }) !==
-          digest({ ...restored.preview!.destination, title: '' })
+        preview.destination &&
+        digest({ ...destination, title: '' }) !== digest({ ...preview.destination, title: '' })
       )
         throw new ConflictException({ code: 'UPLOAD_SCOPE_IMMUTABLE' });
       const { questions: mapped, issues } = resolveIntake(
         input,
-        await this.content.curriculum(),
+        await this.content.curriculum(tx),
         destination,
-        restored.preview!.questions,
+        preview.questions,
       );
       const selected = mapped.filter((q) => body.selectedIds.includes(q.externalId));
-      const persistent = restored.preview!.issues.filter((i) =>
+      const persistent = preview.issues.filter((i) =>
         [
           'FORMULA_UNSUPPORTED',
           'CELL_ERROR',
@@ -388,7 +464,7 @@ export class ContentUploadsService {
     this.importer.enabled();
     const op = operationKey(key);
     const fingerprint = digest({ id, body });
-    await getDatabase().db.transaction(async (tx) => {
+    await this.transaction('save', async (tx) => {
       await operationLock(tx, `content-import:${actor}:${op}`);
       const [previous] = await tx
         .select()
@@ -420,7 +496,7 @@ export class ContentUploadsService {
         });
       const mapped = resolveIntake(
         row.preview.questions,
-        await this.content.curriculum(),
+        await this.content.curriculum(tx),
         destination,
         row.preview.questions,
       );
@@ -580,7 +656,27 @@ export class ContentUploadsService {
     );
     const rows = await getDatabase()
       .db.select({
-        upload: contentUploadSessions,
+        upload: {
+          id: contentUploadSessions.id,
+          fileName: contentUploadSessions.fileName,
+          createdAt: contentUploadSessions.createdAt,
+          revision: contentUploadSessions.revision,
+          state: contentUploadSessions.state,
+          packageId: contentUploadSessions.packageId,
+          error: contentUploadSessions.error,
+          questionCount: sql<number>`coalesce(jsonb_array_length(${contentUploadSessions.preview}->'selectedIds'),jsonb_array_length(${contentUploadSessions.report}->'items'),0)`,
+          previewTitle: sql<
+            string | null
+          >`${contentUploadSessions.preview}->'destination'->>'title'`,
+          previewType: sql<
+            string | null
+          >`${contentUploadSessions.preview}->'destination'->>'assessmentType'`,
+          contentIssues: sql<number>`coalesce((${contentUploadSessions.preview}->'validationCounts'->>'content')::int,0)`,
+          mappingIssues: sql<number>`coalesce((${contentUploadSessions.preview}->'validationCounts'->>'mapping')::int,0)`,
+          parsingIssues: sql<number>`coalesce(jsonb_array_length(${contentUploadSessions.preview}->'issues'),0)`,
+          hasReport: sql<boolean>`${contentUploadSessions.report} is not null and ${contentUploadSessions.report}<>'null'::jsonb`,
+          canImportDraft: sql<boolean>`coalesce((${contentUploadSessions.report}->>'canImportDraft')::boolean,false)`,
+        },
         actorName: users.displayName,
         title: assessmentPackages.name,
         type: assessmentPackages.assessmentType,
@@ -604,7 +700,7 @@ export class ContentUploadsService {
     };
   }
   private summary(
-    row: typeof contentUploadSessions.$inferSelect,
+    row: UploadSummaryRow,
     actorName: string,
     title: string | null,
     type: string | null,
@@ -618,29 +714,25 @@ export class ContentUploadsService {
       revision: row.revision,
       state: row.state,
       status,
-      questionCount:
-        row.preview?.selectedIds.length ??
-        (row.report as ImportReportDto | null)?.items.length ??
-        0,
-      title: title ?? row.preview?.destination?.title ?? null,
-      assessmentType: type ?? row.preview?.destination?.assessmentType ?? null,
+      questionCount: row.questionCount,
+      title: title ?? row.previewTitle,
+      assessmentType: type ?? row.previewType,
       packageId: row.packageId,
       error: row.error,
       validationResult:
         row.error ??
-        (row.preview?.validationCounts &&
-        (row.preview.validationCounts.content || row.preview.validationCounts.mapping)
-          ? `Konten: ${row.preview.validationCounts.content} masalah; pemetaan: ${row.preview.validationCounts.mapping} belum selesai`
-          : row.preview?.issues.length
-            ? `${row.preview.issues.length} masalah parsing`
-            : row.report
-              ? (row.report as ImportReportDto).canImportDraft
+        (row.contentIssues || row.mappingIssues
+          ? `Konten: ${row.contentIssues} masalah; pemetaan: ${row.mappingIssues} belum selesai`
+          : row.parsingIssues
+            ? `${row.parsingIssues} masalah parsing`
+            : row.hasReport
+              ? row.canImportDraft
                 ? 'Isi valid'
                 : 'Pemetaan/validasi belum lengkap'
               : 'Belum divalidasi'),
     };
   }
-  private async restore(row: typeof contentUploadSessions.$inferSelect, media: boolean) {
+  private async restore(row: WorkbookSource, media: boolean) {
     let preview = row.preview;
     let extracted: ExcelIntakeDto['media'] = [];
     if (row.objectKey && (media || !preview?.intakeVersion)) {
@@ -747,7 +839,20 @@ export class ContentUploadsService {
             });
     return {
       ...this.summary(
-        row,
+        {
+          ...row,
+          questionCount:
+            row.preview?.selectedIds.length ??
+            (row.report as ImportReportDto | null)?.items.length ??
+            0,
+          previewTitle: row.preview?.destination?.title ?? null,
+          previewType: row.preview?.destination?.assessmentType ?? null,
+          contentIssues: row.preview?.validationCounts?.content ?? 0,
+          mappingIssues: row.preview?.validationCounts?.mapping ?? 0,
+          parsingIssues: row.preview?.issues.length ?? 0,
+          hasReport: !!row.report,
+          canImportDraft: !!(row.report as ImportReportDto | null)?.canImportDraft,
+        },
         actorName,
         p?.name ?? null,
         p?.assessmentType ?? null,

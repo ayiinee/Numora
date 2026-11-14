@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EventEmitter } from 'node:events';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { authenticationRequestMiddleware } from './authentication-request';
 import {
   ConflictException,
   ForbiddenException,
@@ -73,6 +76,14 @@ const provisionedStudent = {
 };
 
 describe('IdentityService', () => {
+  function request<T>(run: (response: EventEmitter) => Promise<T>) {
+    const response = new EventEmitter();
+    return new Promise<T>((resolve, reject) =>
+      authenticationRequestMiddleware({} as IncomingMessage, response as ServerResponse, () => {
+        void run(response).then(resolve, reject);
+      }),
+    );
+  }
   beforeEach(() => {
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
@@ -93,6 +104,91 @@ describe('IdentityService', () => {
     await expect(service.getProfile('Bearer invalid')).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it('shares sequential and concurrent verified identity only inside one HTTP request', async () => {
+    const service = new IdentityService();
+    await request(async () => {
+      const users = await Promise.all(
+        Array.from({ length: 20 }, () => service.authenticate('Bearer valid')),
+      );
+      expect(users.every((user) => user.id === authUser.id)).toBe(true);
+      await service.authenticate('Bearer valid');
+      expect(mocks.getUser).toHaveBeenCalledTimes(1);
+    });
+    await request(() => service.authenticate('Bearer valid'));
+    expect(mocks.getUser).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps account status, role and affiliation fresh after identity was verified', async () => {
+    const service = new IdentityService();
+    await request(async () => {
+      mocks.selectRows.push([profile], []);
+      expect((await service.me('Bearer valid')).studentAffiliation).toBe('MANDIRI');
+      mocks.selectRows.push([profile], [{ id: 'new-membership' }]);
+      expect((await service.me('Bearer valid')).studentAffiliation).toBe('SCHOOL');
+      mocks.selectRows.push([{ ...profile, role: 'ADMIN', adminRole: 'OPERATIONS' }]);
+      expect((await service.me('Bearer valid')).adminRole).toBe('OPERATIONS');
+      mocks.selectRows.push([{ ...profile, status: 'DISABLED' }]);
+      await expect(service.me('Bearer valid')).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mocks.getUser).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('isolates tokens and IdentityService providers even in the same request', async () => {
+    const first = new IdentityService(),
+      second = new IdentityService();
+    await request(async () => {
+      await Promise.all([
+        first.authenticate('Bearer one'),
+        first.authenticate('Bearer two'),
+        second.authenticate('Bearer one'),
+      ]);
+      expect(mocks.getUser).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  it('revalidates outside HTTP and after finish/close rather than retaining identities', async () => {
+    const service = new IdentityService();
+    await service.authenticate('Bearer valid');
+    await service.authenticate('Bearer valid');
+    expect(mocks.getUser).toHaveBeenCalledTimes(2);
+    for (const event of ['finish', 'close'])
+      await request(async (response) => {
+        await service.authenticate('Bearer valid');
+        const before = mocks.getUser.mock.calls.length;
+        response.emit(event);
+        await service.authenticate('Bearer valid');
+        await service.authenticate('Bearer valid');
+        expect(mocks.getUser).toHaveBeenCalledTimes(before + 2);
+      });
+  });
+
+  it('shares a verification failure in flight but lets a later explicit retry revalidate', async () => {
+    const service = new IdentityService();
+    mocks.getUser.mockResolvedValueOnce({ data: { user: null }, error: new Error('invalid JWT') });
+    await request(async () => {
+      const result = await Promise.allSettled([
+        service.authenticate('Bearer valid'),
+        service.authenticate('Bearer valid'),
+      ]);
+      expect(result.every((row) => row.status === 'rejected')).toBe(true);
+      expect(mocks.getUser).toHaveBeenCalledTimes(1);
+      await expect(service.authenticate('Bearer valid')).resolves.toMatchObject({
+        id: authUser.id,
+      });
+      expect(mocks.getUser).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('does not reuse a successful identity in a later request after token revocation', async () => {
+    const service = new IdentityService();
+    await request(() => service.authenticate('Bearer valid'));
+    mocks.getUser.mockResolvedValue({ data: { user: null }, error: new Error('revoked') });
+    await expect(request(() => service.authenticate('Bearer valid'))).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(mocks.getUser).toHaveBeenCalledTimes(2);
   });
 
   it('creates one Google Student profile with Mandiri affiliation', async () => {

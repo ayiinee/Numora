@@ -48,6 +48,7 @@ export function AssessmentHeader({
   timer,
   progress,
   progressLabel = 'Posisi soal',
+  progressText,
   exitDisabled = false,
   exitHref = '/student/learn',
   exitLabel = exitHref.endsWith('/result')
@@ -59,8 +60,9 @@ export function AssessmentHeader({
   title?: string;
   status: ReactNode;
   timer?: ReactNode;
-  progress: number;
+  progress?: number;
   progressLabel?: string;
+  progressText?: string | undefined;
   exitDisabled?: boolean;
   exitHref?: string;
   exitLabel?: string;
@@ -89,16 +91,18 @@ export function AssessmentHeader({
           </Link>
         )}
       </div>
-      <div
+      {progressText && <p className="tryout-session-progress">{progressText}</p>}
+      {progress !== undefined && <div
         className="practice-header__track"
         role="progressbar"
         aria-label={progressLabel}
         aria-valuenow={progress}
+        aria-valuetext={progressText}
         aria-valuemin={0}
         aria-valuemax={100}
       >
         <span style={{ width: `${progress}%` }} />
-      </div>
+      </div>}
     </header>
   );
 }
@@ -114,6 +118,7 @@ export function SubmitConfirmation({
   description,
   pending,
   error,
+  onReviewQuestion,
   title = 'Kumpulkan Latihan Sekarang?',
 }: {
   open: boolean;
@@ -126,12 +131,17 @@ export function SubmitConfirmation({
   description: string;
   pending: boolean;
   error?: string | undefined;
+  onReviewQuestion?: ((position: number) => void) | undefined;
   title?: string;
 }) {
   return (
     <Dialog
-      className="practice-submit-dialog practice-mascot-dialog"
-      icon={<StudentMascot pose="submitted" />}
+      className={
+        onReviewQuestion
+          ? 'practice-submit-dialog tryout-submit-dialog'
+          : 'practice-submit-dialog practice-mascot-dialog'
+      }
+      icon={onReviewQuestion ? undefined : <StudentMascot pose="submitted" />}
       open={open}
       onClose={onClose}
       title={title}
@@ -162,16 +172,44 @@ export function SubmitConfirmation({
           <div>
             <span>Kosong</span>
             <strong>{empty.length}</strong>
-            {empty.length > 0 && <small>No. {empty.join(', ')}</small>}
+            {!onReviewQuestion && empty.length > 0 && <small>No. {empty.join(', ')}</small>}
           </div>
           <div>
-            <span>Ragu</span>
+            <span>{onReviewQuestion ? 'Ragu-ragu' : 'Ragu'}</span>
             <strong>{flagged.length}</strong>
-            {flagged.length > 0 && <small>No. {flagged.join(', ')}</small>}
+            {!onReviewQuestion && flagged.length > 0 && <small>No. {flagged.join(', ')}</small>}
           </div>
+          {onReviewQuestion && (
+            <div>
+              <span>Kategori belum lengkap</span>
+              <strong>{incomplete.length}</strong>
+            </div>
+          )}
         </div>
       </div>
-      {incomplete.length > 0 && (
+      {onReviewQuestion && (empty.length > 0 || incomplete.length > 0) && (
+        <div className="tryout-submit-review">
+          {empty[0] !== undefined && (
+            <Button
+              variant="secondary"
+              disabled={pending}
+              onClick={() => onReviewQuestion(empty[0]! - 1)}
+            >
+              Ke soal kosong
+            </Button>
+          )}
+          {incomplete[0] !== undefined && (
+            <Button
+              variant="secondary"
+              disabled={pending}
+              onClick={() => onReviewQuestion(incomplete[0]! - 1)}
+            >
+              Ke soal belum lengkap
+            </Button>
+          )}
+        </div>
+      )}
+      {!onReviewQuestion && incomplete.length > 0 && (
         <p role="note" className="submit-incomplete-notice">
           {incomplete.length} soal Kategori belum lengkap (No. {incomplete.join(', ')}). Jawaban
           yang sudah tersimpan tetap dapat dikumpulkan.

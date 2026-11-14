@@ -784,7 +784,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const started = mandiri.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/tryout/attempts'),
     );
-    await mandiri.getByRole('button', { name: 'Mulai TryOut', exact: true }).click();
+    await mandiri.getByRole('button', { name: 'Mulai pengerjaan', exact: true }).click();
     const startResponse = await started;
     expect(startResponse.status()).toBe(201);
     const independent = (await startResponse.json()) as TryoutAttemptDto;
@@ -848,15 +848,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0, xpPolicyVersion: 1 }));
-    await mandiri.getByRole('button', { name: /^Soal 30,/ }).click();
-    await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
+    await mandiri.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
     await mandiri
       .getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?', exact: true })
       .getByRole('button', { name: 'Ya, Kumpulkan Jawaban', exact: true })
       .click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     await expect(
-      mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
+      mandiri.getByRole('heading', { name: 'Menunggu hasil', exact: true }),
     ).toBeVisible();
     await expect(mandiri.getByText('10 XP', { exact: true })).toBeVisible();
     for (const [alias, attempt] of [
@@ -897,6 +896,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     }
     await mandiri.goto('/student/assessment');
     await expect(mandiri.getByRole('link', { name: /Tryout Mingguan/ })).toHaveCount(0);
+    await mandiri.goto('/student/tryout/history');
+    const history = mandiri.getByRole('tabpanel', { name: 'Riwayat', exact: true });
+    await expect(history.getByRole('link', { name: /Tryout Mingguan.*Lihat status hasil/ }))
+      .toBeVisible();
+    await expect(history.getByRole('button', { name: 'Periksa status hasil' })).toHaveCount(0);
     const teacherPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/assessment-results`;
     const teacherHistory = await body<AssessmentHistoryDto>(request, 'teacher', teacherPath);
     expect(teacherHistory.records.find((r) => r.attemptId === affiliated.id)).toMatchObject({
@@ -938,7 +942,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect((await request.post(`${fixtureBase}/tryout-fixture/release`)).status()).toBe(200);
     await mandiri.reload();
-    await mandiri.getByRole('link', { name: /Tryout Mingguan/ }).click();
+    await history.getByRole('link', { name: /Tryout Mingguan.*Lihat hasil/ }).click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     const result = await body<TryoutResultDto>(
       request,
@@ -953,7 +957,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
       new RegExp('/student/tryout/' + independent.id + '/explanation$'),
     );
     await expect(mandiri.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
-    await expect(option(mandiri, 'A')).toBeDisabled();
+    const reviewOptions = mandiri.getByRole('list', { name: 'Pilihan jawaban' });
+    await expect(reviewOptions.getByRole('listitem').filter({ hasText: /^B/ }))
+      .toContainText('Jawabanmu');
+    await expect(reviewOptions.getByText('Kunci', { exact: true })).toBeVisible();
+    await expect(mandiri.getByRole('radio')).toHaveCount(0);
     await mandiri.getByRole('link', { name: 'Kembali ke hasil', exact: true }).click();
     const persistence = await (
       await request.get(`${fixtureBase}/tryout-fixture/persistence`)

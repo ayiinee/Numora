@@ -30,8 +30,10 @@ it('keeps Admin credentials empty', () => {
 
 it('shows readiness without promising release while content or scoring is pending', () => {
   const view = render(<TryoutWaiting resultPendingReason="CONTENT_PENDING" />);
-  expect(screen.getByText(/hasil dan pembahasan menunggu/)).toBeTruthy();
-  expect(screen.queryByText(/72 jam|DEMO/i)).toBeNull();
-  view.rerender(<TryoutWaiting resultPendingReason={null} />);
-  expect(screen.getByText(/72 jam/)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Menunggu hasil' })).toBeTruthy();
+  expect(screen.getByText(/konten penilaian sedang disiapkan/i)).toBeTruthy();
+  expect(screen.getByText(/nilai dan pembahasan tersedia setelah hasil dirilis/i)).toBeTruthy();
+  expect(screen.queryByText(/tenggat rilis|72 jam|DEMO/i)).toBeNull();
+  view.rerender(<TryoutWaiting resultDueAt="2026-11-16T12:00:00Z" />);
+  expect(screen.getByText(/Tenggat rilis .*19\.00 WIB/)).toBeTruthy();
 });

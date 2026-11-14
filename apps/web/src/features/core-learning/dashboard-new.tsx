@@ -8,7 +8,6 @@ import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
 import { useProfilePhoto } from '@/features/onboarding/user-avatar';
 import { learningApi } from './api';
-import { useTryoutSummary } from './tryout-queries';
 import { DataState, StudentGate } from './ui';
 import type { StudentDashboardDto } from './generated-types';
 import type { Catalog } from './types';
@@ -21,6 +20,7 @@ import {
 } from './dashboard-presentation';
 import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
+import { useTryoutSummary } from './tryout-queries';
 import './student-home.css';
 
 export function NewStudentDashboard() {

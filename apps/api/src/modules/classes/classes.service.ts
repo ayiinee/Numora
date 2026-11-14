@@ -376,7 +376,7 @@ export class ClassesService {
     return { items };
   }
 
-  async students(authorization: string | undefined, classId: string) {
+  async students(authorization: string | undefined, classId: string, studentId?: string) {
     const teacherId = await this.teacher(authorization);
     const { db } = getDatabase();
     const [ownedClass] = await db
@@ -427,6 +427,7 @@ export class ClassesService {
           eq(classMemberships.classId, classId),
           isNull(classMemberships.leftAt),
           eq(users.role, 'STUDENT'),
+          studentId ? eq(classMemberships.studentUserId, studentId) : undefined,
         ),
       )
       .orderBy(asc(users.displayName), asc(users.id));

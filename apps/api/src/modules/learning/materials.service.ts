@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Optional } from '@nestjs/common';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import {
   assessmentAttempts,
@@ -9,39 +9,37 @@ import {
   getDatabase,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
+import { CurriculumCache, sharedCurriculumCache } from './curriculum-cache';
 import type { StudentMaterialsDto } from './materials.dto';
 
 @Injectable()
 export class MaterialsService {
-  constructor(private readonly identity: IdentityService) {}
+  constructor(
+    private readonly identity: IdentityService,
+    @Optional() private readonly curriculum: CurriculumCache = sharedCurriculumCache,
+  ) {}
   async list(auth?: string): Promise<StudentMaterialsDto> {
     const student = await this.identity.me(auth);
     if (student.role !== 'STUDENT' || student.status !== 'ACTIVE')
       throw new ForbiddenException('Akses Student aktif diperlukan.');
     const { db } = getDatabase();
-    const [chapterRows, subRows, levelRows, recent, graded] = await Promise.all([
+    const { chapterRows, subRows: subs, levelRows: metadata } = await this.curriculum.get();
+    const subRows = subs.map((sub) => ({ sub }));
+    const [personal, recent, graded] = await Promise.all([
       db
-        .select()
-        .from(chapters)
-        .where(eq(chapters.status, 'READY'))
-        .orderBy(asc(chapters.displayOrder)),
-      db
-        .select({ sub: subchapters })
-        .from(subchapters)
-        .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
-        .where(and(eq(subchapters.status, 'READY'), eq(chapters.status, 'READY')))
-        .orderBy(asc(subchapters.displayOrder)),
-      db
-        .select({ level: levels, progress: levelProgress })
-        .from(levels)
+        .select({
+          levelId: levelProgress.levelId,
+          bestScore: levelProgress.bestScore,
+          completedAt: levelProgress.completedAt,
+          unlockedAt: levelProgress.unlockedAt,
+        })
+        .from(levelProgress)
+        .innerJoin(levels, eq(levels.id, levelProgress.levelId))
         .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
         .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
-        .leftJoin(
-          levelProgress,
-          and(eq(levelProgress.levelId, levels.id), eq(levelProgress.studentId, student.id)),
-        )
         .where(
           and(
+            eq(levelProgress.studentId, student.id),
             eq(levels.status, 'READY'),
             eq(subchapters.status, 'READY'),
             eq(chapters.status, 'READY'),
@@ -88,6 +86,8 @@ export class MaterialsService {
           desc(assessmentAttempts.id),
         ),
     ]);
+    const byLevel = new Map(personal.map((row) => [row.levelId, row]));
+    const levelRows = metadata.map((level) => ({ level, progress: byLevel.get(level.id) }));
     const result = chapterRows.map((chapter) => {
       const children = subRows
         .filter(({ sub }) => sub.chapterId === chapter.id)

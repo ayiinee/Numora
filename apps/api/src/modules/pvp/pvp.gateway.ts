@@ -46,15 +46,34 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
         next(new Error('PVP_AUTH_REQUIRED'));
       }
     });
-    this.scheduler.notify = (matchId) => this.broadcast(matchId);
+    this.scheduler.notify = (matchId, includeCreator) => this.broadcast(matchId, includeCreator);
   }
   private envelope(event: string, payload: unknown, requestId: string | null = null) {
     return { event, eventVersion: '1', sentAt: new Date().toISOString(), requestId, payload };
   }
-  private async broadcast(matchId: string) {
-    for (const socket of this.server.sockets.values()) {
-      if (socket.data.matchId !== matchId) continue;
-      const state = await this.service.engine.snapshot(String(socket.data.studentId), matchId);
+  private async broadcast(matchId: string, includeCreator = false) {
+    const sockets = [...this.server.sockets.values()].filter((s) => s.data.matchId === matchId);
+    const ids = [...new Set(sockets.map((s) => String(s.data.studentId)))];
+    let views = new Map<string, PvpSnapshotDto>();
+    let creator: PvpSnapshotDto | undefined;
+    if (!ids.length && !includeCreator) return;
+    try {
+      const batch = await this.service.engine.snapshotViews(matchId, ids, includeCreator);
+      views = batch.views;
+      creator = includeCreator ? views.get(batch.creatorStudentId) : undefined;
+    } catch {
+      // Preserve per-recipient availability if a stale socket or delivery failure rejects the batch.
+      for (const id of ids) {
+        try {
+          views.set(id, await this.service.engine.snapshot(id, matchId));
+        } catch {
+          this.logger.warn('PvP recipient snapshot unavailable.');
+        }
+      }
+    }
+    for (const socket of sockets) {
+      const state = views.get(String(socket.data.studentId));
+      if (!state) continue;
       socket.emit('room:state', this.envelope('room:state', state));
       const previous = this.states.get(socket.id);
       if (previous?.question && previous.question.id !== state.question?.id)
@@ -78,6 +97,7 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
         );
       this.states.set(socket.id, state);
     }
+    return creator;
   }
   private async command(event: PvpCommand, socket: Socket, input: unknown) {
     let requestId: string | null = null;
@@ -128,7 +148,7 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
         // Durable command state is acknowledged before transient queue/broadcast work.
         setImmediate(() => {
           void this.scheduler
-            .schedule(committedMatchId, user.id)
+            .schedule(committedMatchId, user.id, state)
             .then(() => this.broadcast(committedMatchId))
             .catch(() =>
               this.logger.warn('PvP post-command notification delayed; durable state retained.'),

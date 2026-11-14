@@ -2,18 +2,27 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+const tryoutHistoryGuard = 'numoraTryoutExitGuard';
+
+function hasPreviousHistoryEntry() {
+  const { navigation } = window as Window & { navigation?: { canGoBack: boolean } };
+  return navigation?.canGoBack ?? window.history.length > 1;
+}
+
 export function useUnsavedWarning(
   unsaved: boolean,
   confirmDrillExit = false,
   onExit?: () => void,
-  options?: { message?: string; ignoreSearchChanges?: boolean; customDialog?: boolean },
+  options?: { message?: string; ignoreSearchChanges?: boolean; customDialog?: boolean; confirmNavigation?: boolean },
 ) {
   const customMessage = options?.message;
+  const confirmNavigation = options?.confirmNavigation ?? false;
   const ignoreSearchChanges = options?.ignoreSearchChanges ?? false;
   const customDialog = options?.customDialog ?? false;
   const [destination, setDestination] = useState<{ proceed: () => void } | null>(null);
   const approved = useRef(false);
-  const active = unsaved || confirmDrillExit;
+  const active = unsaved || confirmDrillExit || confirmNavigation;
+  const warnOnUnload = unsaved || confirmDrillExit;
   const description =
     customMessage ??
     (confirmDrillExit
@@ -24,6 +33,15 @@ export function useUnsavedWarning(
     if (!active) return;
     let currentUrl = window.location.href;
     let currentState: unknown = window.history.state;
+    // Keep one same-document entry so Back can show the dialog even after a direct load.
+    const useTryoutGuard = confirmNavigation && customDialog;
+    if (useTryoutGuard && window.history.state?.[tryoutHistoryGuard]?.url !== currentUrl) {
+      currentState = {
+        ...window.history.state,
+        [tryoutHistoryGuard]: { url: currentUrl, hasPrevious: hasPreviousHistoryEntry() },
+      };
+      window.history.pushState(currentState, '', currentUrl);
+    }
     function unload(event: BeforeUnloadEvent) {
       if (approved.current) return;
       event.preventDefault();
@@ -71,6 +89,16 @@ export function useUnsavedWarning(
       if (approved.current) return;
       const target = new URL(window.location.href);
       const previous = new URL(currentUrl);
+      if (useTryoutGuard && target.href === currentUrl &&
+        window.history.state?.[tryoutHistoryGuard]?.url !== currentUrl) {
+        event.stopImmediatePropagation();
+        window.history.pushState(currentState, '', currentUrl);
+        setDestination({ proceed: () => {
+          if (window.history.state?.[tryoutHistoryGuard]?.hasPrevious) window.history.go(-2);
+          else window.location.assign('/student/tryout');
+        } });
+        return;
+      }
       if (
         target.pathname === previous.pathname &&
         (ignoreSearchChanges || target.search === previous.search)
@@ -90,7 +118,7 @@ export function useUnsavedWarning(
       window.history.pushState(currentState, '', currentUrl);
       if (customDialog) setDestination({ proceed: () => window.history.back() });
     }
-    window.addEventListener('beforeunload', unload);
+    if (warnOnUnload) window.addEventListener('beforeunload', unload);
     window.addEventListener('popstate', traverse, true);
     document.addEventListener('click', navigate, true);
     return () => {
@@ -98,7 +126,7 @@ export function useUnsavedWarning(
       window.removeEventListener('popstate', traverse, true);
       document.removeEventListener('click', navigate, true);
     };
-  }, [active, customDialog, description, ignoreSearchChanges, onExit]);
+  }, [active, confirmNavigation, customDialog, description, ignoreSearchChanges, onExit, warnOnUnload]);
   return {
     open: active && destination !== null,
     title: confirmDrillExit ? 'Jeda latihan dulu?' : 'Keluar dari sesi?',

@@ -38,6 +38,8 @@ export class CurrentTryoutDto {
 }
 
 export class TryoutAttemptDto {
+  @ApiPropertyOptional({ enum: ['waiting', 'overdue'], nullable: true })
+  resultWaitState?: 'waiting' | 'overdue' | null;
   @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) closeAt?:
     string | null;
   @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) resultDueAt?:

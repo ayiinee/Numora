@@ -48,3 +48,31 @@ Pemeriksaan browser memakai aksi baca, buka/tutup, filter dan dialog tanpa final
 ## Lingkungan verifikasi
 
 Build memakai output terpisah dan mode hemat memori. Pemeriksaan browser lokal sempat terhambat cache pengembangan dan reload yang timeout; hanya state yang sudah terlihat dicatat sebagai verifikasi lulus. Build akhir setelah perbaikan fokus laporan dan selector peta selesai dengan exit 0. Bukti screenshot dan log lingkungan tetap ignored serta tidak dipublikasikan dalam PR.
+
+## Rekonsiliasi PR #178 dengan main — 15 November 2026
+
+**ENGINEERING DECISION — permintaan pemilik untuk rekonsiliasi:** basis integrasi
+`5b8b6d5e` sudah memuat perbaikan Tryout #180 dan optimasi #179. Sembilan file
+berkonflik diselaraskan tanpa mengganti hasil, timer, XP, atau pemeriksaan server.
+
+- `tryout-queries.ts` memakai reader dari main: status `scheduled`, `checking`,
+  `waitingIrt`, `overdue`, dan `resultReady` tetap dibedakan. Routing legacy hanya
+  aktif saat server menyatakan routing batch nonaktif. Tidak menyalin reader lama
+  `batchTryoutSummary` yang belum memahami publikasi dan kelayakan resume terbaru.
+- `account-presentation.tsx`, `dashboard-presentation.tsx`, `profile.tsx`, dan
+  `student-home-carousel.tsx` memakai tipe, label, dan tujuan Tryout yang sama.
+  Label Siswa mandiri, editor profil, penghapusan navigasi berulang, serta kontrol
+  jeda carousel dari F01/F10/F15/F16 dipertahankan.
+- `tryout-batches.tsx`, `tryout-presentation.tsx`, dan `tryout.tsx` mempertahankan
+  kartu Jadwal/Terlewat/Riwayat, penyegaran/error, guard resume, guard start ganda,
+  dan hasil null/UNSCORABLE dari main. Informasi sekolah/paket terkunci, jawaban
+  tersimpan, dan tenggat hasil pada dialog batch tetap memenuhi F08.
+- `assessment-review.tsx` mempertahankan peta/dialog pembahasan Tryout terbaru,
+  panah kembali ke hasil, dan menghapus tautan kembali yang berulang untuk Drill.
+
+Tes query F01 diselaraskan dengan kontrak status main dan diperluas untuk status
+publikasi, sesi kedaluwarsa, serta payload routing invalid. Assertion label pada
+E2E login mengikuti copy Siswa mandiri; pemeriksaan peran dan navigasi tetap ada.
+Verifikasi lokal: 103 tes dalam lima file lulus dan ESLint area terkait lulus.
+CI penuh pada SHA rekonsiliasi tetap menjadi gate sebelum merge; verifikasi lokal
+ini tidak dinyatakan sebagai acceptance terintegrasi atau bukti QA cloud.

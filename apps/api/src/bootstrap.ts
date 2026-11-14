@@ -4,9 +4,11 @@ import { SwaggerModule } from '@nestjs/swagger';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { createOpenApiDocument } from './openapi';
 import { ProblemDetailsFilter } from './problem-details.filter';
+import { authenticationRequestMiddleware } from './modules/identity/authentication-request';
 
 export function configureApplication(app: INestApplication) {
   const expressApp = app as NestExpressApplication;
+  app.use(authenticationRequestMiddleware);
   expressApp.useBodyParser('json', { limit: '2mb' });
   expressApp.disable('x-powered-by');
   app.setGlobalPrefix('api/v1');

@@ -205,7 +205,11 @@ export async function retryTryoutAnalysis(client: Sql, actorId: string, key: str
 }
 
 export async function analysisRequestDetail(client: Sql, id: string) {
-  const [r] = await client<
+  return (await analysisRequestDetails(client, [id]))[0]!;
+}
+async function analysisRequestDetails(client: Sql, ids: string[]) {
+  if (!ids.length) return [];
+  const requests = await client<
     {
       id: string;
       context_id: string;
@@ -222,64 +226,94 @@ export async function analysisRequestDetail(client: Sql, id: string) {
       generation: number;
     }[]
   >`
-    SELECT r.*,r.due_at<clock_timestamp() AND r.status<>'COMPLETED' AS overdue,s.row_count,s.digest,d.generation
+    SELECT r.id,r.context_id,r.package_id,r.configuration_pins,r.status,r.input_digest,r.snapshot_id,r.due_at,r.accepted_execution_id,
+    r.due_at<clock_timestamp() AND r.status<>'COMPLETED' AS overdue,s.row_count,s.digest,d.generation
     FROM analysis_requests r JOIN response_snapshots s ON s.id=r.snapshot_id JOIN LATERAL (SELECT generation FROM analysis_request_dispatches WHERE request_id=r.id ORDER BY generation DESC LIMIT 1) d ON true
-    WHERE r.id=${id} AND r.request_type='CALIBRATE_TRYOUT'`;
-  if (!r) fail('IRT_REQUEST_NOT_FOUND', 404);
-  const [e] = await client<
+    WHERE r.id=ANY(${ids}::uuid[]) AND r.request_type='CALIBRATE_TRYOUT'`;
+  const byId = new Map(requests.map((r) => [r.id, r]));
+  if (ids.some((id) => !byId.has(id))) fail('IRT_REQUEST_NOT_FOUND', 404);
+  const executions = await client<
     {
+      request_id: string;
       id: string;
       status: string;
       attempt_number: number;
       failure_code: string | null;
       lease_expired: boolean;
     }[]
-  >`SELECT id,status,attempt_number,failure_code,lease_expires_at<=clock_timestamp() AS lease_expired FROM irt_compute.compute_executions WHERE request_id=${id} ORDER BY attempt_number DESC LIMIT 1`;
-  const artifacts = await client<
+  >`SELECT e.request_id,e.id,e.status,e.attempt_number,e.failure_code,e.lease_expires_at<=clock_timestamp() AS lease_expired
+    FROM analysis_requests r JOIN LATERAL (SELECT request_id,id,status,attempt_number,failure_code,lease_expires_at FROM irt_compute.compute_executions WHERE request_id=r.id ORDER BY attempt_number DESC LIMIT 1) e ON true
+    WHERE r.id=ANY(${ids}::uuid[])`;
+  const byExecution = new Map(executions.map((e) => [e.request_id, e]));
+  const artifacts = executions.length
+    ? await client<
+        { execution_id: string; id: string; digest: string; scientific_decision: string }[]
+      >`SELECT execution_id,id,digest,scientific_decision FROM irt_compute.compute_outputs WHERE execution_id=ANY(${executions.map((e) => e.id)}::uuid[]) ORDER BY sequence_number`
+    : [];
+  const byArtifact = new Map<
+    string,
     { id: string; digest: string; scientific_decision: string }[]
-  >`SELECT id,digest,scientific_decision FROM irt_compute.compute_outputs WHERE execution_id=${e?.id ?? null} ORDER BY sequence_number`;
-  const [delivery] = await client<
-    { failure_code: string | null }[]
-  >`SELECT d.failure_code FROM outbox_deliveries d JOIN analytics_outbox o ON o.id=d.outbox_id WHERE o.entity_id=${id} AND d.consumer='irt_compute' AND o.event_name='analysis.requested'`;
+  >();
+  for (const a of artifacts) {
+    const group = byArtifact.get(a.execution_id) ?? [];
+    group.push(a);
+    byArtifact.set(a.execution_id, group);
+  }
+  const deliveries = await client<
+    { request_id: string; failure_code: string | null }[]
+  >`SELECT o.entity_id AS request_id,d.failure_code FROM outbox_deliveries d JOIN analytics_outbox o ON o.id=d.outbox_id WHERE o.entity_id=ANY(${ids}::uuid[]) AND d.consumer='irt_compute' AND o.event_name='analysis.requested'`;
+  const byDelivery = new Map<string, (typeof deliveries)[number]>();
+  for (const row of deliveries)
+    if (!byDelivery.has(row.request_id)) byDelivery.set(row.request_id, row);
   const safeCode = (code: string | null | undefined) =>
     code && /^[A-Z0-9_]{1,80}$/.test(code) ? code : code ? 'IRT_COMPUTE_FAILED' : null;
-  return {
-    id: r.id,
-    contractVersion: 3 as const,
-    contextId: r.context_id,
-    configurationPins: r.configuration_pins,
-    packageId: r.package_id,
-    status: r.status,
-    inputDigest: r.input_digest,
-    snapshotId: r.snapshot_id,
-    snapshotDigest: r.digest,
-    rowCount: r.row_count,
-    dispatchGeneration: r.generation,
-    dueAt: new Date(r.due_at).toISOString(),
-    overdue: r.overdue,
-    acceptedExecutionId: r.accepted_execution_id,
-    execution: e
-      ? {
-          id: e.id,
-          status: e.status,
-          attemptNumber: e.attempt_number,
-          leaseExpired: e.lease_expired,
-          failureCode: safeCode(e.failure_code),
-        }
-      : null,
-    failureCode: safeCode(delivery?.failure_code),
-    artifacts: artifacts.map((a) => ({
-      id: a.id,
-      digest: a.digest,
-      scientificDecision: a.scientific_decision,
-    })),
-  };
+  return ids.map((id) => {
+    const r = byId.get(id)!,
+      e = byExecution.get(id),
+      delivery = byDelivery.get(id);
+    return {
+      id: r.id,
+      contractVersion: 3 as const,
+      contextId: r.context_id,
+      configurationPins: r.configuration_pins,
+      packageId: r.package_id,
+      status: r.status,
+      inputDigest: r.input_digest,
+      snapshotId: r.snapshot_id,
+      snapshotDigest: r.digest,
+      rowCount: r.row_count,
+      dispatchGeneration: r.generation,
+      dueAt: new Date(r.due_at).toISOString(),
+      overdue: r.overdue,
+      acceptedExecutionId: r.accepted_execution_id,
+      execution: e
+        ? {
+            id: e.id,
+            status: e.status,
+            attemptNumber: e.attempt_number,
+            leaseExpired: e.lease_expired,
+            failureCode: safeCode(e.failure_code),
+          }
+        : null,
+      failureCode: safeCode(delivery?.failure_code),
+      artifacts: (e ? (byArtifact.get(e.id) ?? []) : []).map((a) => ({
+        id: a.id,
+        digest: a.digest,
+        scientificDecision: a.scientific_decision,
+      })),
+    };
+  });
 }
 export async function listAnalysisRequests(client: Sql, limit: number, offset: number) {
   const rows = await client<
     { id: string }[]
   >`SELECT r.id FROM analysis_requests r JOIN analysis_request_dispatches d ON d.request_id=r.id AND d.generation=1 WHERE r.request_type='CALIBRATE_TRYOUT' ORDER BY r.created_at DESC,r.id DESC LIMIT ${limit} OFFSET ${offset}`;
-  return { items: await Promise.all(rows.map((r) => analysisRequestDetail(client, r.id))) };
+  return {
+    items: await analysisRequestDetails(
+      client,
+      rows.map((r) => r.id),
+    ),
+  };
 }
 
 export async function adoptTryoutArtifact(client: Sql, id: string, actorId?: string) {

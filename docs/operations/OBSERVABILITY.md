@@ -4,6 +4,11 @@
 
 PRD requires storage/scoring/match failures to be traceable. Observability must allow a user-visible failure to be followed across API, database/worker, and PvP processing.
 
+**ENGINEERING DECISION — 13 November 2026:** upload preview validation and
+draft save emit the debug event `content_upload_transaction` with operation,
+outcome, connection acquisition/BEGIN time and transaction time. The event
+contains no IDs or content. See [field definitions and local verification](../development/CONTENT_UPLOAD_TRANSACTIONS_2026-11-13.md).
+
 ## Logging
 
 Use structured JSON logs (Pino recommended).

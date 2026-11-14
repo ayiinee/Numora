@@ -73,6 +73,7 @@ export function ActivityRow({
   chapterImage?: string | undefined;
 }) {
   const drill = item.activity === 'drill';
+  const ready = item.resultState === 'ready';
   const content = (
     <>
       <span className={`icon-tile ${drill ? 'accent-0' : 'accent-1'}`}>
@@ -117,21 +118,19 @@ export function ActivityRow({
         )}
       </div>
       <div className="activity-score">
-        {item.resultState === 'waitingIrt' ? (
-          <Badge variant="warning" style={{ whiteSpace: 'normal' }}>
-            Menunggu hasil
-          </Badge>
-        ) : (
+        {ready ? (
           <>
             <strong>{item.score == null ? '—' : formatStudentNumber(item.score)}</strong>
             <small>Nilai</small>
           </>
+        ) : (
+          <Badge variant="warning" style={{ whiteSpace: 'normal' }}>Menunggu hasil</Badge>
         )}
       </div>
-      {item.resultState === 'ready' && <Icon name="chevron" width={18} height={18} />}
+      {ready && <Icon name="chevron" width={18} height={18} />}
     </>
   );
-  return item.resultState !== 'ready' ? (
+  return !ready ? (
     <div className="activity-row">{content}</div>
   ) : (
     <Link
