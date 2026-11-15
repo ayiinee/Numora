@@ -290,6 +290,7 @@ export async function verifyProductionDatabase(client: Sql, target: ProductionTa
   try {
     await client.begin(async (tx) => {
       await tx.unsafe('SET TRANSACTION READ ONLY');
+      await tx.unsafe('SET LOCAL search_path = pg_catalog');
       await tx.unsafe("SET LOCAL statement_timeout = '5s'");
       const [state] = await tx<RuntimeDatabaseState[]>`
         SELECT current_database() AS database, session_user AS login, current_user AS actor,

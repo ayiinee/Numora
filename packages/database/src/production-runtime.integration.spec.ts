@@ -144,6 +144,18 @@ describe.skipIf(!base || !tlsUrl || !ca)(
       expect(result.output).toContain('Production database preflight failed');
       expect(result.output).not.toContain(password);
     });
+    it('reads real catalog identity even with a conflicting default search path', async () => {
+      await owner`CREATE SCHEMA preflight_shadow`;
+      await owner`CREATE FUNCTION preflight_shadow.current_database() RETURNS name LANGUAGE sql AS $$ SELECT 'unexpected_database'::name $$`;
+      await owner.unsafe(`GRANT USAGE ON SCHEMA preflight_shadow TO "${login}"`);
+      await owner.unsafe(`ALTER ROLE "${login}" SET search_path=preflight_shadow,pg_catalog`);
+      try {
+        const result = await run();
+        expect(result.code, result.output).toBe(0);
+      } finally {
+        await owner.unsafe(`ALTER ROLE "${login}" RESET search_path`);
+      }
+    });
     it('rejects a trusted certificate for a different DNS hostname', async () => {
       const directory = await mkdtemp(join(tmpdir(), 'numora-test-dns-'));
       const file = join(directory, 'lookup.cjs');
