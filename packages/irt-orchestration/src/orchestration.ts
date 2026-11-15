@@ -105,8 +105,10 @@ export async function prepareTryoutAnalysis(
       SELECT a.id,a.approved_digest,t.kind,a.scope FROM configuration_approvals a JOIN irt_compute.technical_policy_versions t ON t.id=a.technical_policy_version_id
       WHERE a.id=ANY(${pins.map((p) => p.approvalId)}::uuid[]) AND a.revoked_at IS NULL AND t.status='SEALED' AND a.approved_digest=t.digest`;
     const production = process.env.NUMORA_IRT_MODE === 'PRODUCTION';
+    // Fallback is pinned separately by batch.releaseApprovalId; configurationPins
+    // contain the five input resources only.
     const requiredKinds = production
-      ? ['IRT_MODEL', 'QUALITY_GATE', 'IRT_ELIGIBILITY', 'IRT_SCORING', 'SCORE_MAPPING', 'IRT_FALLBACK']
+      ? ['IRT_MODEL', 'QUALITY_GATE', 'IRT_ELIGIBILITY', 'IRT_SCORING', 'SCORE_MAPPING']
       : ['IRT_MODEL', 'QUALITY_GATE'];
     if (
       approvals.length !== pins.length ||
