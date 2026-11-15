@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { isAbsolute } from 'node:path';
 import type { Sql } from 'postgres';
 import { backupCheck } from './backup-config.js';
 import { privatePath } from './backup-runtime.js';
@@ -23,6 +24,10 @@ export async function readRestoreEvidence(
   reportFile: string,
   planFile: string,
 ): Promise<RestoreEvidence> {
+  backupCheck(
+    isAbsolute(reportFile) && isAbsolute(planFile),
+    'Use absolute private restore evidence paths',
+  );
   await privatePath(reportFile, false);
   await privatePath(planFile, false);
   const reportText = await readFile(reportFile, 'utf8');
@@ -127,8 +132,18 @@ export async function inspectRestoredRuntime(
     );
     const memberships =
       await tx`SELECT rolname FROM pg_roles WHERE rolname<>current_user AND pg_has_role(current_user,oid,'MEMBER')`;
+    const [direct] = await tx`SELECT m.admin_option,m.inherit_option,m.set_option,r.rolreplication
+      FROM pg_auth_members m JOIN pg_roles r ON r.oid=m.member
+      JOIN pg_roles parent ON parent.oid=m.roleid
+      WHERE r.rolname=current_user AND parent.rolname='numora_main_runtime'`;
     backupCheck(
-      memberships.length === 1 && memberships[0]?.rolname === 'numora_main_runtime',
+      memberships.length === 1 &&
+        memberships[0]?.rolname === 'numora_main_runtime' &&
+        direct &&
+        !direct.admin_option &&
+        direct.inherit_option &&
+        !direct.set_option &&
+        !direct.rolreplication,
       'Runtime login must retain only its reviewed Main membership',
     );
     const [databaseRights] =
@@ -156,7 +171,7 @@ export async function inspectRestoredRuntime(
     checked: [
       'runtime-identity-TLS-and-role',
       'mapped-owner-object-column-default-ACLs',
-      'direct-membership',
+      'exact-Main-membership-options-and-replication-boundary',
       'database-rights',
       'bounded-read-contracts',
     ],

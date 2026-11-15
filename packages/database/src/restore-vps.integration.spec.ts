@@ -261,6 +261,11 @@ it.skipIf(!base || !tls || !ca || process.platform === 'win32')(
         inspectRestoredRuntime(api, 'api', runtimeTarget('numora_api'), evidence),
       ).rejects.toThrow(/drifted/);
       await targetAdmin.unsafe('REVOKE DELETE ON public.users FROM numora_compute');
+      await targetAdmin.unsafe('GRANT numora_main_runtime TO numora_api WITH ADMIN TRUE');
+      await expect(
+        inspectRestoredRuntime(api, 'api', runtimeTarget('numora_api'), evidence),
+      ).rejects.toThrow(/membership/);
+      await targetAdmin.unsafe('GRANT numora_main_runtime TO numora_api WITH ADMIN FALSE');
       if (process.env.NUMORA_RESTORE_RUNTIME_PROBE === 'true') {
         const probe = await promisify(execFile)(
           process.execPath,
