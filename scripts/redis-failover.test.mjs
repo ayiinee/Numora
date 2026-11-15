@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { autoFailover, redisEndpointId, validateFailoverState } from './redis-failover.mjs';
+import { autoFailover, redisEndpointId, rehearseFailover, validateFailoverState } from './redis-failover.mjs';
 
 const url = (name, password = 'fixture') => `rediss://default:${password}@${name}.example.invalid:6379`;
 const quotaError = () => Object.assign(new Error('sanitized'), { quotaExceeded: true });
@@ -139,4 +139,48 @@ test('corrupt state fails closed before checking Redis', async () => {
   state.setState({});
   await assert.rejects(autoFailover(state.options), /State failover tidak valid/);
   assert.deepEqual(state.events, []);
+});
+
+test('rehearsal simulates only the active quota, uses real standby probes and never writes durable state', async () => {
+  const state = fixture();
+  const before = structuredClone(state.state());
+  assert.equal(await rehearseFailover(state.options), 'backup-1');
+  assert.deepEqual(state.events, [['probe', url('backup1'), false]]);
+  assert.deepEqual(state.state(), before);
+});
+
+test('rehearsal bypasses cooldown locally while retaining exhausted reserves and original state', async () => {
+  const state = fixture();
+  state.setState({ version: 1, exhausted: [redisEndpointId(url('backup1'))], cooldownUntil: 900_000 });
+  const before = structuredClone(state.state());
+  assert.equal(await rehearseFailover(state.options), 'backup-2');
+  assert.deepEqual(state.state(), before);
+  assert.deepEqual(state.events, [['probe', url('backup2'), false]]);
+});
+
+test('explicit apply uses the actual switch callback without marking healthy primary exhausted on disk', async () => {
+  const state = fixture();
+  const before = structuredClone(state.state());
+  assert.equal(await rehearseFailover(state.options, { apply: true }), 'backup-1');
+  assert.deepEqual(state.events, [['probe', url('backup1'), false], ['switch', 'backup-1']]);
+  assert.deepEqual(state.state(), before);
+});
+
+test('rehearsal cannot fake an unavailable standby into readiness or print success', async () => {
+  const messages = [];
+  const state = fixture({ probe: async () => { throw quotaError(); }, log: (message) => messages.push(message) });
+  await assert.rejects(rehearseFailover(state.options), /Tidak ada Redis cadangan berikutnya/);
+  assert.equal(state.events.some(([event]) => event === 'switch' || event === 'save'), false);
+  assert.equal(messages.some((message) => message.includes('LULUS:')), false);
+});
+
+test('apply rehearsal reports a real switch failure and does not try every reserve', async () => {
+  const messages = [];
+  const state = fixture({
+    log: (message) => messages.push(message),
+    switchTo: async (name) => { state.events.push(['switch', name]); throw new Error('real health failure'); },
+  });
+  await assert.rejects(rehearseFailover(state.options, { apply: true }), /real health failure/);
+  assert.equal(messages.some((message) => message.includes('LULUS:')), false);
+  assert.deepEqual(state.events, [['probe', url('backup1'), false], ['switch', 'backup-1']]);
 });

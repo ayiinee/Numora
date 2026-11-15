@@ -17,6 +17,29 @@ export function validateFailoverState(state) {
   return { version: 1, exhausted: [...new Set(state.exhausted)], cooldownUntil: state.cooldownUntil };
 }
 
+// Simulate only the active endpoint's quota error. Standby Redis probes stay real.
+// Exhaustion/cooldown updates are kept in memory even when testing a real switch.
+export async function rehearseFailover(options, { apply = false } = {}) {
+  let state = { ...validateFailoverState(options.readState()), cooldownUntil: 0 };
+  const log = (message) => (options.log ?? console.log)(`[${apply ? 'UJI PERPINDAHAN NYATA' : 'SIMULASI TANPA PERPINDAHAN'}] ${message}`);
+  log('Limit Redis aktif disimulasikan; file state failover tidak diubah.');
+  const result = await autoFailover({
+    ...options,
+    readState: () => state,
+    saveState: (next) => { state = next; },
+    probe: (target, mode) => {
+      if (mode.readOnly) throw Object.assign(new FailoverError('Simulated quota'), { quotaExceeded: true });
+      return options.probe(target, mode);
+    },
+    switchTo: apply ? options.switchTo : async (name) => {
+      log(`Kandidat ${name} lolos tes Redis; production.env dan service tidak diubah.`);
+    },
+    log,
+  });
+  log(apply ? `LULUS: perpindahan nyata ke ${result} selesai.` : `LULUS: ${result} akan dipilih ketika limit terdeteksi.`);
+  return result;
+}
+
 export async function autoFailover({ currentUrl, loadCandidates, probe, switchTo,
   readState, saveState, now = Date.now, log = console.log }) {
   const state = validateFailoverState(readState());

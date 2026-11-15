@@ -8,7 +8,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
-import { autoFailover, FailoverError, validateFailoverState } from './redis-failover.mjs';
+import { autoFailover, FailoverError, rehearseFailover, validateFailoverState } from './redis-failover.mjs';
 
 const ENV_FILE = '/etc/numora/production.env';
 const SERVICES = ['numora-api', 'numora-worker'];
@@ -178,7 +178,7 @@ async function waitHealthy(nonInteractive = false) {
   throw new Error('API/worker belum sehat dalam 60 detik.');
 }
 
-async function run(action, profile, { nonInteractive = false, expectedOriginal } = {}) {
+async function run(action, profile, { nonInteractive = false, expectedOriginal, apply = false } = {}) {
   const original = readPrivateFile(ENV_FILE);
   if (expectedOriginal !== undefined && original !== expectedOriginal) {
     throw new OperatorError('File production.env berubah setelah probe; peralihan dibatalkan.');
@@ -194,9 +194,9 @@ async function run(action, profile, { nonInteractive = false, expectedOriginal }
   if (!prefix || prefix.includes('<')) throw new OperatorError('BULLMQ_PREFIX production belum valid.');
   const require = createRequire(new URL('../apps/worker/package.json', import.meta.url));
   const Redis = require('ioredis');
-  if (action === 'auto') {
+  if (action === 'auto' || action === 'test-auto') {
     const statePath = join(dirname(ENV_FILE), 'redis-failover-state.json');
-    await autoFailover({
+    const options = {
       currentUrl,
       loadCandidates: () => readdirSync(dirname(ENV_FILE))
         .filter((file) => /^redis-backup-[1-9][0-9]*\.env$/.test(file))
@@ -215,7 +215,9 @@ async function run(action, profile, { nonInteractive = false, expectedOriginal }
         }
       },
       saveState: (state) => atomicWrite(statePath, `${JSON.stringify(state)}\n`),
-    });
+    };
+    if (action === 'test-auto') await rehearseFailover(options, { apply });
+    else await autoFailover(options);
     return;
   }
   const target = redisUrlFrom(readPrivateFile(profileFile(profile)));
@@ -255,22 +257,24 @@ if (process.argv[1] && resolve(process.argv[1]) === scriptPath) {
   const args = process.argv.slice(2);
   const locked = args.at(-1) === '--locked';
   if (locked) args.pop();
-  const action = args[0] === 'save-current' ? 'save-current' : args[0] === 'auto' ? 'auto' : 'switch';
+  const apply = args.at(-1) === '--apply';
+  if (apply) args.pop();
+  const action = ['save-current', 'auto', 'test-auto'].includes(args[0]) ? args[0] : 'switch';
   const profile = args[action === 'save-current' ? 1 : 0];
   try {
     if (process.platform !== 'linux') throw new OperatorError('Jalankan skrip ini di VPS Ubuntu melalui PuTTY.');
-    if (args.length !== (action === 'save-current' ? 2 : 1)) {
-      throw new OperatorError('Pemakaian: node scripts/switch-redis.mjs auto | [save-current] primary|backup-1');
+    if (args.length !== (action === 'save-current' ? 2 : 1) || (apply && action !== 'test-auto')) {
+      throw new OperatorError('Pemakaian: node scripts/switch-redis.mjs auto | test-auto [--apply] | [save-current] primary|backup-1');
     }
-    if (action !== 'auto') profileFile(profile);
+    if (!['auto', 'test-auto'].includes(action)) profileFile(profile);
     if (!locked) {
       const result = spawnSync('flock', ['-n', '-E', '75', '/etc/numora/redis-switch.lock',
-        process.execPath, scriptPath, ...args, '--locked'], { stdio: 'inherit' });
+        process.execPath, scriptPath, ...args, ...(apply ? ['--apply'] : []), '--locked'], { stdio: 'inherit' });
       if (result.error) throw new OperatorError('flock tidak tersedia; instal paket util-linux.');
       if (result.status === 75) throw new OperatorError('Peralihan Redis lain sedang berjalan.');
       process.exitCode = result.status ?? 1;
     } else {
-      await run(action, profile, { nonInteractive: action === 'auto' });
+      await run(action, profile, { nonInteractive: action === 'auto' || (action === 'test-auto' && apply), apply });
     }
   } catch (error) {
     // File/OS/library errors can carry credential contents; only display our own messages.

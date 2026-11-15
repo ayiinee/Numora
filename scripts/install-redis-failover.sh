@@ -64,6 +64,24 @@ UMask=0077
 TimeoutStartSec=0
 EOF
 chmod 644 /etc/systemd/system/numora-redis-failover.service
+# This test unit is never enabled or attached to the timer; start it explicitly.
+cat > /etc/systemd/system/numora-redis-failover-test.service <<EOF
+[Unit]
+Description=Numora explicit Redis failover rehearsal with real switch
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=${redis_user}
+Group=${redis_group}
+SupplementaryGroups=systemd-journal
+WorkingDirectory=${redis_repo}
+ExecStart=/usr/bin/flock -w 300 /etc/numora/redis-switch.lock ${redis_node} ${redis_repo}/scripts/switch-redis.mjs test-auto --apply --locked
+UMask=0077
+TimeoutStartSec=0
+EOF
+chmod 644 /etc/systemd/system/numora-redis-failover-test.service
 cat > /etc/systemd/system/numora-redis-failover.timer <<'EOF'
 [Unit]
 Description=Check Numora Redis quota every minute
@@ -78,7 +96,7 @@ Unit=numora-redis-failover.service
 WantedBy=timers.target
 EOF
 chmod 644 /etc/systemd/system/numora-redis-failover.timer
-systemd-analyze verify /etc/systemd/system/numora-redis-failover.service /etc/systemd/system/numora-redis-failover.timer
+systemd-analyze verify /etc/systemd/system/numora-redis-failover.service /etc/systemd/system/numora-redis-failover-test.service /etc/systemd/system/numora-redis-failover.timer
 systemctl daemon-reload
 systemctl enable --now numora-redis-failover.timer
 echo 'Timer failover aktif. Lihat: sudo journalctl -u numora-redis-failover -n 40 --no-pager'

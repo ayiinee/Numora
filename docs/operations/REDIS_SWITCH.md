@@ -186,6 +186,66 @@ Untuk menonaktifkan perpindahan otomatis, cukup disable timer seperti di atas;
 biarkan pemeriksaan yang sudah berjalan selesai. File sudoers tetap ada sampai
 dihapus tersendiri oleh administrator.
 
+## Menguji failover tanpa menghabiskan kuota
+
+Pesan `Redis aktif menerima command; koneksi dipertahankan` menunjukkan probe
+berhasil. `Deactivated successfully` normal untuk service oneshot setelah selesai;
+yang perlu tetap aktif/enabled adalah timer:
+
+```bash
+systemctl is-enabled numora-redis-failover.timer
+systemctl is-active numora-redis-failover.timer
+systemctl list-timers --all numora-redis-failover.timer --no-pager
+```
+
+Setelah pull versi terbaru, jalankan installer sekali lagi agar unit uji tersedia:
+
+```bash
+cd /opt/numora
+sudo env NUMORA_NODE_BIN="$(command -v node)" bash scripts/install-redis-failover.sh
+```
+
+Uji pemilihan cadangan tanpa mengganti env atau merestart service:
+
+```bash
+node /opt/numora/scripts/switch-redis.mjs test-auto
+```
+
+Mode ini mensimulasikan error limit pada Redis aktif dan menjalankan probe
+SET/GET/DEL sungguhan pada cadangan. Harapkan hasil seperti
+`[SIMULASI TANPA PERPINDAHAN] LULUS: backup-1 akan dipilih ketika limit terdeteksi.`
+Nama menyesuaikan cadangan yang tersedia. Simulasi tidak membuktikan izin
+restart, startup API/worker, atau jadwal timer; semuanya diperiksa terpisah.
+
+Untuk uji penuh, lakukan ketika tidak ada sesi siswa/duel aktif karena koneksi
+benar-benar dipindahkan dan API/worker direstart:
+
+```bash
+sudo systemctl start numora-redis-failover-test.service
+sudo journalctl -u numora-redis-failover-test -n 60 --no-pager
+systemctl is-active numora-api numora-worker
+```
+
+Unit uji memakai akun/grup, jalur Node/repo, sudoers dan prosedur peralihan yang
+sama dengan watchdog. Ia menunggu lock bersama jika pemeriksaan lain masih
+berjalan. Unit ini tidak di-enable dan tidak dipanggil timer; hanya berjalan
+ketika diperintahkan secara eksplisit. Timer produksi tetap hanya memakai error
+Redis sungguhan, tanpa flag simulasi atau variabel env yang dapat tertinggal.
+
+Uji dianggap lulus jika journal memuat
+`[UJI PERPINDAHAN NYATA] LULUS: perpindahan nyata ke backup-1 selesai.`,
+kedua service kembali `active`, dan pemeriksaan timer selanjutnya menerima
+command di Redis yang baru. Pengujian nyata tidak memulihkan primary secara
+otomatis setelah sukses; gunakan perintah manual `primary` jika ingin kembali.
+Jika semua cadangan gagal atau startup tidak sehat, hasil uji harus gagal;
+pemulihan env mengikuti prosedur manual yang sama di atas.
+
+Kedua mode uji menyimpan perubahan state limit/cooldown hanya dalam memori,
+sehingga primary yang sebenarnya sehat tidak tercatat kehabisan kuota. Uji
+tetap menghormati daftar endpoint yang benar-benar sudah habis dari state
+produksi, tetapi mengabaikan cooldown hanya selama uji. Jangan melakukan load
+test atau mengirim command massal untuk sengaja menghabiskan kuota.
+
 ## Verifikasi developer
 
 ```bash
