@@ -30,6 +30,7 @@ import {
   scoringPolicyVersions,
   scoringRubricVersions,
   xpLedger,
+  type AssessmentReader,
 } from '@tka/database';
 import {
   AssessmentFinalizationError,
@@ -84,15 +85,21 @@ export class TryoutService {
     return user.id;
   }
 
-  private async pendingReason(packageId: string): Promise<PendingReason> {
-    const reason = (await this.pendingReasons([packageId])).get(packageId);
+  private async pendingReason(
+    packageId: string,
+    db: AssessmentReader = getDatabase().db,
+  ): Promise<PendingReason> {
+    const reason = (await this.pendingReasons([packageId], undefined, db)).get(packageId);
     return reason === undefined ? 'CONTENT_PENDING' : reason;
   }
 
-  private async itemStatistics(packageIds: string[]): Promise<Map<string, PackageItemStats>> {
+  private async itemStatistics(
+    packageIds: string[],
+    db: AssessmentReader = getDatabase().db,
+  ): Promise<Map<string, PackageItemStats>> {
     if (!packageIds.length) return new Map();
-    const rows = await getDatabase()
-      .db.select({
+    const rows = await db
+      .select({
         packageId: packageItems.packageId,
         total: count(packageItems.id),
         versions: count(questionVersions.id),
@@ -109,10 +116,10 @@ export class TryoutService {
   private async pendingReasons(
     packageIds: string[],
     statistics?: ReadonlyMap<string, PackageItemStats>,
+    db: AssessmentReader = getDatabase().db,
   ) {
     const reasons = new Map<string, PendingReason>(packageIds.map((id) => [id, 'CONTENT_PENDING']));
     if (!packageIds.length) return reasons;
-    const db = getDatabase().db;
     const packs = await db
       .select({
         id: assessmentPackages.id,
@@ -131,7 +138,12 @@ export class TryoutService {
         pack.frozenAt &&
         pack.curriculumApproval.manifestDigest === pack.manifestDigest,
     );
-    const stats = statistics ?? (await this.itemStatistics(eligible.map((pack) => pack.id)));
+    const stats =
+      statistics ??
+      (await this.itemStatistics(
+        eligible.map((pack) => pack.id),
+        db,
+      ));
     const ready = eligible.filter(
       (pack) => stats.get(pack.id)?.versions === 30 && stats.get(pack.id)?.ready === 30,
     );
@@ -423,8 +435,7 @@ export class TryoutService {
     return this.packageMetadata(studentId, pack);
   }
 
-  private async questionRows(attemptId: string) {
-    const { db } = getDatabase();
+  private async questionRows(attemptId: string, db: AssessmentReader = getDatabase().db) {
     return db
       .select({
         id: attemptItems.id,
@@ -446,8 +457,11 @@ export class TryoutService {
       .orderBy(asc(attemptItems.displayOrder));
   }
 
-  private async forStudent(studentId: string, attemptId: string) {
-    const { db } = getDatabase();
+  private async forStudent(
+    studentId: string,
+    attemptId: string,
+    db: AssessmentReader = getDatabase().db,
+  ) {
     const [attempt] = await db
       .select({
         id: assessmentAttempts.id,
@@ -481,37 +495,52 @@ export class TryoutService {
   }
 
   private async presentAttempt(studentId: string, attemptId: string) {
-    let attempt = await this.forStudent(studentId, attemptId);
-    if (
-      attempt.status === 'IN_PROGRESS' &&
-      attempt.deadlineAt &&
-      attempt.deadlineAt <= attempt.now
-    ) {
-      await this.finalizeForStudent(studentId, attemptId, 'automatic');
-      attempt = await this.forStudent(studentId, attemptId);
-    }
+    const { db } = getDatabase();
+    const response = await db.transaction(async (tx) => {
+      const attempt = await this.forStudent(studentId, attemptId, tx);
+      if (
+        attempt.status === 'IN_PROGRESS' &&
+        attempt.deadlineAt &&
+        attempt.deadlineAt <= attempt.now
+      )
+        return null;
+      return this.attemptResponse(tx, attempt);
+    });
+    if (response) return response;
+    // The finalizer owns its transaction. Release the read connection before invoking it.
+    await this.finalizeForStudent(studentId, attemptId, 'automatic');
+    return db.transaction(async (tx) =>
+      this.attemptResponse(tx, await this.forStudent(studentId, attemptId, tx)),
+    );
+  }
+
+  private async attemptResponse(
+    db: AssessmentReader,
+    attempt: Awaited<ReturnType<TryoutService['forStudent']>>,
+  ) {
+    const attemptId = attempt.id;
     if (attempt.status === 'CANCELLED')
       throw new ConflictException(
         problem('ATTEMPT_NOT_ACTIVE', 'Sesi Tryout ini sudah dibatalkan.'),
       );
-    const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId) : [];
+    const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId, db) : [];
     if (rows.length)
-      await getDatabase().db.execute(
-        sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`,
-      );
+      await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     const pendingReason = attempt.managedBatch
       ? null
-      : (await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
+      : (await this.releases.releasedPackageIds([attempt.packageId], attempt.now, db)).has(
+            attempt.packageId,
+          )
         ? null
-        : await this.pendingReason(attempt.packageId);
-    const now = await databaseTime(getDatabase().db);
+        : await this.pendingReason(attempt.packageId, db);
+    const now = await databaseTime(db);
     const resultDueAt =
       attempt.batchResultDueAt ??
       (attempt.closeAt ? new Date(attempt.closeAt.getTime() + 72 * 3600_000) : null);
     const waitState = tryoutResultState(attempt.status, false, resultDueAt, now);
     const isPublished =
       waitState === 'overdue' &&
-      (await this.releases.studentPublications([attempt], now)).ready.has(attemptId);
+      (await this.releases.studentPublications([attempt], now, db)).ready.has(attemptId);
     return {
       id: attempt.id,
       packageId: attempt.packageId,

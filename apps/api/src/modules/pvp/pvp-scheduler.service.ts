@@ -14,7 +14,7 @@ import {
   observeRuntime,
   gaugeRuntime,
 } from '@tka/database';
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { PvpEngineService } from './pvp-engine.service';
 import { PVP_POLICY, type PvpPolicy } from './pvp.policy';
 import type { PvpSnapshotDto } from './pvp.dto';
@@ -99,14 +99,18 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     }, 1000);
   }
   private async sweep() {
-    const matches = await getDatabase()
-      .db.select({ id: pvpMatches.id })
-      .from(pvpMatches)
-      .where(inArray(pvpMatches.status, ['WAITING', 'READY', 'RUNNING']));
+    const matches = await this.engine.sweepCandidates();
     gaugeRuntime('numora_pvp_active_matches', matches.length);
     for (const match of matches) {
-      await this.engine.tick(match.id);
-      await this.refresh(match.id);
+      if (match.due) {
+        await this.engine.tick(match.id);
+        await this.refresh(match.id);
+      } else {
+        // Keep local sockets synchronized even if another API handled the last command.
+        await this.notify(match.id).catch(() => {
+          this.logger.warn('PvP deadline notification delayed; durable state retained.');
+        });
+      }
     }
     this.engine.setSchedulerReady(true);
   }

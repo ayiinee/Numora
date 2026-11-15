@@ -1,21 +1,21 @@
 import { expect, it, vi } from 'vitest';
-const rows = vi.hoisted(() => vi.fn());
-vi.mock('@tka/database', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tka/database')>()),
-  getDatabase: () => ({ db: { select: () => ({ from: () => ({ where: rows }) }) } }),
-  pvpMatches: { id: 'id', status: 'status' },
-}));
 import { PvpSchedulerService } from './pvp-scheduler.service';
 import type { PvpEngineService } from './pvp-engine.service';
 it('processes durable deadlines without Redis and restores readiness', async () => {
-  rows.mockResolvedValue([{ id: 'match' }]);
-  const engine = { tick: vi.fn().mockResolvedValue(undefined), setSchedulerReady: vi.fn() };
+  const engine = {
+    sweepCandidates: vi.fn().mockResolvedValue([
+      { id: 'match', due: true },
+      { id: 'live', due: false },
+    ]),
+    tick: vi.fn().mockResolvedValue(undefined),
+    setSchedulerReady: vi.fn(),
+  };
   const scheduler = new PvpSchedulerService(engine as unknown as PvpEngineService, null);
   const notify = vi.fn().mockResolvedValue(undefined);
   scheduler.notify = notify;
   await (scheduler as unknown as { sweep(): Promise<void> }).sweep();
-  expect(engine.tick).toHaveBeenCalledWith('match');
-  expect(notify).toHaveBeenCalledWith('match');
+  expect(engine.tick).toHaveBeenCalledExactlyOnceWith('match');
+  expect(notify.mock.calls).toEqual([['match'], ['live']]);
   expect(engine.setSchedulerReady).toHaveBeenCalledWith(true);
 });
 it('does not cancel a match when transient queue is absent', async () => {
@@ -30,8 +30,14 @@ it('does not cancel a match when transient queue is absent', async () => {
 });
 
 it('keeps processing other deadlines when a notification fails', async () => {
-  rows.mockResolvedValue([{ id: 'first' }, { id: 'second' }]);
-  const engine = { tick: vi.fn().mockResolvedValue(undefined), setSchedulerReady: vi.fn() };
+  const engine = {
+    sweepCandidates: vi.fn().mockResolvedValue([
+      { id: 'first', due: true },
+      { id: 'second', due: true },
+    ]),
+    tick: vi.fn().mockResolvedValue(undefined),
+    setSchedulerReady: vi.fn(),
+  };
   const scheduler = new PvpSchedulerService(engine as unknown as PvpEngineService, null);
   scheduler.notify = vi
     .fn()
@@ -43,8 +49,8 @@ it('keeps processing other deadlines when a notification fails', async () => {
 });
 
 it('does not report readiness when durable deadline processing fails', async () => {
-  rows.mockResolvedValue([{ id: 'match' }]);
   const engine = {
+    sweepCandidates: vi.fn().mockResolvedValue([{ id: 'match', due: true }]),
     tick: vi.fn().mockRejectedValue(new Error('Database unavailable')),
     setSchedulerReady: vi.fn(),
   };
