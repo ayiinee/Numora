@@ -192,6 +192,13 @@ describe.skipIf(!testUrl)(
       const later = await getDatabase()
         .client`select count(*)::integer as n from student_item_exposures where student_id=${student(0)} and question_version_id=${versionId} and module='PVP'`;
       expect(later[0]!.n).toBe(deliveries[0]!.n);
+      const guestFirst = await measured(() => engine.snapshot(student(1), matchId));
+      const guestRepeat = await measured(() => engine.snapshot(student(1), matchId));
+      expect(guestRepeat.value).toEqual(guestFirst.value);
+      expect(guestRepeat.queries).toBeLessThan(guestFirst.queries);
+      const [guestDelivery] = await getDatabase()
+        .client`select count(*)::integer as n from student_item_exposures where student_id=${student(1)} and question_version_id=${versionId} and module='PVP'`;
+      expect(guestDelivery!.n).toBe(1);
       expect(JSON.stringify(snapshot.value)).not.toMatch(
         /answerKey|explanation|correctOptionId|email/,
       );

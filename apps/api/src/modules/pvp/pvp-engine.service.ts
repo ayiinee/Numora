@@ -12,6 +12,7 @@ import {
   analyticsOutbox,
   assessmentPackages,
   classMemberships,
+  contentDeliveryManifests,
   getDatabase,
   enqueueNotification,
   packageItems,
@@ -1180,6 +1181,11 @@ export class PvpEngineService implements OnModuleDestroy {
           explanation: questionVersions.explanation,
         },
         submitted: { id: pvpAnswers.id, answer: pvpAnswers.answer },
+        deliveryRecorded: sql<boolean>`exists (
+          select 1 from ${contentDeliveryManifests}
+          where ${contentDeliveryManifests.studentId} = ${pvpPlayers.studentId}
+            and ${contentDeliveryManifests.idempotencyKey} = 'pvp:' || ${pvpMatchQuestions.id}::text
+        )`,
       })
       .from(pvpPlayers)
       .innerJoin(users, eq(users.id, pvpPlayers.studentId))
@@ -1217,8 +1223,11 @@ export class PvpEngineService implements OnModuleDestroy {
         ? { question: current.question, version: current.version }
         : null;
     const content = active ? decodeSingleChoice(active.version) : null;
-    if (active && content && recipients.length) {
-      const ids = [...new Set(recipients.map((p) => p.player.studentId))].sort();
+    const undelivered = recipients.filter((p) => !p.deliveryRecorded);
+    if (active && content && undelivered.length) {
+      // Existing immutable manifests need no advisory lock or repeated delivery command.
+      // The function still serializes concurrent first deliveries for each recipient.
+      const ids = [...new Set(undelivered.map((p) => p.player.studentId))].sort();
       await tx.execute(sql`select public.record_pvp_delivery(recipient, ${active.question.id}::uuid)
         from unnest(array[${sql.join(
           ids.map((id) => sql`${id}::uuid`),
