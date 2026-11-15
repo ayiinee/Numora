@@ -16,6 +16,7 @@ import {
   assessmentPackages,
   currentPretestPackage,
   supportedPretestPolicy,
+  type AssessmentReader,
   attemptAnswers,
   attemptItems,
   chapters,
@@ -66,16 +67,13 @@ export class PretestService {
     if (!chapter) throw new NotFoundException(problem('CHAPTER_NOT_FOUND', 'Bab tidak ditemukan.'));
     return chapter;
   }
-  private async package(chapterId: string) {
-    return currentPretestPackage(chapterId, getDatabase().db, isPretestPartialPolicy);
+  private async package(chapterId: string, db: AssessmentReader = getDatabase().db) {
+    return currentPretestPackage(chapterId, db, isPretestPartialPolicy);
   }
-  private async supportedPolicy(id: string | null, synthetic: boolean) {
-    return supportedPretestPolicy(id, synthetic, getDatabase().db, isPretestPartialPolicy);
-  }
-  private async partialPolicy(id: string | null) {
+  private async partialPolicy(id: string | null, db: AssessmentReader) {
     if (!id) return false;
-    const [policy] = await getDatabase()
-      .db.select()
+    const [policy] = await db
+      .select()
       .from(scoringPolicyVersions)
       .where(eq(scoringPolicyVersions.id, id));
     return !!policy && isPretestPartialPolicy(policy);
@@ -271,7 +269,7 @@ export class PretestService {
           );
         return existing.id;
       }
-      const selected = await this.package(chapterId);
+      const selected = await this.package(chapterId, tx);
       if (!selected)
         throw new ServiceUnavailableException(
           problem(
@@ -296,7 +294,7 @@ export class PretestService {
         )
         .where(eq(packageItems.packageId, selected.id))
         .orderBy(asc(packageItems.displayOrder));
-      const partial = await this.partialPolicy(selected.scoringPolicyVersionId);
+      const partial = await this.partialPolicy(selected.scoringPolicyVersionId, tx);
       if (
         rows.length !== 20 ||
         rows.some(
@@ -531,9 +529,14 @@ export class PretestService {
         .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
         .leftJoin(scoringRubricVersions, eq(scoringRubricVersions.id, attemptItems.rubricVersionId))
         .where(eq(attemptItems.attemptId, attemptId));
-      const partial = await this.partialPolicy(attempt!.scoringPolicyVersionId);
+      const partial = await this.partialPolicy(attempt!.scoringPolicyVersionId, tx);
       if (
-        !(await this.supportedPolicy(attempt!.scoringPolicyVersionId, owned.isDemo)) ||
+        !(await supportedPretestPolicy(
+          attempt!.scoringPolicyVersionId,
+          owned.isDemo,
+          tx,
+          isPretestPartialPolicy,
+        )) ||
         rows.length !== 20 ||
         (!partial && rows.some((row) => row.version.questionType !== 'SINGLE_CHOICE'))
       )

@@ -1,6 +1,6 @@
 import { seedLifecycleDemo } from '@tka/database/testing';
 import { randomUUID, createHash } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
@@ -79,6 +79,7 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
       'twenty',
       'deadline',
       'tryout',
+      'pool',
     ]) {
       const [actor] = await db
         .insert(users)
@@ -125,6 +126,30 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
   afterAll(async () => {
     await app?.close();
     await closeDatabaseConnection();
+  });
+
+  it('starts and submits Pretest with one database connection', async () => {
+    const poolSize = process.env.DB_POOL_MAX;
+    await closeDatabaseConnection();
+    vi.stubEnv('DB_POOL_MAX', '1');
+    try {
+      const start = () =>
+        http('pretest/attempts', 'POST', { chapterId: fixture.chapterId }, 'pool');
+      const [first, retry] = await Promise.all([start(), start()]);
+      expect(first.status).toBe(201);
+      expect(retry.body.id).toBe(first.body.id);
+      const result = await http(
+        `pretest/attempts/${first.body.id}/submit`,
+        'POST',
+        undefined,
+        'pool',
+      );
+      expect(result.status).toBe(201);
+      expect(result.body).toMatchObject({ attemptId: first.body.id, score: 0 });
+    } finally {
+      await closeDatabaseConnection();
+      vi.stubEnv('DB_POOL_MAX', poolSize);
+    }
   });
 
   it('allows independent Students, does not consume Skip, and concurrently starts one pinned 20-item session', async () => {
