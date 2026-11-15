@@ -3,7 +3,6 @@ import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { lstat, mkdir, open, readFile, readdir, realpath, unlink } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 import {
   BackupError,
@@ -21,7 +20,7 @@ import {
 } from './backup-catalog.js';
 
 const files = ['application.dump', 'archive.list', 'inventory.json', 'writers.json'] as const;
-const checkoutRoot = fileURLToPath(new URL('../../../', import.meta.url));
+const checkoutRoot = resolve(__dirname, '../../..');
 const toolPath = (tool: 'pg_dump' | 'pg_restore') =>
   process.env.NUMORA_BACKUP_PG_BIN ? join(process.env.NUMORA_BACKUP_PG_BIN, tool) : tool;
 
