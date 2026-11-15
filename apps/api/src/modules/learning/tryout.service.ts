@@ -570,7 +570,7 @@ export class TryoutService {
       const current =
         selected && selectedPackage
           ? { ...selectedPackage, closeAt: selected.batch.closesAt, durationSeconds: 600 }
-          : await this.currentPackage();
+          : await currentTryoutPackage(tx);
       if (!current || current.id !== packageId)
         throw new ConflictException(
           problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'),
