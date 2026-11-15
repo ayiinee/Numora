@@ -243,7 +243,7 @@ it.skipIf(!base || !tls || !ca || process.platform === 'win32')(
       ).rejects.toMatchObject({ code: '42501' });
       const before = (await api`SELECT revision FROM public.pvp_content_revision`)[0]!.revision;
       await api.begin('READ WRITE', async (tx) => {
-        await tx`INSERT INTO public.chapters(code,name,display_order) VALUES('RESTORE-TEST','TEST ONLY',1)`;
+        await tx`INSERT INTO public.chapters(code,slug,name,display_order) VALUES('RESTORE-TEST','restore-test','TEST ONLY',1)`;
       });
       expect((await api`SELECT revision FROM public.pvp_content_revision`)[0]!.revision).not.toBe(
         before,
