@@ -64,6 +64,23 @@ test('probe checks real writes/reads and disconnects; provider errors do not exp
   await assert.rejects(probeRedis(ConstructorFailure, backup, 'numora:prod'), /Tes baca\/tulis/);
 });
 
+test('monitor uses one GET and preserves quota classification without provider credentials', async () => {
+  const events = [];
+  class Redis {
+    constructor(_url, options) { assert.equal(options.disableClientInfo, true); }
+    on() {}
+    async connect() { events.push('connect'); }
+    async get() { events.push('get'); throw new Error(`ERR max requests limit exceeded ${backup}`); }
+    disconnect() { events.push('disconnect'); }
+  }
+  await assert.rejects(probeRedis(Redis, backup, 'numora:prod', { readOnly: true }), (error) => {
+    assert.equal(error.quotaExceeded, true);
+    assert.equal(error.message.includes(backup), false);
+    return true;
+  });
+  assert.deepEqual(events, ['connect', 'get', 'disconnect']);
+});
+
 function fixture(overrides = {}) {
   let current = original;
   const events = [];
