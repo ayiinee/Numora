@@ -1404,6 +1404,17 @@
 .tryout-attempt-shell .tryout-mobile-map {
   display: none;
 }
+.student-join-actions .button-link--secondary {
+  background: var(--color-primary-light);
+  color: var(--color-primary-strong);
+}
+.student-join-actions .button-link--secondary:hover {
+  background: var(--color-primary-light);
+  filter: brightness(0.97);
+}
+.student-join-actions .button-link--secondary[aria-disabled='true'] {
+  opacity: 0.6;
+}
 .tryout-submit-dialog[open] {
   display: flex;
   flex-direction: column;

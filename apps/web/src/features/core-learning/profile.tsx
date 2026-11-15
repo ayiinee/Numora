@@ -51,7 +51,10 @@ function ProfileContent({ token }: { token: string }) {
     }
   }, [confirmationKey]);
   useEffect(() => {
-    if (confirmation) confirmationRef.current?.focus();
+    const message = confirmationRef.current;
+    if (!confirmation || !message) return;
+    message.focus({ preventScroll: true });
+    message.scrollIntoView?.({ block: 'center' });
   }, [confirmation]);
   const photo = useProfilePhoto(state.status === 'ready' ? state.profile.id : undefined);
   const dashboard = useQuery({

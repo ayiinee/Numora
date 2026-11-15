@@ -132,7 +132,7 @@ function JoinContent({ token, rawCode }: { token: string; rawCode: string | unde
           )}
         </p>
       )}
-      <div className="flex flex-wrap gap-2">
+      <div className="student-join-actions flex flex-wrap gap-2">
         <Button onClick={() => void join()} disabled={busy}>
           {busy ? 'Menghubungkan…' : 'Gabung kelas'}
         </Button>

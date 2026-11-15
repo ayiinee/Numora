@@ -1445,12 +1445,16 @@ for (const width of [320, 390, 1440])
     await fixtures(page);
     await page.goto('/student/join?code=FIX234');
     await expect(page.getByRole('heading', { name: 'Konfirmasi gabung kelas' })).toBeVisible();
+    const join = page.getByRole('button', { name: 'Gabung kelas', exact: true });
+    const cancel = page.getByRole('link', { name: 'Batal dan buka profil' });
+    const primaryBackground = await join.evaluate((element) => getComputedStyle(element).backgroundColor);
+    await expect(cancel).not.toHaveCSS('background-color', primaryBackground);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`class-join-${width}.png`), fullPage: true });
 
-    await page.getByRole('button', { name: 'Gabung kelas', exact: true }).focus();
+    await join.focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:3300/student');
     await expect(

@@ -304,6 +304,7 @@ test('feedback failure, pagination retry and refresh preserve messages without f
 test('Mandiri join failure preserves input; successful join refreshes identity; logout guards the inbox', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 740 });
   const { state, errors } = await setup(page);
   state.school = false;
   state.failJoin = true;
@@ -320,7 +321,13 @@ test('Mandiri join failure preserves input; successful join refreshes identity; 
     page.locator('.student-profile-identity').getByText('SMPN 1 Jakarta', { exact: true }),
   ).toBeVisible();
   expect(state.joins).toEqual(['BAD999', 'FIX234']);
-  await expect(page.getByRole('status').filter({ hasText: 'Berhasil bergabung dengan kelas.' })).toBeVisible();
+  const confirmation = page.getByRole('status').filter({ hasText: 'Berhasil bergabung dengan kelas.' });
+  await expect(confirmation).toBeFocused();
+  await expect.poll(async () => {
+    const message = await confirmation.boundingBox();
+    const nav = await page.locator('.student-bottom-nav').boundingBox();
+    return !!message && !!nav && message.y >= 0 && message.y + message.height <= nav.y;
+  }).toBe(true);
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
   await expect(page).toHaveURL('http://localhost:3300/login');
