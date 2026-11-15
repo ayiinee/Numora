@@ -46,6 +46,13 @@ type Transaction = Parameters<
   Parameters<ReturnType<typeof getDatabase>['db']['transaction']>[0]
 >[0];
 const problem = (code: string, detail: string) => ({ code, detail });
+const runtimeQuestionFields = {
+  questionType: questionVersions.questionType,
+  stem: questionVersions.stem,
+  optionsOrStatements: questionVersions.optionsOrStatements,
+  answerKey: questionVersions.answerKey,
+  explanation: questionVersions.explanation,
+};
 export function pretestInitialLevel(correct: number) {
   return correct >= 19 ? 3 : correct >= 8 ? 2 : 1;
 }
@@ -382,8 +389,8 @@ export class PretestService {
   private rows(attemptId: string) {
     return getDatabase()
       .db.select({
-        item: attemptItems,
-        version: questionVersions,
+        item: { id: attemptItems.id },
+        version: { id: questionVersions.id, ...runtimeQuestionFields },
         answer: attemptAnswers.answer,
         revision: attemptAnswers.revision,
       })
@@ -429,7 +436,7 @@ export class PretestService {
     const studentId = await this.student(auth);
     return getDatabase().db.transaction(async (tx) => {
       const [attempt] = await tx
-        .select()
+        .select({ status: assessmentAttempts.status })
         .from(assessmentAttempts)
         .where(
           and(
@@ -445,8 +452,7 @@ export class PretestService {
         throw new ConflictException(problem('PRETEST_COMPLETED', 'Pretest sudah selesai.'));
       const [row] = await tx
         .select({
-          item: attemptItems,
-          version: questionVersions,
+          version: runtimeQuestionFields,
           answer: attemptAnswers.answer,
           revision: attemptAnswers.revision,
         })
@@ -495,7 +501,7 @@ export class PretestService {
           set: {
             answer: answer === null ? sql`'null'::jsonb` : answer,
             revision,
-            savedAt: await databaseTime(tx),
+            savedAt: sql`clock_timestamp()`,
           },
         });
       return {
@@ -561,6 +567,7 @@ export class PretestService {
         : null;
       let correctCount = 0;
       const now = await databaseTime(tx);
+      const gradedAnswers: (typeof attemptAnswers.$inferInsert)[] = [];
       for (const [index, row] of rows.entries()) {
         const content = decodeAssessmentContent(row.version);
         const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
@@ -579,20 +586,33 @@ export class PretestService {
         };
         const awardedPoints = String(Number((fraction * Number(row.item.maxPoints)).toFixed(2)));
         if (fraction === 1) correctCount++;
-        await tx
-          .insert(attemptAnswers)
-          .values({
-            attemptItemId: row.item.id,
-            answer: answer === null ? sql`'null'::jsonb` : answer,
-            awardedPoints,
-            ...grading,
-            gradedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: attemptAnswers.attemptItemId,
-            set: { awardedPoints, ...grading, gradedAt: now },
-          });
+        gradedAnswers.push({
+          attemptItemId: row.item.id,
+          answer,
+          awardedPoints,
+          ...grading,
+          gradedAt: now,
+        });
       }
+      await tx
+        .insert(attemptAnswers)
+        .values(
+          gradedAnswers.map((row) => ({
+            ...row,
+            answer: row.answer === null ? sql`'null'::jsonb` : row.answer,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: attemptAnswers.attemptItemId,
+          // Grade pinned items together; preserve the original answer, revision and save time.
+          set: {
+            awardedPoints: sql`excluded.awarded_points`,
+            scoreCategory: sql`excluded.score_category`,
+            fullyCorrect: sql`excluded.fully_correct`,
+            responseState: sql`excluded.response_state`,
+            gradedAt: now,
+          },
+        });
       const initialLevel = partialResult?.initialLevel ?? pretestInitialLevel(correctCount);
       const unlocked = await this.unlock(
         tx,

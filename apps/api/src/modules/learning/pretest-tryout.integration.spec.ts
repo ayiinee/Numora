@@ -221,6 +221,12 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
     expect(
       (await http(`pretest/attempts/${one.body.id}`, 'GET', undefined, 'unknown')).status,
     ).toBe(401);
+    const savedAnswer = () =>
+      getDatabase().client`
+        select answer::text as answer, revision, saved_at::text as "savedAt"
+        from public.attempt_answers where attempt_item_id = ${question.questionInstanceId}
+      `;
+    const beforeGrading = await savedAnswer();
     const [first, second] = await Promise.all([
       http(`pretest/attempts/${one.body.id}/submit`, 'POST'),
       http(`pretest/attempts/${one.body.id}/submit`, 'POST'),
@@ -231,6 +237,16 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
       initialLevel: 1,
       mappingStatus: 'applied',
     });
+    expect(await savedAnswer()).toEqual(beforeGrading);
+    const [graded] = await getDatabase().client`
+      select count(*)::integer as total,
+        count(*) filter (where a.answer = 'null'::jsonb)::integer as omitted,
+        count(*) filter (where a.graded_at is not null)::integer as graded
+      from public.attempt_answers a
+      join public.attempt_items i on i.id = a.attempt_item_id
+      where i.attempt_id = ${one.body.id}
+    `;
+    expect(graded).toEqual({ total: 20, omitted: 19, graded: 20 });
     expect((await http('pretest/attempts', 'POST', { chapterId: fixture.chapterId })).status).toBe(
       409,
     );
