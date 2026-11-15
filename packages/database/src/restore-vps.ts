@@ -1,6 +1,7 @@
 import { lstat, mkdir, readFile, realpath, rmdir, unlink } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
-import type { Sql } from 'postgres';
+import type { Sql, TransactionSql } from 'postgres';
 import { backupCheck, backupTarget } from './backup-config.js';
 import { catalog, sequenceProofs, tableProofs } from './backup-catalog.js';
 import {
@@ -57,6 +58,17 @@ async function newReport(path: string) {
     if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT'))
       throw error;
   }
+}
+
+async function assertConnectionFence(sql: Sql | TransactionSql) {
+  const grants =
+    await sql`SELECT CASE WHEN a.grantee=0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee
+    FROM pg_database d CROSS JOIN LATERAL aclexplode(coalesce(d.datacl,acldefault('d',d.datdba))) a
+    WHERE d.datname=current_database() AND a.privilege_type IN ('CONNECT','CREATE','TEMPORARY')`;
+  backupCheck(
+    grants.every((row) => ['numora_owner', 'numora_migrator'].includes(row.grantee)),
+    'New target must be connection-fenced: no PUBLIC/runtime/other database access',
+  );
 }
 
 export async function prepareVpsRestore(folder: string, mappingFile: string, report: string) {
@@ -173,14 +185,7 @@ async function targetPreflight(sql: Sql, url: URL, major: number) {
         state.others === 0,
       'Restore must run locally as migrator/owner on a new dedicated owner database without other sessions',
     );
-    const databaseGrants =
-      await tx`SELECT CASE WHEN a.grantee=0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee
-      FROM pg_database d CROSS JOIN LATERAL aclexplode(coalesce(d.datacl,acldefault('d',d.datdba))) a
-      WHERE d.datname=current_database() AND a.privilege_type IN ('CONNECT','CREATE','TEMPORARY')`;
-    backupCheck(
-      databaseGrants.every((row) => ['numora_owner', 'numora_migrator'].includes(row.grantee)),
-      'New target must be connection-fenced: no PUBLIC/runtime/other database access',
-    );
+    await assertConnectionFence(tx);
     const schemas =
       await tx`SELECT nspname,pg_get_userbyid(nspowner) AS owner FROM pg_namespace WHERE nspname !~ '^pg_' AND nspname<>'information_schema'`;
     const [objects] =
@@ -294,7 +299,9 @@ export async function restoreVps(url: URL, folder: string, planFile: string, rep
   await newReport(report);
   await privatePath(planFile, false);
   const { manifest, inventory } = await verifyBackup(folder);
-  const plan = JSON.parse(await readFile(planFile, 'utf8')) as {
+  const planText = await readFile(planFile, 'utf8');
+  const planSha256 = createHash('sha256').update(planText).digest('hex');
+  const plan = JSON.parse(planText) as {
     format: string;
     manifestSha256: string;
     mapping: Mapping;
@@ -345,6 +352,7 @@ export async function restoreVps(url: URL, folder: string, planFile: string, rep
     );
     await applyAccess(client, expected);
     await verifyMappedRestore(client, inventory, expected);
+    await assertConnectionFence(client);
     await privateWrite(
       report,
       JSON.stringify(
@@ -352,7 +360,7 @@ export async function restoreVps(url: URL, folder: string, planFile: string, rep
           format: 'NUMORA_VPS_RESTORE_REPORT_V1',
           completedAt: new Date().toISOString(),
           manifestSha256: plan.manifestSha256,
-          planSha256: await fileHash(planFile),
+          planSha256,
           result: 'PASS',
           target: {
             database: decodeURIComponent(url.pathname.slice(1)),

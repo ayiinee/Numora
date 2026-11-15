@@ -163,6 +163,12 @@ it.skipIf(!base || !tls || !ca || process.platform === 'win32')(
       targetUrl.pathname = '/' + targetName;
       targetUrl.username = 'numora_migrator';
       targetUrl.password = password;
+      const originalPlan = await readFile(planFile, 'utf8');
+      const editedPlan = JSON.parse(originalPlan);
+      editedPlan.access.pop();
+      await writeFile(planFile, JSON.stringify(editedPlan));
+      await expect(restoreVps(targetUrl, folder, planFile, report)).rejects.toThrow(/edited/);
+      await writeFile(planFile, originalPlan);
       await expect(restoreVps(targetUrl, folder, planFile, report)).rejects.toThrow(
         /connection-fenced/,
       );
