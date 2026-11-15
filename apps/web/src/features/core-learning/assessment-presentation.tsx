@@ -51,6 +51,8 @@ export function AssessmentHeader({
   progressText,
   exitDisabled = false,
   exitHref = '/student/learn',
+  exitLabel = exitHref === '/student/tryout' ? 'Kembali ke Tryout' : 'Kembali ke materi',
+  exitIcon = 'close',
 }: {
   title?: string;
   status: ReactNode;
@@ -60,21 +62,23 @@ export function AssessmentHeader({
   progressText?: string | undefined;
   exitDisabled?: boolean;
   exitHref?: string;
+  exitLabel?: string;
+  exitIcon?: 'close' | 'back';
 }) {
   return (
     <header className="practice-header">
       <div className="practice-header__row">
         {exitDisabled ? (
-          <Button variant="secondary" aria-label="Kembali ke materi" disabled>
-            <Icon name="close" />
+          <Button variant="secondary" aria-label={exitLabel} disabled>
+            <Icon name={exitIcon} />
           </Button>
         ) : (
           <Link
             className="practice-exit"
             href={exitHref}
-            aria-label={exitHref === '/student/tryout' ? 'Kembali ke Tryout' : 'Kembali ke materi'}
+            aria-label={exitLabel}
           >
-            <Icon name="close" />
+            <Icon name={exitIcon} />
           </Link>
         )}
         <div className="practice-header__copy">

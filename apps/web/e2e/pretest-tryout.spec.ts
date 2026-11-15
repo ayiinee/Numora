@@ -507,7 +507,12 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await page.setViewportSize({ width: 390, height: 850 });
   const raw = await fixture(page, true);
   await page.goto('/student/tryout');
-  await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
+  const detailButton = page.getByRole('button', { name: 'Detail dan aturan paket' });
+  await detailButton.click();
+  await expect(page).toHaveURL(new RegExp(`detail=${past}`));
+  await page.goBack();
+  await expect(detailButton).toBeFocused();
+  await page.goForward();
   await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
   await page.getByRole('button', { name: 'Mulai pengerjaan', exact: true }).click();
   await expect(page.getByText('Soal 1 dari 30', { exact: true })).toBeVisible();
@@ -545,6 +550,16 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await expect(page.getByText('Soal 30 dari 30', { exact: true })).toBeVisible();
   await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
   await allQuestions.click();
+  await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
+  await page.setViewportSize({ width: 320, height: 560 });
+  const submitDialog = page.getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?' });
+  const close = await submitDialog.getByRole('button', { name: 'Tutup dialog' }).boundingBox();
+  const title = await submitDialog.getByRole('heading').boundingBox();
+  expect(close!.x).toBeGreaterThanOrEqual(title!.x + title!.width);
+  await expect(submitDialog.getByRole('button', { name: 'Periksa Kembali' })).toBeInViewport({ ratio: 1 });
+  await expect(submitDialog.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' })).toBeInViewport({ ratio: 1 });
+  await submitDialog.getByRole('button', { name: 'Tutup dialog' }).click();
+  await expect(map).toBeVisible();
   await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
   await page.getByRole('button', { name: 'Ke soal belum lengkap' }).click();
   await expect(page.locator('.practice-stem')).toBeFocused();
@@ -600,6 +615,28 @@ test('Tryout keeps a failed answer visible across questions and confirms exit af
   await expect(exit).toBeVisible();
   await exit.getByRole('button', { name: 'Ya, keluar dulu' }).click();
   await expect(page).toHaveURL('/student/tryout');
+});
+
+test('Pretest keeps failed saves reachable above the mobile controls and recovers a missing attempt', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await fixture(page);
+  const attemptUrl = `/student/pretest/${attempt}`;
+  await page.route('**/api/v1/pretest/attempts/*/answers/*', (route) => route.fulfill({
+    status: 503, json: {},
+  }), { times: 1 });
+  await page.goto(attemptUrl);
+  await page.getByRole('radio', { name: /^A\s*\./ }).check();
+  const retry = page.getByRole('button', { name: 'Coba simpan lagi' });
+  await expect(retry).toBeInViewport({ ratio: 1 });
+  await retry.click();
+  await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /^A\s*\./ })).toBeChecked();
+  await page.route(`**/api/v1/pretest/attempts/${attempt}`, (route) =>
+    route.fulfill({ status: 404, json: { detail: 'Sesi tidak ditemukan.' } }),
+  );
+  await page.reload();
+  await page.getByRole('link', { name: 'Kembali ke Latihan' }).click();
+  await expect(page).toHaveURL('/student/learn');
 });
 
 async function screenshot(page: Page, name: string) {
@@ -871,9 +908,8 @@ for (const width of [390, 1280]) {
     await expect(page.getByRole('radio', { name: /^A\s*\./ })).toBeChecked();
     await expect(page.getByText('Tanpa batas waktu', { exact: true })).toBeVisible();
     await screenshot(page, `pretest-attempt-${width}`);
-    await page.getByRole('link', { name: 'Kembali ke materi' }).click();
-    await expect(page).toHaveURL('/student/learn');
-    await page.locator(`a[href="/student/learn/${chapter}"]`).click();
+    await page.getByRole('link', { name: 'Kembali ke bab' }).click();
+    await expect(page).toHaveURL(`/student/learn/${chapter}`);
     await page.getByRole('button', { name: 'Skip untuk sekarang', exact: true }).click();
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click();
     await expect(page.getByRole('radio', { name: /^A\s*\./ })).toBeChecked();

@@ -1404,8 +1404,67 @@
 .tryout-attempt-shell .tryout-mobile-map {
   display: none;
 }
-.tryout-submit-dialog .numora-dialog__header h2 {
-  padding-inline: 22px;
+.tryout-submit-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tryout-submit-dialog .numora-dialog__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+}
+.tryout-submit-dialog .numora-dialog__header > button {
+  position: static;
+}
+.tryout-submit-dialog .numora-dialog__content {
+  min-height: 0;
+  overflow-y: auto;
+}
+.tryout-submit-dialog :is(.numora-dialog__header, .numora-dialog__description, .numora-dialog__actions) {
+  flex-shrink: 0;
+}
+.practice-save-recovery {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-bottom: var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  background: var(--color-surface-raised);
+}
+.student-area .practice-breadcrumb > a,
+.student-area .materials-section-title > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.student-area .practice-profile {
+  width: 44px;
+  height: 44px;
+}
+.student-area .practice-profile::after {
+  content: none;
+}
+@media (max-height: 400px) {
+  .tryout-submit-dialog[open] {
+    max-height: calc(100dvh - 16px);
+    padding: 12px;
+  }
+  .tryout-submit-dialog :is(.numora-dialog__content, .numora-dialog__actions) {
+    margin-top: 8px;
+  }
+  .tryout-submit-dialog .numora-dialog__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .practice-save-recovery {
+    max-height: 35dvh;
+    overflow: auto;
+  }
 }
 .tryout-map-dialog {
   max-height: calc(100dvh - 24px);

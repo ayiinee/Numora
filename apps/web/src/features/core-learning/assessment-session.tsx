@@ -52,6 +52,8 @@ export function AssessmentSession({
   resumeKey,
   redesign = false,
   sessionKind = 'drill',
+  exitHref = sessionKind === 'tryout' ? '/student/tryout' : '/student/learn',
+  exitLabel,
 }: {
   title: string;
   questions: DrillQuestion[];
@@ -72,6 +74,8 @@ export function AssessmentSession({
   resumeKey?: string | undefined;
   redesign?: boolean;
   sessionKind?: 'drill' | 'tryout' | 'pretest';
+  exitHref?: string;
+  exitLabel?: string;
 }) {
   const isTryout = sessionKind === 'tryout';
   const [resume] = useState(() =>
@@ -342,7 +346,8 @@ export function AssessmentSession({
                 ? 'Sesi Tryout'
                 : 'Sesi Latihan Soal'
           }
-          exitHref={sessionKind === 'tryout' ? '/student/tryout' : '/student/learn'}
+          exitHref={exitHref}
+          {...(exitLabel && { exitLabel })}
           status={
             isTryout ? (
               <p className="tryout-question-position">Soal {index + 1} dari {questions.length}</p>
@@ -494,18 +499,6 @@ export function AssessmentSession({
                 )}
               </div>
             </Card>
-            {!isTryout && saveError && !deadline.expired && (
-              <Status title="Jawaban belum tersimpan">
-                <p role="alert">{saveError}</p>
-                <Button
-                  variant="secondary"
-                  disabled={save.isPending || submit.isPending || submit.isSuccess}
-                  onClick={retrySave}
-                >
-                  {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
-                </Button>
-              </Status>
-            )}
             {submit.isError && (!confirmationOpen || deadline.expired) && (
               <div>
                 <p role="alert" className="form-error">
@@ -520,6 +513,21 @@ export function AssessmentSession({
             )}
           </div>
           <aside className="practice-toolbar" id="practice-navigator">
+            {!isTryout && saveError && !deadline.expired && (
+              <div className="practice-save-recovery">
+                <div role="alert">
+                  <strong>Jawaban belum tersimpan</strong>
+                  <p>{saveError}</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  disabled={save.isPending || submit.isPending || submit.isSuccess}
+                  onClick={retrySave}
+                >
+                  {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
+                </Button>
+              </div>
+            )}
             {isTryout ? (
               <div className="tryout-desktop-map">
                 <h2>Peta soal</h2>

@@ -76,6 +76,8 @@ const profile = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  window.history.replaceState(null, '', '/student');
+  sessionStorage.clear();
   vi.mocked(getTeacherClasses).mockResolvedValue({ items: [] });
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   context.pathname = '/student';
@@ -880,7 +882,7 @@ describe('responsive learning composition', () => {
     await waitFor(() =>
       expect(learningApi.startTryout).toHaveBeenCalledWith('test-token', 'package-test'),
     );
-    await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/tryout/attempt-test'));
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/student/tryout/attempt-test'));
     expect(learningApi.startTryout).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/TryOut gratis untuk seluruh siswa/)).toBeTruthy();
   });
@@ -944,7 +946,7 @@ describe('responsive learning composition', () => {
     await screen.findByRole('alert');
     expect(learningApi.startTryout).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Mulai pengerjaan' }));
-    await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/tryout/attempt-test'));
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/student/tryout/attempt-test'));
     expect(learningApi.startTryout).toHaveBeenCalledTimes(2);
   });
   it('loads additional history pages when the first page contains no Tryout and retries pagination', async () => {

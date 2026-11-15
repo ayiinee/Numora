@@ -32,6 +32,11 @@ export function ReportForm<T extends string = string>({
   const [state, setState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
   const sending = useRef(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  function closeForm() {
+    setOpen(false);
+    requestAnimationFrame(() => trigger.current?.focus());
+  }
   const request = useRef<{ payload: string; id: string } | null>(null);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,6 +65,7 @@ export function ReportForm<T extends string = string>({
   if (!open)
     return (
       <button
+        ref={trigger}
         type="button"
         className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
         onClick={() => setOpen(true)}
@@ -128,7 +134,7 @@ export function ReportForm<T extends string = string>({
           type="button"
           className="min-h-11 underline"
           disabled={state === 'saving'}
-          onClick={() => setOpen(false)}
+          onClick={closeForm}
         >
           Batal
         </button>
@@ -136,7 +142,7 @@ export function ReportForm<T extends string = string>({
     </form>
   );
   return modal ? (
-    <Dialog open={open} onClose={() => setOpen(false)} title={label} pending={state === 'saving'}>
+    <Dialog open={open} onClose={closeForm} title={label} pending={state === 'saving'}>
       {form}
     </Dialog>
   ) : (

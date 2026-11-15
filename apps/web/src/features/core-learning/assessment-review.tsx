@@ -300,6 +300,8 @@ export function AssessmentExplanation({
           <AssessmentHeader
             title={title}
             exitHref={resultHref}
+            exitLabel="Kembali ke hasil"
+            exitIcon="back"
             status="Pembahasan — hanya baca"
             progressLabel={`Soal ${index + 1} dari ${questions.length}`}
             progress={(100 * (index + 1)) / questions.length}
@@ -358,11 +360,6 @@ export function AssessmentExplanation({
             {previous}
             {next}
           </div>
-          {!tryout && (
-            <Link className="button-link button-link--secondary" href={resultHref}>
-              Kembali ke hasil
-            </Link>
-          )}
         </aside>
       </div>
       {tryout && (
@@ -521,6 +518,7 @@ function ExplanationData({
         pending={query.isPending || query.isFetching}
         error={query.error}
         retry={() => void query.refetch()}
+        recovery={{ href: resultHref, label: 'Kembali ke hasil' }}
       />
     );
   if (!query.data || !available)
