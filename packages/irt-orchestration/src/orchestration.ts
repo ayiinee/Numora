@@ -104,7 +104,8 @@ export async function prepareTryoutAnalysis(
     >`
       SELECT a.id,a.approved_digest,t.kind,a.scope FROM configuration_approvals a JOIN irt_compute.technical_policy_versions t ON t.id=a.technical_policy_version_id
       WHERE a.id=ANY(${pins.map((p) => p.approvalId)}::uuid[]) AND a.revoked_at IS NULL AND t.status='SEALED' AND a.approved_digest=t.digest`;
-    const requiredKinds = process.env.IRT_DELIVERY_MODE === 'PRODUCTION'
+    const production = process.env.NUMORA_IRT_MODE === 'PRODUCTION';
+    const requiredKinds = production
       ? ['IRT_MODEL', 'QUALITY_GATE', 'IRT_ELIGIBILITY', 'IRT_SCORING', 'SCORE_MAPPING', 'IRT_FALLBACK']
       : ['IRT_MODEL', 'QUALITY_GATE'];
     if (
@@ -116,7 +117,7 @@ export async function prepareTryoutAnalysis(
         (a) =>
           a.approved_digest !== pins.find((p) => p.approvalId === a.id)?.digest ||
           a.scope.ecosystem !== 'TRYOUT' ||
-          (process.env.IRT_DELIVERY_MODE === 'PRODUCTION' && a.scope.purpose !== 'PRODUCTION') ||
+          (production && a.scope.purpose !== 'PRODUCTION') ||
           (a.scope.contextId && a.scope.contextId !== input.contextId),
       )
     )
