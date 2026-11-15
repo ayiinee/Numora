@@ -2,7 +2,8 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { lstat, mkdir, open, readFile, readdir, realpath, unlink } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 import {
   BackupError,
@@ -20,6 +21,7 @@ import {
 } from './backup-catalog.js';
 
 const files = ['application.dump', 'archive.list', 'inventory.json', 'writers.json'] as const;
+const checkoutRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const toolPath = (tool: 'pg_dump' | 'pg_restore') =>
   process.env.NUMORA_BACKUP_PG_BIN ? join(process.env.NUMORA_BACKUP_PG_BIN, tool) : tool;
 
@@ -27,6 +29,11 @@ async function privatePath(path: string, directory: boolean) {
   backupCheck(
     process.platform !== 'win32',
     'Backup artifacts require a POSIX host with verified private filesystem permissions',
+  );
+  const location = relative(checkoutRoot, resolve(path));
+  backupCheck(
+    location === '..' || location.startsWith('..' + sep) || isAbsolute(location),
+    'Backup artifacts and reports must stay outside the repository checkout',
   );
   const info = await lstat(path);
   backupCheck(

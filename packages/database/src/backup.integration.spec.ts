@@ -77,8 +77,8 @@ it.skipIf(!base || !tlsUrl || !ca || process.platform === 'win32')(
         GRANT SELECT ON public.backup_history_fixture TO numora_main_runtime;
         GRANT SELECT ON irt_compute.backup_artifact_fixture TO numora_irt_runtime;`);
       await source`INSERT INTO public.backup_history_fixture(user_id,payload) VALUES(${id},
-        ${source.json({ xp: '137.25', policyVersion: 3, rubricVersion: 2, score: '82.50', contentVersion: 7 })})`;
-      await source`INSERT INTO irt_compute.backup_artifact_fixture(payload) VALUES(${source.json({ digest: 'TEST_ONLY', historical: true })})`;
+        ${JSON.stringify({ xp: '137.25', policyVersion: 3, rubricVersion: 2, score: '82.50', contentVersion: 7 })}::jsonb)`;
+      await source`INSERT INTO irt_compute.backup_artifact_fixture(payload) VALUES(${JSON.stringify({ digest: 'TEST_ONLY', historical: true })}::jsonb)`;
       await writeFile(
         writers,
         JSON.stringify({
