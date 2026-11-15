@@ -332,3 +332,6 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan tiga revisi; lima saran tetap opsional. HOLD Curriculum B6-17, kalibrasi empiris/IRT dan rollout official tetap terpisah.
 
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan empat revisi; lima saran tetap opsional. HOLD Curriculum B6-17, kalibrasi empiris/IRT dan rollout official tetap terpisah.
+
+
+**ENGINEERING DECISION — 15 November 2026:** untuk batch sekolah tunggal, pemilik memilih snapshot roster saat posting. Mode BALANCED_50_50 membagi siswa aktif ke original/varian dengan selisih maksimal satu; assignment siswa dan paket dipin untuk batch tersebut. Ini menggantikan batas satu paket per sekolah hanya ketika mode balanced dipilih.

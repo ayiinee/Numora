@@ -7,6 +7,7 @@ import {
   IsArray,
   IsInt,
   IsISO8601,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -20,6 +21,14 @@ import {
 export class TryoutDelegationInputDto {
   @ApiProperty() @IsUUID() schoolId!: string;
   @ApiProperty() @IsUUID() packageId!: string;
+  @ApiPropertyOptional({ enum: ['SINGLE_PACKAGE', 'BALANCED_50_50'], default: 'SINGLE_PACKAGE' })
+  @IsOptional()
+  @IsIn(['SINGLE_PACKAGE', 'BALANCED_50_50'])
+  allocationMode?: 'SINGLE_PACKAGE' | 'BALANCED_50_50';
+  @ApiPropertyOptional({ nullable: true, type: String })
+  @IsOptional()
+  @IsUUID()
+  variantPackageId?: string | null;
 }
 export class SaveTryoutBatchDto {
   @ApiProperty() @IsString() @Length(1, 160) title!: string;
@@ -78,6 +87,8 @@ export class TryoutBatchSchoolDto {
   @ApiProperty() schoolId!: string;
   @ApiProperty() schoolName!: string;
   @ApiProperty() packageId!: string;
+  @ApiProperty({ enum: ['SINGLE_PACKAGE', 'BALANCED_50_50'] }) allocationMode!: string;
+  @ApiProperty({ nullable: true, type: String }) variantPackageId!: string | null;
 }
 export class TryoutBatchPackageDto {
   @ApiProperty() id!: string;

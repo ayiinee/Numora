@@ -343,3 +343,6 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) memetakan 10 EASY/16 MEDIUM/4 HARD dan tiga revisi ke manifest 30 versi baru; HOLD dipisahkan, histori/pin serta konfigurasi runtime tetap dipertahankan.
 
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) memetakan 9 EASY/17 MEDIUM/4 HARD dan empat revisi ke manifest 30 versi baru; HOLD tetap dipisahkan, histori/pin dan konfigurasi runtime tetap.
+
+
+**ENGINEERING DECISION — 15 November 2026:** batch sekolah tunggal dapat memakai snapshot alokasi per siswa dengan mode `BALANCED_50_50`; implementasi memakai migration `0075_tryout_balanced_school_allocations`, DTO delegasi, dan assignment snapshot durable. Hasil multi-paket tetap mengikuti gate IRT yang berlaku.

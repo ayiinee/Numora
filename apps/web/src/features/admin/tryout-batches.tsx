@@ -364,6 +364,14 @@ function BatchWorkspace({
                           <td>
                             {detail.packages.find((p) => p.id === s.packageId)?.name ??
                               'Paket tidak ditemukan'}
+                            {s.allocationMode === 'BALANCED_50_50' && (
+                              <>
+                                {' / '}
+                                {detail.packages.find((p) => p.id === s.variantPackageId)?.name ??
+                                  'Varian tidak ditemukan'}
+                                {' (50/50)'}
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -549,7 +557,12 @@ function BatchForm({
           closesAt: local(batch.closesAt),
           packageIds: batch.packages.map((p) => p.id),
           mandiriPackageId: batch.mandiriPackageId,
-          schools: batch.schools.map((s) => ({ schoolId: s.schoolId, packageId: s.packageId })),
+          schools: batch.schools.map((s) => ({
+            schoolId: s.schoolId,
+            packageId: s.packageId,
+            allocationMode: s.allocationMode,
+            variantPackageId: s.variantPackageId,
+          })),
           expectedRevision: batch.revision,
         }
       : structuredClone(initial),
@@ -745,7 +758,9 @@ function BatchForm({
                       variant="secondary"
                       disabled={
                         (p.id === form.packageIds[0] && form.packageIds.length > 1) ||
-                        form.schools.some((s) => s.packageId === p.id) ||
+                        form.schools.some(
+                          (s) => s.packageId === p.id || s.variantPackageId === p.id,
+                        ) ||
                         form.mandiriPackageId === p.id
                       }
                       onClick={() =>
@@ -768,8 +783,8 @@ function BatchForm({
                 <h3 id="batch-recipients-title">Penerima Tryout</h3>
               </header>
               <p className="tryout-batch-recipient-info">
-                Sekolah aktif tanpa delegasi memakai paket utama. Tambahkan delegasi untuk memilih
-                paket berbeda. Akses Mandiri diatur terpisah.
+                Pilih satu paket per sekolah, atau aktifkan pembagian seimbang 50/50 untuk membagi
+                roster sekolah antara paket original dan varian. Akses Mandiri diatur terpisah.
               </p>
               <div className="tryout-batch-recipient-controls">
                 <label>
@@ -798,7 +813,14 @@ function BatchForm({
                             ...form,
                             schools: form.schools.map((old) =>
                               old.schoolId === s.schoolId
-                                ? { ...old, packageId: e.target.value }
+                                ? {
+                                    ...old,
+                                    packageId: e.target.value,
+                                    variantPackageId:
+                                      old.variantPackageId === e.target.value
+                                        ? null
+                                        : (old.variantPackageId ?? null),
+                                  }
                                 : old,
                             ),
                           })
@@ -811,6 +833,64 @@ function BatchForm({
                         ))}
                       </select>
                     </label>
+                    <label>
+                      Mode alokasi
+                      <select
+                        value={s.allocationMode ?? 'SINGLE_PACKAGE'}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            schools: form.schools.map((old) =>
+                              old.schoolId === s.schoolId
+                                ? {
+                                    ...old,
+                                    allocationMode: e.target.value as
+                                      | 'SINGLE_PACKAGE'
+                                      | 'BALANCED_50_50',
+                                    variantPackageId:
+                                      e.target.value === 'BALANCED_50_50'
+                                        ? old.variantPackageId ??
+                                          selectedPackages.find((p) => p.id !== old.packageId)?.id ??
+                                          null
+                                        : null,
+                                  }
+                                : old,
+                            ),
+                          })
+                        }
+                      >
+                        <option value="SINGLE_PACKAGE">Satu paket</option>
+                        <option value="BALANCED_50_50">Seimbang 50/50</option>
+                      </select>
+                    </label>
+                    {s.allocationMode === 'BALANCED_50_50' && (
+                      <label>
+                        Paket varian
+                        <select
+                          required
+                          value={s.variantPackageId ?? ''}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              schools: form.schools.map((old) =>
+                                old.schoolId === s.schoolId
+                                  ? { ...old, variantPackageId: e.target.value || null }
+                                  : old,
+                              ),
+                            })
+                          }
+                        >
+                          <option value="">Pilih paket varian</option>
+                          {selectedPackages
+                            .filter((p) => p.id !== s.packageId)
+                            .map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                    )}
                     <Button
                       type="button"
                       variant="secondary"
@@ -836,7 +916,12 @@ function BatchForm({
                           ...form,
                           schools: [
                             ...form.schools,
-                            { schoolId: e.target.value, packageId: form.packageIds[0]! },
+                            {
+                              schoolId: e.target.value,
+                              packageId: form.packageIds[0]!,
+                              allocationMode: 'SINGLE_PACKAGE',
+                              variantPackageId: null,
+                            },
                           ],
                         });
                     }}

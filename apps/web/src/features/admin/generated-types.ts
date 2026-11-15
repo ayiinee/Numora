@@ -5,7 +5,7 @@ export type TryoutBatchDto = { "id": string; "title": string; "startsAt": string
 
 export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; };
 
-export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "packageId": string; };
+export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "packageId": string; "allocationMode": "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId": string | null; };
 
 export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; "familyCode": string; "status": string; "usedBatchCount": number; "valid": boolean; };
 
@@ -17,7 +17,7 @@ export type UpdateTryoutDelegationsDto = { "expectedRevision": number; "mandiriP
 
 export type ExtendTryoutBatchDto = { "expectedRevision": number; "closesAt": string; };
 
-export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; };
+export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; "allocationMode"?: "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId"?: string | null; };
 
 export type TryoutBatchOptionsDto = { "packages": (TryoutBatchPackageDto)[]; "schools": (StudentTryoutSchoolDto)[]; "packageTotal": number; "schoolTotal": number; };
 

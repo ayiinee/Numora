@@ -1,4 +1,6 @@
+import { sql } from 'drizzle-orm';
 import {
+  check,
   foreignKey,
   pgTable,
   primaryKey,
@@ -22,6 +24,8 @@ export const tryoutSchoolDelegations = pgTable(
       .notNull()
       .references(() => schools.id),
     packageId: uuid('package_id').notNull(),
+    allocationMode: text('allocation_mode').notNull().default('SINGLE_PACKAGE'),
+    variantPackageId: uuid('variant_package_id'),
   },
   (t) => [
     primaryKey({ columns: [t.batchId, t.schoolId] }),
@@ -29,6 +33,43 @@ export const tryoutSchoolDelegations = pgTable(
       columns: [t.batchId, t.packageId],
       foreignColumns: [tryoutBatchPackages.batchId, tryoutBatchPackages.packageId],
     }),
+    foreignKey({
+      columns: [t.batchId, t.variantPackageId],
+      foreignColumns: [tryoutBatchPackages.batchId, tryoutBatchPackages.packageId],
+    }),
+    check(
+      'tryout_school_delegations_allocation_ck',
+      sql`(${t.allocationMode} = 'SINGLE_PACKAGE' AND ${t.variantPackageId} IS NULL) OR (${t.allocationMode} = 'BALANCED_50_50' AND ${t.variantPackageId} IS NOT NULL AND ${t.variantPackageId} <> ${t.packageId})`,
+    ),
+  ],
+).enableRLS();
+
+export const tryoutBatchStudentAllocations = pgTable(
+  'tryout_batch_student_allocations',
+  {
+    batchId: uuid('batch_id')
+      .notNull()
+      .references(() => tryoutBatches.id),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id),
+    schoolId: uuid('school_id')
+      .notNull()
+      .references(() => schools.id),
+    packageId: uuid('package_id').notNull(),
+    allocationMode: text('allocation_mode').notNull(),
+    assignedAt: timestamp('assigned_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.batchId, t.studentId, t.schoolId] }),
+    foreignKey({
+      columns: [t.batchId, t.packageId],
+      foreignColumns: [tryoutBatchPackages.batchId, tryoutBatchPackages.packageId],
+    }),
+    check(
+      'tryout_batch_student_allocations_mode_ck',
+      sql`${t.allocationMode} = 'BALANCED_50_50'`,
+    ),
   ],
 ).enableRLS();
 

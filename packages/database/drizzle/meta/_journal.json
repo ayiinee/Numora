@@ -526,6 +526,13 @@
       "when": 1794315600002,
       "tag": "0074_pvp_content_cache_revision",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1794315600003,
+      "tag": "0075_tryout_balanced_school_allocations",
+      "breakpoints": true
     }
   ]
 }
