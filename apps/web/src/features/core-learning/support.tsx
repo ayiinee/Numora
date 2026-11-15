@@ -65,7 +65,10 @@ export function ReportForm<T extends string = string>({
     <button
       type="button"
       className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
-      onClick={() => setOpen(true)}
+      onClick={(event) => {
+        if (modal) event.currentTarget.focus({ preventScroll: true });
+        setOpen(true);
+      }}
     >
       {label}
     </button>

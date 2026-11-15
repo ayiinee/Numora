@@ -245,7 +245,8 @@ export function MaterialSubchapterList({ chapter }: { chapter: MaterialChapterDt
       ) : (
         <p>Subbab belum tersedia.</p>
       )}
-      {chapter.continueSubchapterId && (
+      {chapter.continueSubchapterId &&
+        !(chapter.subchapters.length === 1 && chapter.subchapters[0]?.id === chapter.continueSubchapterId) && (
         <Link
           className="material-chapter__continue"
           href={`/student/learn/${chapter.id}/${chapter.continueSubchapterId}`}

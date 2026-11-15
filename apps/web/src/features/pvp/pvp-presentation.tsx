@@ -19,6 +19,7 @@ export function PvpHeader({
   connected,
   onLeave,
   showProfile = true,
+  leaveLabel = 'Keluar',
   backHref = '/student/pvp',
   backLabel = 'Kembali ke PvP',
 }: {
@@ -26,6 +27,7 @@ export function PvpHeader({
   connected?: boolean | undefined;
   onLeave?: (() => void) | undefined;
   showProfile?: boolean;
+  leaveLabel?: string;
   backHref?: string;
   backLabel?: string;
 }) {
@@ -34,10 +36,13 @@ export function PvpHeader({
       {onLeave ? (
         <Button
           variant="ghost"
-          onClick={onLeave}
+          onClick={(event) => {
+            event.currentTarget.focus({ preventScroll: true });
+            onLeave();
+          }}
           leftIcon={<Icon name="back" width={16} height={16} />}
         >
-          Keluar
+          {leaveLabel}
         </Button>
       ) : (
         <Link className="pvp-header__back" href={backHref} aria-label={backLabel}>
@@ -484,7 +489,6 @@ export function BattleRoom({
   disabled,
   onSelect,
   onAnswer,
-  onLeave,
   reconnectRemaining,
 }: {
   snapshot: PvpSnapshotDto;
@@ -494,7 +498,6 @@ export function BattleRoom({
   disabled: boolean;
   onSelect: (id: string) => void;
   onAnswer: () => void;
-  onLeave: () => void;
   reconnectRemaining: Record<string, number>;
 }) {
   const question = snapshot.question;
@@ -510,9 +513,6 @@ export function BattleRoom({
             <Icon name="clock" width={14} height={14} />
             {difficultyLabels[snapshot.difficulty]} ({question.durationSeconds}s)
           </span>
-          <Button variant="danger-outline" size="sm" onClick={onLeave}>
-            Menyerah
-          </Button>
         </div>
         <Card className="pvp-scoreboard" aria-label="Skor pertandingan">
           <div className="pvp-scoreboard__player">

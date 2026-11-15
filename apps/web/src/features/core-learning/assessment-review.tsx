@@ -516,6 +516,7 @@ function ExplanationData({
         pending={query.isPending || query.isFetching}
         error={query.error}
         retry={() => void query.refetch()}
+        recovery={{ href: resultHref, label: 'Kembali ke hasil' }}
       />
     );
   if (!query.data || !available)

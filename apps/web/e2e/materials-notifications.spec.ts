@@ -444,7 +444,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       .click();
     await expect(page.locator('.notification-item')).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Belum Dibaca (1)', exact: true })).toBeFocused();
-    await page.getByRole('button', { name: 'Tandai Dibaca', exact: true }).click();
+    await page.getByRole('button', { name: 'Tandai Semua Dibaca', exact: true }).click();
     await expect(page.getByText('Semua notifikasi sudah dibaca', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Arsip', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Latihan bulan lalu' })).toBeVisible();
@@ -479,6 +479,8 @@ test('notification failures preserve explicit read state and hide cached data wh
     .getByRole('button', { name: 'Tandai dibaca: Catatan Baru dari Bu Ratna, M.Pd.' })
     .click();
   await expect(page.locator('.form-error[role=alert]')).toContainText('Layanan sedang bermasalah');
+  await expect(page.locator('.notification-item').filter({ hasText: 'Catatan Baru dari Bu Ratna' })
+    .getByRole('alert')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Belum Dibaca (2)', exact: true })).toBeVisible();
   status = 401;
   await page.getByRole('button', { name: 'Aktivitas Kelas', exact: true }).click();

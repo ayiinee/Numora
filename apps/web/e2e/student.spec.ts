@@ -1464,12 +1464,16 @@ for (const width of [320, 390, 1440])
     await fixtures(page);
     await page.goto('/student/join?code=FIX234');
     await expect(page.getByRole('heading', { name: 'Konfirmasi gabung kelas' })).toBeVisible();
+    const join = page.getByRole('button', { name: 'Gabung kelas', exact: true });
+    const cancel = page.getByRole('link', { name: 'Batal dan buka profil' });
+    const primaryBackground = await join.evaluate((element) => getComputedStyle(element).backgroundColor);
+    await expect(cancel).not.toHaveCSS('background-color', primaryBackground);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`class-join-${width}.png`), fullPage: true });
 
-    await page.getByRole('button', { name: 'Gabung kelas', exact: true }).focus();
+    await join.focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:3300/student');
     await expect(
@@ -2832,6 +2836,16 @@ for (const width of [320, 768, 1280]) {
       await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toHaveCount(0);
       await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
       await expect(page).toHaveURL('/student/drill/' + attemptId + '/explanation');
+      await expect(page.getByRole('link', { name: 'Kembali ke hasil', exact: true }))
+        .toHaveAttribute('href', '/student/drill/' + attemptId + '/result');
+      const report = page.getByRole('button', { name: 'Laporkan soal 1', exact: true });
+      await report.click();
+      const reportDialog = page.getByRole('dialog', { name: 'Laporkan soal 1', exact: true });
+      await reportDialog.getByRole('button', { name: 'Tutup dialog' }).click();
+      await expect(report).toBeFocused();
+      await report.click();
+      await page.keyboard.press('Escape');
+      await expect(report).toBeFocused();
       await page.getByRole('button', { name: /^Pembahasan soal 2,/ }).click();
       await expect(page.getByText('Sebagian benar', { exact: true })).toBeVisible();
       await expect(page.getByRole('checkbox').first()).toBeDisabled();

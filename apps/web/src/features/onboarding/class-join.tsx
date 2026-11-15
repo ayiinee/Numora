@@ -36,6 +36,7 @@ export function ClassJoinScreen({ code }: { code: string | undefined }) {
       title="Gabung kelas"
       subtitle="Tautan atau QR dari gurumu membawa kode kelas."
       backHref="/student"
+      showTopbarProfile={false}
     >
       <StudentGate>{(token) => <JoinContent token={token} rawCode={code} />}</StudentGate>
     </StudentLayout>
@@ -131,20 +132,22 @@ function JoinContent({ token, rawCode }: { token: string; rawCode: string | unde
           )}
         </p>
       )}
-      <Button onClick={() => void join()} disabled={busy}>
-        {busy ? 'Menghubungkan…' : 'Gabung kelas'}
-      </Button>
-      <Link
-        className="button-link"
-        href="/student/profile"
-        aria-disabled={busy}
-        onClick={(event) => {
-          if (busy) event.preventDefault();
-          else clearClassInvitation();
-        }}
-      >
-        Batal dan buka profil
-      </Link>
+      <div className="student-join-actions flex flex-wrap gap-2">
+        <Button onClick={() => void join()} disabled={busy}>
+          {busy ? 'Menghubungkan…' : 'Gabung kelas'}
+        </Button>
+        <Link
+          className="button-link button-link--secondary"
+          href="/student/profile"
+          aria-disabled={busy}
+          onClick={(event) => {
+            if (busy) event.preventDefault();
+            else clearClassInvitation();
+          }}
+        >
+          Batal dan buka profil
+        </Link>
+      </div>
     </section>
   );
 }

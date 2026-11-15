@@ -9,6 +9,7 @@ export function StudentLayout({
   backHref,
   mobileHeader,
   className,
+  showTopbarProfile,
 }: {
   title: string;
   subtitle?: string;
@@ -17,6 +18,7 @@ export function StudentLayout({
   backHref?: string;
   mobileHeader?: ReactNode;
   className?: string | undefined;
+  showTopbarProfile?: boolean;
 }) {
   return (
     <AppShell
@@ -26,6 +28,7 @@ export function StudentLayout({
       focus={hideBottomNav}
       mobileHeader={mobileHeader}
       className={className ?? ''}
+      {...(showTopbarProfile !== undefined && { showTopbarProfile })}
     >
       {children}
     </AppShell>

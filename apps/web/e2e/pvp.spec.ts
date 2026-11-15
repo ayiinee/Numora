@@ -18,6 +18,8 @@ const transport = new Server(http, transportOptions);
 const namespace = transport.of('/pvp');
 let snapshot: PvpSnapshotDto;
 let commands: { event: string; requestId: string; payload: Record<string, unknown> }[] = [];
+let rejectLeave = false;
+let dropLeaveAcknowledgement = false;
 const players = () => [
   {
     studentId: selfId,
@@ -86,6 +88,11 @@ test.beforeAll(async () => {
         ack: (value: unknown) => void,
       ) => {
         if (event !== 'match:reconnect') commands.push({ event, ...body });
+        if (event === 'room:leave' && dropLeaveAcknowledgement) return;
+        if (event === 'room:leave' && rejectLeave) {
+          ack({ payload: { ok: false, error: { detail: 'Belum dapat keluar duel.' } } });
+          return;
+        }
         if (event === 'room:create' || event === 'room:join') snapshot = state('WAITING');
         if (event === 'player:ready')
           snapshot = {
@@ -242,6 +249,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     page,
   }) => {
     commands = [];
+    rejectLeave = false;
+    dropLeaveAcknowledgement = false;
     snapshot = state('WAITING');
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
@@ -308,8 +317,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(startDuel).toBeEnabled();
     await capture('waiting-host-start');
     await startDuel.click();
-    expect(commands.some((command) => command.event === 'match:start')).toBe(true);
     await expect(page.getByRole('heading', { name: 'Duel Berlangsung' })).toBeVisible();
+    expect(commands.some((command) => command.event === 'match:start')).toBe(true);
     await expect(page.locator('.pvp-question .katex-html')).toBeVisible();
     await expect(page.locator('.pvp-question math msqrt')).toHaveText('1156');
     await expect(page.locator('.pvp-answer-list math mfrac')).toHaveCount(1);
@@ -339,6 +348,13 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByRole('timer', { name: 'Waktu reconnect Ahmad F.' })).toBeVisible();
     await expect(page.getByRole('radio', { name: /A\s*\.\s*28 unit/ })).toBeDisabled();
     await capture('battle-reconnect');
+    await expect(page.getByRole('button', { name: 'Menyerah', exact: true })).toHaveCount(1);
+    await expect(page.getByRole('link', { name: 'Buka profil' })).toHaveCount(0);
+    await page.goBack();
+    const leaveDialog = page.getByRole('dialog', { name: 'Menyerah dari duel?' });
+    await expect(leaveDialog).toBeVisible();
+    await leaveDialog.getByRole('button', { name: 'Tutup dialog' }).click();
+    await expect(page).toHaveURL(new RegExp(matchId));
     await page.getByRole('button', { name: 'Menyerah', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Menyerah dari duel?' })).toBeVisible();
     await page.keyboard.press('Escape');
@@ -405,7 +421,25 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.goto(`/student/pvp/${matchId}`);
     await expect(page.getByRole('button', { name: 'Menyerah', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Menyerah', exact: true }).click();
-    await page.getByRole('button', { name: 'Ya, keluar' }).click();
+    if (width === 320) {
+      rejectLeave = true;
+      await leaveDialog.getByRole('button', { name: 'Ya, keluar' }).click();
+      await expect(leaveDialog.getByRole('alert')).toHaveText('Belum dapat keluar duel.');
+      expect(commands.filter((command) => command.event === 'room:leave')).toHaveLength(1);
+      rejectLeave = false;
+      dropLeaveAcknowledgement = true;
+      await leaveDialog.getByRole('button', { name: 'Ya, keluar' }).click();
+      const check = leaveDialog.getByRole('button', { name: 'Periksa permintaan sebelumnya' });
+      await expect(check).toBeEnabled();
+      dropLeaveAcknowledgement = false;
+      await check.click();
+      await expect(page.getByRole('heading', { name: 'Kamu kalah kali ini' })).toBeVisible();
+      const leaves = commands.filter((command) => command.event === 'room:leave');
+      expect(leaves).toHaveLength(3);
+      expect(leaves[2]?.requestId).toBe(leaves[1]?.requestId);
+    } else {
+      await leaveDialog.getByRole('button', { name: 'Ya, keluar' }).click();
+    }
     await expect(page.getByRole('heading', { name: 'Kamu kalah kali ini' })).toBeVisible();
     await expect(
       page.getByText('Duel berakhir karena kamu keluar atau tidak tersambung kembali.'),
@@ -413,8 +447,30 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(
       page.getByText('Pertandingan ini tidak berkontribusi pada leaderboard.'),
     ).toBeVisible();
-    expect(commands.filter((command) => command.event === 'room:leave')).toHaveLength(1);
+    await expect(leaveDialog).toHaveCount(0);
+    expect(commands.filter((command) => command.event === 'room:leave')).toHaveLength(width === 320 ? 3 : 1);
     await capture('outcome-forfeit');
     expect(errors).toEqual([]);
   });
 }
+
+test('leaving the page during a disconnected duel shows the server warning and sends no leave command', async ({ page }) => {
+  commands = [];
+  snapshot = state('RUNNING');
+  await page.setViewportSize({ width: 320, height: 640 });
+  await fixtures(page);
+  await page.route('**/api/v1/pvp/availability', (route) =>
+    route.fulfill({ json: { available: true, activeMatchId: matchId } }),
+  );
+  await page.goto(`/student/pvp/${matchId}`);
+  await expect(page.locator('.pvp-header__connection')).toHaveText('Terhubung');
+  namespace.disconnectSockets(true);
+  await expect(page.locator('.pvp-header__connection')).toHaveText('Offline');
+  await page.getByRole('button', { name: 'Menyerah', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Menyerah dari duel?' });
+  await expect(dialog.getByText(/server tetap menentukan hasil/)).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Sambungkan lagi' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Keluar halaman' }).click();
+  await expect(page).toHaveURL('/student/pvp');
+  expect(commands.filter((command) => command.event === 'room:leave')).toHaveLength(0);
+});

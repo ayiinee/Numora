@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,10 +31,31 @@ function ProfileContent({ token }: { token: string }) {
   const router = useRouter();
   const cache = useQueryClient();
   const [joinCode, setJoinCode] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [leaveError, setLeaveError] = useState('');
+  const [logoutError, setLogoutError] = useState('');
   const [busy, setBusy] = useState(false);
   const [leaving, setLeaving] = useState<DashboardClassDto | null>(null);
+  const [confirmation, setConfirmation] = useState<'join' | 'leave' | null>(null);
+  const sending = useRef(false);
+  const confirmationRef = useRef<HTMLParagraphElement>(null);
+  const confirmationKey = state.status === 'ready' ? `student-class-confirmation:${state.profile.id}` : null;
+  useEffect(() => {
+    if (!confirmationKey) return;
+    try {
+      const action = sessionStorage.getItem(confirmationKey);
+      sessionStorage.removeItem(confirmationKey);
+      if (action === 'join' || action === 'leave') setConfirmation(action);
+    } catch {
+      // The dashboard still shows membership when storage is unavailable.
+    }
+  }, [confirmationKey]);
+  useEffect(() => {
+    const message = confirmationRef.current;
+    if (!confirmation || !message) return;
+    message.focus({ preventScroll: true });
+    message.scrollIntoView?.({ block: 'center' });
+  }, [confirmation]);
   const photo = useProfilePhoto(state.status === 'ready' ? state.profile.id : undefined);
   const dashboard = useQuery({
     queryKey: ['student-dashboard'],
@@ -45,50 +66,62 @@ function ProfileContent({ token }: { token: string }) {
   const profile = state.profile;
   const classes = dashboard.data?.classes ?? (dashboard.data?.class ? [dashboard.data.class] : []);
 
+  async function refreshMembership(action: 'join' | 'leave') {
+    try {
+      if (confirmationKey) sessionStorage.setItem(confirmationKey, action);
+    } catch {
+      setConfirmation(action);
+    }
+    await cache.invalidateQueries();
+    await refresh();
+  }
+
   async function join(event: FormEvent) {
     event.preventDefault();
-    if (!joinCode.trim() || busy) return;
+    if (!joinCode.trim() || sending.current) return;
+    sending.current = true;
     setBusy(true);
-    setError('');
-    setSuccess('');
+    setJoinError('');
+    setConfirmation(null);
     try {
       await joinClass(token, joinCode.trim());
-      setSuccess('Berhasil bergabung dengan kelas.');
       setJoinCode('');
-      await cache.invalidateQueries();
-      await refresh();
+      await refreshMembership('join');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Belum dapat bergabung. Coba lagi.');
+      setJoinError(err instanceof Error ? err.message : 'Belum dapat bergabung. Coba lagi.');
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }
   async function signOut() {
-    if (busy) return;
+    if (sending.current) return;
+    sending.current = true;
     setBusy(true);
-    setError('');
+    setLogoutError('');
     try {
       await logout();
       router.replace('/login');
     } catch {
-      setError('Belum dapat keluar. Coba lagi.');
+      setLogoutError('Belum dapat keluar. Coba lagi.');
+      sending.current = false;
       setBusy(false);
     }
   }
   async function leave() {
-    if (!leaving || busy) return;
+    if (!leaving || sending.current) return;
+    sending.current = true;
     setBusy(true);
-    setError('');
-    setSuccess('');
+    setLeaveError('');
+    setConfirmation(null);
     try {
       await leaveClass(token, leaving.id);
       setLeaving(null);
-      setSuccess('Berhasil keluar dari kelas. Progres dan riwayatmu tetap tersimpan.');
-      await cache.invalidateQueries();
-      await refresh();
+      await refreshMembership('leave');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Belum dapat keluar kelas. Coba lagi.');
+      setLeaveError(cause instanceof Error ? cause.message : 'Belum dapat keluar kelas. Coba lagi.');
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }
@@ -168,17 +201,13 @@ function ProfileContent({ token }: { token: string }) {
                 {busy ? 'Menghubungkan…' : 'Gabung kelas'}
               </Button>
             </form>
+            {joinError && <p role="alert" className="form-error">{joinError}</p>}
+            {confirmation === 'join' && (
+              <p role="status" tabIndex={-1} ref={confirmationRef} className="success-message">
+                Berhasil bergabung dengan kelas.
+              </p>
+            )}
           </Card>
-          {error && !leaving && (
-            <p role="alert" className="form-error">
-              {error}
-            </p>
-          )}
-          {success && (
-            <p role="status" className="success-message">
-              {success}
-            </p>
-          )}
           {tryout.isPending ? (
             <Skeleton height={84} />
           ) : tryout.isError ? (
@@ -239,8 +268,9 @@ function ProfileContent({ token }: { token: string }) {
                       <Button
                         variant="danger-outline"
                         disabled={busy}
-                        onClick={() => {
-                          setError('');
+                        onClick={(event) => {
+                          event.currentTarget.focus({ preventScroll: true });
+                          setLeaveError('');
                           setLeaving(cls);
                         }}
                       >
@@ -253,6 +283,11 @@ function ProfileContent({ token }: { token: string }) {
                 <p>Belajar mandiri. Gabung kelas bersifat opsional.</p>
               )}
             </ProfileSetting>
+            {confirmation === 'leave' && (
+              <p role="status" tabIndex={-1} ref={confirmationRef} className="success-message">
+                Berhasil keluar dari kelas. Progres dan riwayatmu tetap tersimpan.
+              </p>
+            )}
             <ProfileSetting
               icon="chat"
               title="Feedback dari Guru"
@@ -288,9 +323,9 @@ function ProfileContent({ token }: { token: string }) {
               </>
             }
           >
-            {leaving && error && (
+            {leaving && leaveError && (
               <p role="alert" className="form-error">
-                {error}
+                {leaveError}
               </p>
             )}
           </Dialog>
@@ -304,6 +339,7 @@ function ProfileContent({ token }: { token: string }) {
             <Icon name="logout" width={18} height={18} />{' '}
             {busy ? 'Mohon tunggu…' : 'Keluar Akun Google'}
           </Button>
+          {logoutError && <p role="alert" className="form-error">{logoutError}</p>}
           <p className="student-profile-note">
             Progres dan riwayat belajar tersimpan di akun Numora.
           </p>

@@ -6,7 +6,7 @@ import { Button, Card, Icon, Skeleton } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { LearningApiError } from './api';
 import { ApiProblem } from '@/lib/api';
-import { useStudentToken } from './student-session';
+import { useIsStudentSession, useStudentToken } from './student-session';
 import { ContentRichText } from '@/features/admin/content-rich-text';
 
 export function LearningFrame({
@@ -68,14 +68,18 @@ export function DataState({
   error,
   pending,
   retry,
+  recovery,
 }: {
   error?: unknown;
   pending: boolean;
   retry?: () => void;
+  recovery?: { href: string; label: string };
 }) {
+  const isStudent = useIsStudentSession();
+  const returnTo = recovery ?? (isStudent ? { href: '/student', label: 'Kembali ke Belajar' } : undefined);
   if (pending)
     return (
-      <div className="loading-stack" aria-label="Memuat data">
+      <div className="loading-stack" aria-label="Memuat data" role={returnTo ? 'status' : undefined}>
         <Skeleton height={24} width="45%" />
         <Skeleton height={120} />
         <Skeleton height={80} />
@@ -86,6 +90,9 @@ export function DataState({
   const message = error instanceof Error ? error.message : 'Data belum dapat dimuat.';
   return (
     <Status
+      illustration={isStudent && (status === 401 || status === 403 || status === 404) ? (
+        <span className="icon-tile"><Icon name={status === 404 ? 'search' : 'lock'} /></span>
+      ) : undefined}
       title={
         status === 401
           ? 'Sesi berakhir'
@@ -101,11 +108,15 @@ export function DataState({
         <Link className="button-link" href="/login">
           Masuk kembali
         </Link>
-      ) : (
+      ) : returnTo && (status === 403 || status === 404) ? (
+        <Link className="button-link button-link--secondary" href={returnTo.href}>
+          {returnTo.label}
+        </Link>
+      ) : retry ? (
         <Button variant="secondary" onClick={retry}>
           Coba lagi
         </Button>
-      )}
+      ) : null}
     </Status>
   );
 }

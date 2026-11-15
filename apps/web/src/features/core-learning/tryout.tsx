@@ -86,34 +86,87 @@ function CurrentTryout({
 }) {
   const router = useRouter();
   const client = useQueryClient();
-  const [details, setDetails] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [rulesAccepted, setRulesAccepted] = useState<string | null>(null);
   const [tab, setTab] = useState(initialTab);
   const starting = useRef(false);
   const detailTitle = useRef<HTMLDivElement>(null);
   const detailsButton = useRef<HTMLButtonElement>(null);
+  const hadDetail = useRef(false);
   useLearningView(token, 'tryout_opened');
   const query = useCurrentTryout(token, !batches);
   const history = useAssessmentHistory(token, tab === 'history', undefined, 'tryout');
   const start = useMutation({
-    mutationFn: (packageId: string) => learningApi.startTryout(token, packageId),
-    onSuccess: (attempt) => {
+    mutationFn: ({ packageId }: { packageId: string; detailHref: string }) =>
+      learningApi.startTryout(token, packageId),
+    onSuccess: (attempt, { detailHref }) => {
       refreshTryoutStatus(client);
-      router.push(`/student/tryout/${attempt.id}`);
+      if (window.location.href !== detailHref) {
+        starting.current = false;
+        start.reset();
+        return;
+      }
+      const attemptHref = `/student/tryout/${attempt.id}`;
+      if (window.history.state?.numoraTryoutDetailFromSchedule) router.replace(attemptHref);
+      else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('detail');
+        window.history.replaceState(null, '', url);
+        router.push(attemptHref);
+      }
     },
     onError: () => {
       starting.current = false;
       void query.refetch();
     },
   });
-  useLearningView(
-    token,
-    'tryout_detail_viewed',
-    { packageId: query.data?.id },
-    details && !!query.data?.id,
-  );
   const current = query.data;
   const available = current && current.state !== 'unavailable' && !!current.id;
+  const details = !batches && !!detailId && !!available && current.id === detailId;
+  useLearningView(token, 'tryout_detail_viewed', { packageId: current?.id }, details);
+  function closeDetails() {
+    if (window.history.state?.numoraTryoutDetailFromSchedule) {
+      window.history.back();
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('detail');
+    window.history.replaceState(null, '', url);
+    setDetailId(null);
+    setRulesAccepted(null);
+    setTab('current');
+  }
+  useEffect(() => {
+    function syncDetail() {
+      setDetailId(new URLSearchParams(window.location.search).get('detail'));
+    }
+    syncDetail();
+    window.addEventListener('popstate', syncDetail);
+    return () => window.removeEventListener('popstate', syncDetail);
+  }, []);
+  useEffect(() => {
+    if (!detailId || (!batches && (query.isPending || query.isError))) return;
+    if (!details) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('detail');
+      window.history.replaceState(null, '', url);
+      setDetailId(null);
+      setTab('current');
+      return;
+    }
+    detailTitle.current?.focus();
+  }, [batches, detailId, details, query.isError, query.isPending]);
+  useEffect(() => {
+    if (detailId) {
+      hadDetail.current = true;
+      return;
+    }
+    setRulesAccepted(null);
+    if (hadDetail.current) {
+      hadDetail.current = false;
+      detailsButton.current?.focus();
+    }
+  }, [detailId]);
   const historyRecords =
     history.data?.pages
       .flatMap((page) => page.records)
@@ -138,11 +191,7 @@ function CurrentTryout({
             current={current}
             accepted={rulesAccepted === current.id}
             onAccepted={(value) => setRulesAccepted(value ? (current.id ?? null) : null)}
-            onBack={() => {
-              setDetails(false);
-              setRulesAccepted(null);
-              requestAnimationFrame(() => detailsButton.current?.focus());
-            }}
+            onBack={closeDetails}
             pending={start.isPending || start.isSuccess}
             error={start.isError ? start.error.message : undefined}
             onStart={() => {
@@ -154,7 +203,7 @@ function CurrentTryout({
               )
                 return;
               starting.current = true;
-              start.mutate(current.id);
+              start.mutate({ packageId: current.id, detailHref: window.location.href });
             }}
           />
         ) : (
@@ -204,8 +253,11 @@ function CurrentTryout({
                         detailsButtonRef={detailsButton}
                         current={current}
                         onDetails={() => {
-                          setDetails(true);
-                          requestAnimationFrame(() => detailTitle.current?.focus());
+                          if (!current.id) return;
+                          const url = new URL(window.location.href);
+                          url.searchParams.set('detail', current.id);
+                          window.history.pushState({ numoraTryoutDetailFromSchedule: true }, '', url);
+                          setDetailId(current.id);
                           window.scrollTo(0, 0);
                         }}
                       />

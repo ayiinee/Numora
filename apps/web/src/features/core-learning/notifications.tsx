@@ -58,14 +58,15 @@ export function NotificationsScreen() {
   const client = useQueryClient();
   const reading = useRef(false);
   const filtersRef = useRef<HTMLDivElement>(null);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState<{ id: string | null } | null>(null);
+  const filterRef = useRef(filter);
   const read = useMutation({
     mutationFn: (id: string | null) =>
       id ? notificationApi.read(token, id) : notificationApi.readAll(token),
-    onSuccess: async () => {
+    onSuccess: async (_, id) => {
       await client.invalidateQueries({ queryKey: notificationKey });
-      setNotice('Notifikasi ditandai dibaca.');
-      if (filter === 'unread')
+      setNotice({ id });
+      if (filterRef.current === 'unread')
         filtersRef.current
           ?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
           ?.focus();
@@ -86,6 +87,26 @@ export function NotificationsScreen() {
     ).values(),
   ];
   const groups = new Map<string, NotificationDto[]>();
+  const readTarget = read.variables;
+  const readFeedbackAtFilter = !!readTarget && !items.some((item) => item.id === readTarget);
+  function readFeedback(id: string | null) {
+    if (denied) return null;
+    if (read.variables === id && read.isPending) return <p role="status">Menandai dibaca…</p>;
+    if (read.variables === id && read.isError) {
+      return (
+        <div className="notification-read-feedback">
+          <p role="alert" className="form-error">{read.error.message}</p>
+          {read.error instanceof LearningApiError && read.error.status === 401 ? (
+            <Link className="button-link button-link--secondary" href="/login">Masuk kembali</Link>
+          ) : (
+            <Button variant="secondary" onClick={() => mark(id)}>Coba lagi</Button>
+          )}
+        </div>
+      );
+    }
+    if (notice?.id === id) return <p role="status">Notifikasi ditandai dibaca.</p>;
+    return null;
+  }
   for (const item of items) {
     const label = notificationDateGroup(item.occurredAt);
     groups.set(label, [...(groups.get(label) ?? []), item]);
@@ -93,12 +114,12 @@ export function NotificationsScreen() {
   function mark(id: string | null) {
     if (reading.current) return;
     reading.current = true;
-    setNotice('');
+    setNotice(null);
     read.mutate(id);
   }
   const header = (
     <div className="notification-header">
-      <Link href="/student" className="notification-header__back">
+      <Link href="/student" className="notification-header__back" aria-label="Kembali ke Belajar">
         <Icon name="back" /> Kembali
       </Link>
       <h1>Notifikasi</h1>
@@ -122,21 +143,24 @@ export function NotificationsScreen() {
         <div className="notifications-title">
           <h2>
             Pusat Notifikasi{' '}
-            {summary.data && (
+            {!denied && summary.data && (
               <Badge variant="primary" size="sm" className="notification-unread-badge">
                 {summary.data.unread} Baru
               </Badge>
             )}
           </h2>
-          <button
-            className="text-action"
-            type="button"
-            disabled={read.isPending || !summary.data?.unread}
-            onClick={() => mark(null)}
-          >
-            <Icon name="check" width={18} /> Tandai Dibaca
-          </button>
+          {!(read.isError && readTarget === null) && (
+            <button
+              className="text-action"
+              type="button"
+              disabled={denied || read.isPending || !summary.data?.unread}
+              onClick={() => mark(null)}
+            >
+              <Icon name="check" width={18} /> Tandai Semua Dibaca
+            </button>
+          )}
         </div>
+        {readFeedback(null)}
         {summary.isError && (
           <p className="form-error" role="alert">
             Jumlah notifikasi belum dapat dimuat.{' '}
@@ -157,17 +181,19 @@ export function NotificationsScreen() {
               key={f.id}
               aria-pressed={filter === f.id}
               onClick={() => {
+                filterRef.current = f.id;
                 setFilter(f.id);
-                setNotice('');
+                setNotice(null);
               }}
             >
               {f.label}
-              {summary.data && (f.id === 'all' || f.id === 'unread')
+              {!denied && summary.data && (f.id === 'all' || f.id === 'unread')
                 ? ` (${f.id === 'all' ? summary.data.total : summary.data.unread})`
                 : ''}
             </button>
           ))}
         </div>
+        {readFeedbackAtFilter && readFeedback(readTarget)}
         <div className="notifications-composition">
           <Card className="notification-list" padding="none">
             {list.isPending || denied || (list.isError && !list.data) ? (
@@ -175,6 +201,7 @@ export function NotificationsScreen() {
                 pending={list.isPending}
                 error={list.error}
                 retry={() => void list.refetch()}
+                recovery={{ href: '/student', label: 'Kembali ke Belajar' }}
               />
             ) : !items.length ? (
               <EmptyState
@@ -255,7 +282,7 @@ export function NotificationsScreen() {
                               {item.action.status && (
                                 <span className="muted">{item.action.status}</span>
                               )}
-                              {!item.readAt && (
+                              {!item.readAt && !(read.variables === item.id && read.isError) && (
                                 <button
                                   className="notification-mark"
                                   disabled={read.isPending}
@@ -267,6 +294,7 @@ export function NotificationsScreen() {
                                 </button>
                               )}
                             </div>
+                            {readFeedback(item.id)}
                           </div>
                         </li>
                       );
@@ -302,14 +330,6 @@ export function NotificationsScreen() {
             </Link>
           </aside>
         </div>
-        <p role="status" className="muted">
-          {notice}
-        </p>
-        {read.isError && (
-          <p className="form-error" role="alert">
-            {read.error.message}
-          </p>
-        )}
         {socket.error && (
           <div role="alert" className="form-error">
             {socket.error}

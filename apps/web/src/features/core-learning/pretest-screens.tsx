@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge, Card, Icon } from '@tka/ui';
-import { learningApi } from './api';
+import { learningApi, LearningApiError } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
 import { PretestCard, type PretestChapterState } from './pretest';
@@ -109,13 +109,15 @@ export function PretestAttemptScreen() {
     refetchOnWindowFocus: false,
   });
   const [reload, setReload] = useState(0);
+  const denied = query.error instanceof LearningApiError && [401, 403, 404].includes(query.error.status);
   return (
     <LearningFrame title="Pretest Bab" focus className="learning-practice-shell">
-      {!query.data ? (
+      {denied || !query.data ? (
         <DataState
           pending={query.isPending}
           error={query.error}
           retry={() => void query.refetch()}
+          recovery={{ href: '/student/learn', label: 'Kembali ke Latihan' }}
         />
       ) : query.data.status === 'completed' ? (
         <Status title="Pretest sudah selesai">
@@ -135,7 +137,7 @@ export function PretestAttemptScreen() {
           }
         />
       )}
-      {query.data && query.isError && (
+      {!denied && query.data && query.isError && (
         <DataState pending={false} error={query.error} retry={() => void query.refetch()} />
       )}
     </LearningFrame>
@@ -162,6 +164,8 @@ function PretestForm({
     <AssessmentSession
       redesign
       sessionKind="pretest"
+      exitHref={`/student/learn/${attempt.chapterId}`}
+      exitLabel="Kembali ke bab"
       title={attempt.chapterTitle}
       questions={attempt.questions}
       headerExtra={<span>Tanpa batas waktu</span>}

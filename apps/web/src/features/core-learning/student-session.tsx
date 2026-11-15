@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/onboarding/auth';
+import { LogoutButton } from '@/features/onboarding/logout-button';
 import { LearningProvider } from './provider';
 import {
   rememberClassInvitation,
@@ -10,6 +11,10 @@ import {
 } from '@/features/onboarding/class-invitation';
 
 const StudentSession = createContext<string | null>(null);
+export function useIsStudentSession() {
+  return useContext(StudentSession) !== null;
+}
+
 export function useStudentToken() {
   const token = useContext(StudentSession);
   if (!token) throw new Error('Student screen must be rendered within the student layout.');
@@ -35,14 +40,18 @@ export function StudentAccess({ children }: { children: ReactNode }) {
         </StudentSession.Provider>
       </LearningProvider>
     );
+  if (state.status === 'disabled')
+    return (
+      <main className="mx-auto max-w-lg p-6">
+        <h1 className="text-xl font-bold">Akun tidak aktif</h1>
+        <p className="my-4">{state.message || 'Akses akun ini sedang tidak tersedia.'}</p>
+        <LogoutButton />
+      </main>
+    );
   return (
     <main className="mx-auto max-w-lg p-6" aria-live="polite">
       <h1 className="text-xl font-bold">
-        {state.status === 'disabled'
-          ? 'Akun tidak aktif'
-          : state.status === 'error'
-            ? 'Sesi belum siap'
-            : 'Memeriksa akses'}
+        {state.status === 'error' ? 'Sesi belum siap' : 'Memeriksa akses'}
       </h1>
       <p className="my-4">{state.status === 'error' ? state.message : 'Mohon tunggu…'}</p>
       {state.status === 'error' && (
