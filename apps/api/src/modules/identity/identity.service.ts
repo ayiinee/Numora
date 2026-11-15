@@ -36,6 +36,20 @@ function usedPassword(verifiedToken: string): boolean {
   }
 }
 
+type AccountAccess = Pick<IdentityProfileDto, 'id' | 'role' | 'status'>;
+
+function assertActiveAccount<T extends AccountAccess>(
+  profile: T | undefined,
+): asserts profile is T {
+  if (!profile)
+    throw new NotFoundException({
+      code: 'ACCOUNT_NOT_REGISTERED',
+      detail: 'Lengkapi profil untuk melanjutkan.',
+    });
+  if (profile.status !== 'ACTIVE')
+    throw new ForbiddenException({ code: 'ACCOUNT_DISABLED', detail: 'Akun ini tidak aktif.' });
+}
+
 @Injectable()
 export class IdentityService {
   private readonly logger = new Logger(IdentityService.name);
@@ -72,13 +86,7 @@ export class IdentityService {
       .from(users)
       .where(eq(users.authUserId, authUser.id))
       .limit(1);
-    if (!profile)
-      throw new NotFoundException({
-        code: 'ACCOUNT_NOT_REGISTERED',
-        detail: 'Lengkapi profil untuk melanjutkan.',
-      });
-    if (profile.status !== 'ACTIVE')
-      throw new ForbiddenException({ code: 'ACCOUNT_DISABLED', detail: 'Akun ini tidak aktif.' });
+    assertActiveAccount(profile);
 
     let teacherVerified: boolean | null = null;
     let studentAffiliation: 'MANDIRI' | 'SCHOOL' | null = null;
@@ -121,8 +129,19 @@ export class IdentityService {
   }
 
   // Compatibility alias for domain modules that use the shorter profile lookup name.
-  async me(authorization?: string): Promise<IdentityProfileDto> {
-    return this.getProfile(authorization);
+  me(authorization?: string): Promise<IdentityProfileDto>;
+  me(authorization: string | undefined, scope: 'access'): Promise<AccountAccess>;
+  async me(authorization?: string, scope?: 'access') {
+    if (!scope) return this.getProfile(authorization);
+    const authUser = await this.authenticate(authorization);
+    const { db } = getDatabase();
+    const [profile] = await db
+      .select({ id: users.id, role: users.role, status: users.status })
+      .from(users)
+      .where(eq(users.authUserId, authUser.id))
+      .limit(1);
+    assertActiveAccount(profile);
+    return profile;
   }
 
   async registerProfile(

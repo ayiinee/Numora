@@ -8,6 +8,7 @@ import {
   attemptItems,
   attemptAnswers,
   chapters,
+  contentDeliveryManifests,
   subchapters,
   levels,
   competencies,
@@ -225,6 +226,22 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     expect(resumed.clock?.sessionId).not.toBe(sessionId);
     expect(resumed.clock?.elapsedMs).toBeGreaterThanOrEqual(paused.elapsedMs);
     expect(resumed.questions[0]?.selectedOptionId).toBe('A');
+    const resumedId = resumed.clock!.sessionId!;
+    const renewed = await service.updateClock('student', attempt.id, resumedId, 'heartbeat');
+    expect(renewed).toMatchObject({ sessionId: resumedId, remainingMs: 30_000 });
+    expect(
+      (await service.updateClock('student', attempt.id, sessionId, 'heartbeat')).sessionId,
+    ).toBeNull();
+    const refreshed = await service.attempt('student', attempt.id);
+    expect(refreshed.questions).toEqual(resumed.questions);
+    expect(refreshed.clock?.sessionId).toBe(resumedId);
+    expect(
+      await db
+        .select()
+        .from(contentDeliveryManifests)
+        .where(eq(contentDeliveryManifests.idempotencyKey, attempt.id + ':ITEM_PAYLOAD_ISSUED')),
+    ).toHaveLength(1);
+
     // Simulate a later failure in the very same transaction, after XP insertion.
     const trigger = `test_reward_${suffix.replaceAll('-', '')}`;
     await db.execute(
@@ -328,11 +345,11 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     }
     expect(result.reward).toEqual(replay.reward);
     expect(result).toMatchObject({ score: 80, stars: 2, reward: { baseXp: 80, policyVersion: 2 } });
-    // Auth is a fixture here: count only the result projection and delivery statement.
+    // The first response has already recorded delivery, so reopening reads one projection.
     const resultQueries = vi.spyOn(getDatabase().client, 'unsafe');
     try {
       expect(await service.result('student', attempt.id)).toEqual(result);
-      expect(resultQueries.mock.calls).toHaveLength(2);
+      expect(resultQueries.mock.calls).toHaveLength(1);
       expect(result.questions).toHaveLength(10);
       expect(new Set(result.questions.map((question) => question.questionInstanceId)).size).toBe(
         10,
@@ -340,6 +357,14 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     } finally {
       resultQueries.mockRestore();
     }
+    expect(
+      await db
+        .select()
+        .from(contentDeliveryManifests)
+        .where(
+          eq(contentDeliveryManifests.idempotencyKey, attempt.id + ':EXPLANATION_PAYLOAD_ISSUED'),
+        ),
+    ).toHaveLength(1);
     expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id))).toHaveLength(
       1,
     );
@@ -361,6 +386,28 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     const retry = await service.start('student', level!.id);
     expect(retry.id).not.toBe(attempt.id);
     expect(retry.questions.map((q) => q.stem)).toEqual(attempt.questions.map((q) => q.stem));
+    // An expired matching session is finalized, never renewed by a late heartbeat.
+    await db
+      .update(assessmentAttempts)
+      .set({
+        drillTimer: {
+          elapsedMs: 0,
+          session: {
+            id: retry.clock!.sessionId!,
+            startedAtMs: 1,
+            endsAtMs: 2001,
+          },
+        },
+      })
+      .where(eq(assessmentAttempts.id, retry.id));
+    expect(
+      await service.updateClock('student', retry.id, retry.clock!.sessionId!, 'heartbeat'),
+    ).toEqual({
+      elapsedMs: 2000,
+      remainingMs: 0,
+      sessionId: null,
+    });
+    expect((await service.start('student', level!.id)).id).toBe(retry.id);
     const zero = await service.submit('student', retry.id);
     expect(zero).toMatchObject({ score: 0, stars: 0, mastered: false });
     expect(zero.reward?.totalXp).toBeGreaterThanOrEqual(0);

@@ -8,7 +8,7 @@ import {
   chapters,
   subchapters,
 } from '@tka/database';
-import { and, count, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -21,7 +21,7 @@ export class LearningCatalogService {
   ) {}
 
   private async student(authorization?: string) {
-    const user = await this.identity.me(authorization);
+    const user = await this.identity.me(authorization, 'access');
     if (user.role !== 'STUDENT')
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
     return user.id;
@@ -72,37 +72,32 @@ export class LearningCatalogService {
       throw new NotFoundException(problem('SUBCHAPTER_NOT_FOUND', 'Subbab tidak ditemukan.'));
     const rows = levelRows.filter((row) => row.subchapterId === subchapterId);
     const levelIds = rows.map((row) => row.id);
-    const progress = levelIds.length
+    const states = levelIds.length
       ? await db
           .select({
-            levelId: levelProgress.levelId,
+            levelId: levels.id,
             unlockedAt: levelProgress.unlockedAt,
             completedAt: levelProgress.completedAt,
             latestScore: levelProgress.latestScore,
             bestScore: levelProgress.bestScore,
             latestStars: levelProgress.latestStars,
             bestStars: levelProgress.bestStars,
+            active: sql<boolean>`exists (
+              select 1 from ${assessmentAttempts}
+              where ${assessmentAttempts.studentId} = ${studentId}
+                and ${assessmentAttempts.assessmentType} = 'DRILL'
+                and ${assessmentAttempts.status} = 'IN_PROGRESS'
+                and ${assessmentAttempts.levelIdAtStart} = ${levels.id}
+            )`,
           })
-          .from(levelProgress)
-          .where(
-            and(eq(levelProgress.studentId, studentId), inArray(levelProgress.levelId, levelIds)),
+          .from(levels)
+          .leftJoin(
+            levelProgress,
+            and(eq(levelProgress.levelId, levels.id), eq(levelProgress.studentId, studentId)),
           )
+          .where(inArray(levels.id, levelIds))
       : [];
-    const attempts = levelIds.length
-      ? await db
-          .select({ levelId: assessmentAttempts.levelIdAtStart })
-          .from(assessmentAttempts)
-          .where(
-            and(
-              eq(assessmentAttempts.studentId, studentId),
-              eq(assessmentAttempts.assessmentType, 'DRILL'),
-              eq(assessmentAttempts.status, 'IN_PROGRESS'),
-              inArray(assessmentAttempts.levelIdAtStart, levelIds),
-            ),
-          )
-      : [];
-    const byLevel = new Map(progress.map((row) => [row.levelId, row]));
-    const active = new Set(attempts.flatMap((row) => (row.levelId ? [row.levelId] : [])));
+    const byLevel = new Map(states.map((row) => [row.levelId, row]));
     return {
       subchapter: {
         id: subchapter.id,
@@ -118,7 +113,7 @@ export class LearningCatalogService {
           ? 'locked'
           : state?.completedAt
             ? 'completed'
-            : active.has(row.id)
+            : state?.active
               ? 'inProgress'
               : 'open';
         return {

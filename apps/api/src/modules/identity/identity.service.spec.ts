@@ -135,6 +135,22 @@ describe('IdentityService', () => {
     });
   });
 
+  it('reads access with one query and rechecks account status inside the same request', async () => {
+    const service = new IdentityService();
+    const access = { id: profile.id, role: profile.role, status: profile.status };
+    await request(async () => {
+      mocks.selectRows.push([access], [{ ...access, status: 'DISABLED' }], []);
+      await expect(service.me('Bearer valid', 'access')).resolves.toEqual(access);
+      await expect(service.me('Bearer valid', 'access')).rejects.toMatchObject({
+        response: { code: 'ACCOUNT_DISABLED' },
+      });
+      await expect(service.me('Bearer valid', 'access')).rejects.toMatchObject({
+        response: { code: 'ACCOUNT_NOT_REGISTERED' },
+      });
+      expect(mocks.getUser).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('isolates tokens and IdentityService providers even in the same request', async () => {
     const first = new IdentityService(),
       second = new IdentityService();

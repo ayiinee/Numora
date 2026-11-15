@@ -152,6 +152,7 @@ export async function saveAssessmentAnswerWithEvent(
   input: {
     attemptId: string;
     questionInstanceId: string;
+    questionVersionId?: string;
     answer: import('./question-content.js').AssessmentAnswer;
     questionFormat: import('./question-content.js').QuestionKind;
     now: Date;
@@ -204,24 +205,28 @@ export async function saveAssessmentAnswerWithEvent(
       },
     });
   if (input.answer === null && !previous) return;
-  const [pin] = await tx
-    .select({ questionVersionId: attemptItems.questionVersionId })
-    .from(attemptItems)
-    .where(
-      and(
-        eq(attemptItems.id, input.questionInstanceId),
-        eq(attemptItems.attemptId, input.attemptId),
-      ),
-    )
-    .limit(1);
-  if (!pin) throw new Error('DOMAIN_EVENT_ITEM_MISSING');
+  let questionVersionId = input.questionVersionId;
+  if (!questionVersionId) {
+    const [pin] = await tx
+      .select({ questionVersionId: attemptItems.questionVersionId })
+      .from(attemptItems)
+      .where(
+        and(
+          eq(attemptItems.id, input.questionInstanceId),
+          eq(attemptItems.attemptId, input.attemptId),
+        ),
+      )
+      .limit(1);
+    if (!pin) throw new Error('DOMAIN_EVENT_ITEM_MISSING');
+    questionVersionId = pin.questionVersionId;
+  }
   await recordDomainEvent(
     tx,
     input.attemptId,
     {
       eventName: 'question_answered',
       questionInstanceId: input.questionInstanceId,
-      questionVersionId: pin.questionVersionId,
+      questionVersionId,
       questionFormat: input.questionFormat,
       answerState: input.answer === null ? 'cleared' : 'selected',
     },
