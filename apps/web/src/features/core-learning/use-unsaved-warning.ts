@@ -13,8 +13,17 @@ export function useUnsavedWarning(
   unsaved: boolean,
   confirmDrillExit = false,
   onExit?: () => void,
-  options?: { message?: string; ignoreSearchChanges?: boolean; customDialog?: boolean; confirmNavigation?: boolean },
+  options?: {
+    message?: string;
+    ignoreSearchChanges?: boolean;
+    customDialog?: boolean;
+    confirmNavigation?: boolean;
+    onNavigationAttempt?: () => void;
+    navigationFallbackHref?: string;
+  },
 ) {
+  const onNavigationAttempt = options?.onNavigationAttempt;
+  const navigationFallbackHref = options?.navigationFallbackHref ?? '/student/tryout';
   const customMessage = options?.message;
   const confirmNavigation = options?.confirmNavigation ?? false;
   const ignoreSearchChanges = options?.ignoreSearchChanges ?? false;
@@ -30,7 +39,20 @@ export function useUnsavedWarning(
       : 'Jawaban terakhir belum tersimpan. Jika keluar sekarang, perubahan tersebut dapat hilang.');
   useEffect(() => {
     approved.current = false;
-    if (!active) return;
+    if (!active) {
+      if (!onNavigationAttempt || window.history.state?.[tryoutHistoryGuard]?.url !== window.location.href)
+        return;
+      const url = window.location.href;
+      const hasPrevious = window.history.state[tryoutHistoryGuard].hasPrevious;
+      function skipGuardEntry() {
+        if (window.location.href === url && window.history.state?.[tryoutHistoryGuard]?.url !== url) {
+          if (hasPrevious) window.history.back();
+          else window.location.replace(navigationFallbackHref);
+        }
+      }
+      window.addEventListener('popstate', skipGuardEntry);
+      return () => window.removeEventListener('popstate', skipGuardEntry);
+    }
     let currentUrl = window.location.href;
     let currentState: unknown = window.history.state;
     // Keep one same-document entry so Back can show the dialog even after a direct load.
@@ -83,6 +105,10 @@ export function useUnsavedWarning(
       }
       event.preventDefault();
       event.stopPropagation();
+      if (onNavigationAttempt) {
+        onNavigationAttempt();
+        return;
+      }
       setDestination({ proceed: () => link.click() });
     }
     function traverse(event: PopStateEvent) {
@@ -93,9 +119,13 @@ export function useUnsavedWarning(
         window.history.state?.[tryoutHistoryGuard]?.url !== currentUrl) {
         event.stopImmediatePropagation();
         window.history.pushState(currentState, '', currentUrl);
+        if (onNavigationAttempt) {
+          onNavigationAttempt();
+          return;
+        }
         setDestination({ proceed: () => {
           if (window.history.state?.[tryoutHistoryGuard]?.hasPrevious) window.history.go(-2);
-          else window.location.assign('/student/tryout');
+          else window.location.assign(navigationFallbackHref);
         } });
         return;
       }
@@ -116,7 +146,8 @@ export function useUnsavedWarning(
       event.stopImmediatePropagation();
       // Restore the attempt while the student decides. Back returns to the target on approval.
       window.history.pushState(currentState, '', currentUrl);
-      if (customDialog) setDestination({ proceed: () => window.history.back() });
+      if (onNavigationAttempt) onNavigationAttempt();
+      else if (customDialog) setDestination({ proceed: () => window.history.back() });
     }
     if (warnOnUnload) window.addEventListener('beforeunload', unload);
     window.addEventListener('popstate', traverse, true);
@@ -126,7 +157,7 @@ export function useUnsavedWarning(
       window.removeEventListener('popstate', traverse, true);
       document.removeEventListener('click', navigate, true);
     };
-  }, [active, confirmNavigation, customDialog, description, ignoreSearchChanges, onExit, warnOnUnload]);
+  }, [active, confirmNavigation, customDialog, description, ignoreSearchChanges, navigationFallbackHref, onExit, onNavigationAttempt, warnOnUnload]);
   return {
     open: active && destination !== null,
     title: confirmDrillExit ? 'Jeda latihan dulu?' : 'Keluar dari sesi?',

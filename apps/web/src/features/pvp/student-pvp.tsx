@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { StudentMascot } from '@/components/student-mascot';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePvpSocket } from './use-pvp-socket';
 import QRCode from 'qrcode';
@@ -30,6 +30,7 @@ import {
 import { useAuth } from '@/features/onboarding/auth';
 import { request } from '@/features/core-learning/api';
 import { useStudentToken } from '@/features/core-learning/student-session';
+import { useUnsavedWarning } from '@/features/core-learning/use-unsaved-warning';
 import './pvp-lobby.css';
 import { DataState, LearningFrame, Status } from '@/features/core-learning/ui';
 import type {
@@ -301,6 +302,7 @@ export function PvpScreen() {
 
 export function PvpMatchScreen() {
   const token = useStudentToken();
+  const router = useRouter();
   const { state: auth } = useAuth();
   const { matchId } = useParams<{ matchId: string }>();
   const availability = useQuery({
@@ -328,6 +330,23 @@ export function PvpMatchScreen() {
   const [remaining, setRemaining] = useState(0);
   const [roomRemaining, setRoomRemaining] = useState(0);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [leaveRequested, setLeaveRequested] = useState(false);
+  const isParticipating =
+    !!snapshot &&
+    snapshot.participantActive !== false &&
+    snapshot.status !== 'FINISHED' &&
+    snapshot.status !== 'CANCELLED';
+  const openLeave = useCallback(() => setConfirmLeave(true), []);
+  useUnsavedWarning(false, false, undefined, {
+    confirmNavigation: isParticipating,
+    customDialog: true,
+    onNavigationAttempt: openLeave,
+    navigationFallbackHref: '/student/pvp',
+  });
+  function closeLeave() {
+    setConfirmLeave(false);
+    setLeaveRequested(false);
+  }
   const [reconnectRemaining, setReconnectRemaining] = useState<Record<string, number>>({});
   useEffect(() => {
     if (!snapshot) return;
@@ -493,7 +512,9 @@ export function PvpMatchScreen() {
       <PvpHeader
         title={title}
         connected={!closed && !left && active ? socket.connected : undefined}
-        onLeave={!closed && !left ? () => setConfirmLeave(true) : undefined}
+        onLeave={isParticipating ? openLeave : undefined}
+        leaveLabel={snapshot.status === 'RUNNING' ? 'Menyerah' : 'Keluar'}
+        showProfile={!isParticipating}
       />
       <div className="pvp-match-content">
         {availability.isError && !closed && (
@@ -538,7 +559,6 @@ export function PvpMatchScreen() {
                 optionId: selected,
               })
             }
-            onLeave={() => setConfirmLeave(true)}
             reconnectRemaining={reconnectRemaining}
           />
         ) : snapshot.status === 'RUNNING' ? (
@@ -562,12 +582,12 @@ export function PvpMatchScreen() {
             reconnectRemaining={reconnectRemaining}
           />
         )}
-        {socket.error && (
+        {socket.error && !confirmLeave && (
           <p role="alert" className="pvp-command-error">
             {socket.error}
           </p>
         )}
-        {socket.uncertain && (
+        {socket.uncertain && !confirmLeave && (
           <Button
             variant="secondary"
             disabled={socket.busy || !socket.connected}
@@ -583,8 +603,8 @@ export function PvpMatchScreen() {
         )}
       </div>
       <Dialog
-        open={confirmLeave && !closed}
-        onClose={() => setConfirmLeave(false)}
+        open={confirmLeave && isParticipating}
+        onClose={closeLeave}
         title={snapshot.status === 'RUNNING' ? 'Menyerah dari duel?' : 'Keluar dari room?'}
         pending={socket.busy}
         description={
@@ -597,25 +617,46 @@ export function PvpMatchScreen() {
             <Button
               variant="secondary"
               disabled={socket.busy}
-              onClick={() => setConfirmLeave(false)}
+              onClick={closeLeave}
             >
               Tetap di sini
             </Button>
-            <Button
-              variant="danger"
-              loading={socket.busy}
-              disabled={disabled}
-              onClick={() => {
-                setConfirmLeave(false);
-                void socket.command('room:leave', { matchId });
-              }}
-            >
-              Ya, keluar
-            </Button>
+            {!socket.connected ? (
+              <>
+                <Button variant="secondary" disabled={socket.busy} onClick={socket.reconnect}>Sambungkan lagi</Button>
+                <Button
+                  variant="danger-outline"
+                  disabled={socket.busy}
+                  onClick={() => router.replace('/student/pvp')}
+                >
+                  Keluar halaman
+                </Button>
+              </>
+            ) : socket.uncertain ? (
+              <Button variant="secondary" disabled={socket.busy} onClick={socket.retry}>
+                Periksa permintaan sebelumnya
+              </Button>
+            ) : (
+              <Button
+                variant="danger"
+                loading={socket.busy && leaveRequested}
+                disabled={disabled}
+                onClick={() => {
+                  setLeaveRequested(true);
+                  void socket.command('room:leave', { matchId });
+                }}
+              >
+                Ya, keluar
+              </Button>
+            )}
           </>
         }
       >
-        <p>Pastikan sebelum melanjutkan.</p>
+        {!socket.connected && (
+          <p>Jika kamu keluar halaman saat offline, server tetap menentukan hasil atau status room.</p>
+        )}
+        {socket.busy && leaveRequested && <p role="status">Menunggu konfirmasi server…</p>}
+        {socket.error && <p role="alert" className="pvp-command-error">{socket.error}</p>}
       </Dialog>
     </LearningFrame>
   );
