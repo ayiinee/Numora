@@ -92,16 +92,22 @@ function CurrentTryout({
   const starting = useRef(false);
   const detailTitle = useRef<HTMLDivElement>(null);
   const detailsButton = useRef<HTMLButtonElement>(null);
-  const openedFromSchedule = useRef(false);
+  const hadDetail = useRef(false);
   useLearningView(token, 'tryout_opened');
   const query = useCurrentTryout(token, !batches);
   const history = useAssessmentHistory(token, tab === 'history', undefined, 'tryout');
   const start = useMutation({
-    mutationFn: (packageId: string) => learningApi.startTryout(token, packageId),
-    onSuccess: (attempt) => {
+    mutationFn: ({ packageId }: { packageId: string; detailHref: string }) =>
+      learningApi.startTryout(token, packageId),
+    onSuccess: (attempt, { detailHref }) => {
       refreshTryoutStatus(client);
+      if (window.location.href !== detailHref) {
+        starting.current = false;
+        start.reset();
+        return;
+      }
       const attemptHref = `/student/tryout/${attempt.id}`;
-      if (openedFromSchedule.current) router.replace(attemptHref);
+      if (window.history.state?.numoraTryoutDetailFromSchedule) router.replace(attemptHref);
       else {
         const url = new URL(window.location.href);
         url.searchParams.delete('detail');
@@ -119,7 +125,7 @@ function CurrentTryout({
   const details = !batches && !!detailId && !!available && current.id === detailId;
   useLearningView(token, 'tryout_detail_viewed', { packageId: current?.id }, details);
   function closeDetails() {
-    if (openedFromSchedule.current) {
+    if (window.history.state?.numoraTryoutDetailFromSchedule) {
       window.history.back();
       return;
     }
@@ -129,7 +135,6 @@ function CurrentTryout({
     setDetailId(null);
     setRulesAccepted(null);
     setTab('current');
-    requestAnimationFrame(() => detailsButton.current?.focus());
   }
   useEffect(() => {
     function syncDetail() {
@@ -152,9 +157,15 @@ function CurrentTryout({
     detailTitle.current?.focus();
   }, [batches, detailId, details, query.isError, query.isPending]);
   useEffect(() => {
-    if (detailId) return;
+    if (detailId) {
+      hadDetail.current = true;
+      return;
+    }
     setRulesAccepted(null);
-    if (openedFromSchedule.current) detailsButton.current?.focus();
+    if (hadDetail.current) {
+      hadDetail.current = false;
+      detailsButton.current?.focus();
+    }
   }, [detailId]);
   const historyRecords =
     history.data?.pages
@@ -192,7 +203,7 @@ function CurrentTryout({
               )
                 return;
               starting.current = true;
-              start.mutate(current.id);
+              start.mutate({ packageId: current.id, detailHref: window.location.href });
             }}
           />
         ) : (
@@ -239,8 +250,7 @@ function CurrentTryout({
                           if (!current.id) return;
                           const url = new URL(window.location.href);
                           url.searchParams.set('detail', current.id);
-                          openedFromSchedule.current = true;
-                          window.history.pushState(null, '', url);
+                          window.history.pushState({ numoraTryoutDetailFromSchedule: true }, '', url);
                           setDetailId(current.id);
                           window.scrollTo(0, 0);
                         }}

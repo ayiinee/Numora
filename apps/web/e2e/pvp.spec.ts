@@ -317,8 +317,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(startDuel).toBeEnabled();
     await capture('waiting-host-start');
     await startDuel.click();
-    expect(commands.some((command) => command.event === 'match:start')).toBe(true);
     await expect(page.getByRole('heading', { name: 'Duel Berlangsung' })).toBeVisible();
+    expect(commands.some((command) => command.event === 'match:start')).toBe(true);
     await expect(page.locator('.pvp-question .katex-html')).toBeVisible();
     await expect(page.locator('.pvp-question math msqrt')).toHaveText('1156');
     await expect(page.locator('.pvp-answer-list math mfrac')).toHaveCount(1);

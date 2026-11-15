@@ -48,6 +48,7 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
   let skipped = false,
     started = false,
     completed = false;
+  let tryoutStarted = false;
   let tryoutSubmitted = alreadySubmitted;
   const rawTryoutAnswers = new Map<string, unknown>();
   const tryoutDeadline = new Date(Date.now() + 600_000).toISOString();
@@ -185,18 +186,19 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
       json = mixedTryout
         ? {
             ...packageData,
-            state: tryoutSubmitted ? 'waitingIrt' : 'open',
+            state: tryoutSubmitted ? 'waitingIrt' : tryoutStarted ? 'inProgress' : 'open',
             periodState: 'ongoing',
-            eligible: !tryoutSubmitted,
+            eligible: !tryoutSubmitted && !tryoutStarted,
             title: 'Tryout PGK',
             closeAt: tryoutDeadline,
             resultDueAt: null,
-            attemptId: tryoutSubmitted ? attempt : null,
+            attemptId: tryoutSubmitted || tryoutStarted ? attempt : null,
           }
         : { state: 'unavailable' };
     else if (path === 'tryout/packages') json = { packages: [packageData], nextCursor: null };
     else if (path === `tryout/packages/${past}`) json = packageData;
-    else if (path === 'tryout/attempts' || path === `tryout/attempts/${attempt}`)
+    else if (path === 'tryout/attempts' || path === `tryout/attempts/${attempt}`) {
+      if (path === 'tryout/attempts' && method === 'POST') tryoutStarted = true;
       json = {
         id: attempt,
         packageId: past,
@@ -212,7 +214,7 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
         serverTime: new Date().toISOString(),
         questions: tryoutSubmitted ? [] : tryoutQuestions(),
       };
-    else if (path.startsWith(`tryout/attempts/${attempt}/answers/`)) {
+    } else if (path.startsWith(`tryout/attempts/${attempt}/answers/`)) {
       const questionId = path.split('/').at(-1)!;
       const index = String(Number(questionId.split('-').at(-1)) - 1);
       const input = route.request().postDataJSON();
@@ -573,6 +575,55 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await expect(page.getByText(/Nilai dan pembahasan tersedia setelah hasil dirilis/)).toBeVisible();
   await expect(page.getByText(/XP sudah tercatat/)).toHaveCount(0);
   await screenshot(page, 'tryout-pgk-waiting-390');
+});
+
+test('Tryout detail reload preserves Back to the catalog and its previous page', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 740 });
+  await fixture(page, true);
+  await page.goto('/student/learn');
+  await page.goto('/student/tryout');
+  const details = page.getByRole('button', { name: 'Detail dan aturan paket' });
+  await details.click();
+  await expect(page.getByRole('heading', { name: 'Detail Tryout' })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Kembali ke katalog Tryout' }).click();
+  await expect(details).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL('/student/learn');
+  await page.goForward();
+  await expect(details).toBeVisible();
+  await page.goForward();
+  await expect(page.getByRole('heading', { name: 'Detail Tryout' })).toBeVisible();
+});
+
+test('Tryout start finishing after Back leaves the resumed attempt in the catalog', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 740 });
+  await fixture(page, true);
+  const attemptsPath = '**/api/v1/tryout/attempts';
+  let finishStart!: () => void;
+  const pendingStart = new Promise<void>((resolve) => { finishStart = resolve; });
+  await page.route(attemptsPath, async (route) => {
+    await pendingStart;
+    await route.fallback();
+  });
+  await page.goto('/student/tryout');
+  const details = page.getByRole('button', { name: 'Detail dan aturan paket' });
+  await details.click();
+  await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
+  const sent = page.waitForRequest(attemptsPath);
+  try {
+    await page.getByRole('button', { name: 'Mulai pengerjaan', exact: true }).click();
+    await sent;
+    await page.goBack();
+    await expect(details).toBeVisible();
+  } finally {
+    finishStart();
+  }
+  const resume = page.getByRole('link', { name: 'Lanjutkan TryOut', exact: true });
+  await expect(resume).toHaveAttribute('href', `/student/tryout/${attempt}`);
+  await expect(page).toHaveURL('/student/tryout');
+  await resume.click();
+  await expect(page.getByText('Soal 1 dari 30', { exact: true })).toBeVisible();
 });
 
 test('Tryout keeps a failed answer visible across questions and confirms exit after recovery', async ({ page }) => {
