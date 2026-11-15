@@ -82,7 +82,9 @@ function submittedCoverage(plan, phase, actors, receipts) {
   if (
     !targeted &&
     phase.seconds < 600 &&
-    !['drill-smoke', 'drill-capacity', 'drill-scale', 'drill-steady'].includes(plan.suite)
+    !['drill-smoke', 'drill-capacity', 'drill-scale', 'drill-steady', 'mixed-local'].includes(
+      plan.suite,
+    )
   )
     return null;
   const accepted = plan.suite.endsWith('-start') ? 'start' : 'submit';
@@ -236,7 +238,9 @@ export function validateCohorts(plan, fixtures) {
           ':' +
           actor.id +
           ':' +
-          (role === 'pretest' ? actor.vars.chapterId : actor.vars.batchId);
+          (role === 'pretest'
+            ? actor.vars.chapterId
+            : (actor.vars.batchId ?? actor.vars.packageId));
         if (keys.has(key))
           throw new Error('A one-time assessment fixture is reused across plateaus');
         keys.add(key);
@@ -351,9 +355,10 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
           const explicit = [
             ...new Set(writers.map((actor) => actor.vars.attemptId).filter(Boolean)),
           ];
-          durable = await capture(evidenceUrl, ids, explicit, since, receipts).catch(() => ({
+          durable = await capture(evidenceUrl, ids, explicit, since, receipts).catch((error) => ({
             pass: false,
             reason: 'durable-snapshot-unavailable',
+            code: /^[A-Z0-9_]{1,40}$/.test(error?.code ?? '') ? error.code : 'UNAVAILABLE',
           }));
           if (!durable.attempts && !durable.reason)
             durable = { ...durable, pass: false, reason: 'empty-durable-evidence' };

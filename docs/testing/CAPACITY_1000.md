@@ -34,7 +34,15 @@ Untuk menguji kapasitas Drill lokal, jalankan `pnpm qa:capacity run dev drill-sc
 
 Profil `drill-steady` menguji 1.000 siswa selama enam menit. Semua akun mulai secara merata selama menit pertama dan tetap dalam fase yang sama setelahnya. Gunakan bundle `users-1000` tersendiri. Ambang dan rekonsiliasi sama dengan `drill-scale`. Laporkan hasil terpisah karena pola kedatangan awalnya berbeda. Selama Drill berlangsung, generator menyimpan jawaban dan mengirim heartbeat. Pembacaan subbab terjadi saat masuk atau memulai percobaan berikutnya, mengikuti navigasi browser.
 
+## Latihan beban campuran lokal
+
+Jalankan `pnpm qa doctor --profile full`, lalu `node scripts/qa/capacity/rehearse.mjs`. Skrip memakai PostgreSQL dan Redis dari konfigurasi uji localhost, membuat database/namespace sendiri, membangun web/API, dan menjalankan listener loopback pada port 3520–3522. Jalankan dari checkout kandidat dan simpan versi di `qa/.local/capacity`. Perintah menghasilkan path laporan dan file `STOP`. Database sementara dan bundel sesi dibersihkan setelah run.
+
+Profil `mixed-local` menjalankan 20 → 100 → 500 → 1.000 siswa dengan 150 detik per tahap. Siswa menjawab dengan jeda 1,2–2,8 detik. Navigasi dan pemantauan memakai jeda 8–20 detik, dan halaman awal asesmen hanya dibaca saat masuk atau memulai percobaan berikutnya. Ia menguji akun sekolah/mandiri, Pretest, Drill, Tryout pilihan ganda demo melalui endpoint paket, PvP, guru dan admin. Gate latensi, kelengkapan submit, dan rekonsiliasi tetap berlaku. Durasi, tipe Tryout, autentikasi sintetis, dan dependensi loopback membatasi perbandingan dengan uji staging yang memakai endpoint batch, OAuth, serta infrastruktur nyata.
+
 ## Pemeriksaan sebelum uji staging
+
+Salin `.env.staging.example` ke `.env.staging.local` pada mesin operator dan isi dengan nilai dari inventaris staging. Jalankan `node scripts/check-staging-env.mjs .env.staging.local` sebelum migrasi atau deployment. Pemeriksa membaca berkas lokal dan hanya mencetak nama field bermasalah. URL migrasi dan bukti hanya diberikan ke proses operator yang memerlukannya. Setelah pemeriksaan, gunakan jalur deployment VPS tim untuk web, API, dan worker. Supabase menyediakan Auth dan PostgreSQL.
 
 `check` memeriksa konfigurasi dan fixture secara lokal tanpa mengirim trafik. Ia memvalidasi jendela yang disetujui, pin SHA, bukti smoke/restore yang diwajibkan suite, usia token pada proyeksi tiap tahap, pemisahan paket percobaan sekali jalan, URL bukti PostgreSQL, dan bentuk berkas sesi Playwright. Jika token tahap lanjut perlu diperbarui, periksa ulang dengan bundle baru dan pertahankan ID serta fixture saat rotasi. Status `LOCAL_PREFLIGHT_PASS` hanya membuktikan pemeriksaan berkas.
 

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { isIP } from 'node:net';
 import { isDeepStrictEqual } from 'node:util';
 import {
+  assessmentFor,
   assessmentOperations,
   identity,
   productionReads,
@@ -89,6 +90,7 @@ export function workload(environment, suite) {
         'drill-capacity',
         'drill-scale',
         'drill-steady',
+        'mixed-local',
       ].includes(suite),
       'Use staging for this suite',
     );
@@ -96,6 +98,7 @@ export function workload(environment, suite) {
     if (suite === 'drill-capacity') return [plateau(100, 300), plateau(250, 300)];
     if (suite === 'drill-scale') return [250, 500, 1000].map((n) => plateau(n, 300));
     if (suite === 'drill-steady') return [plateau(1000, 360)];
+    if (suite === 'mixed-local') return [20, 100, 500, 1000].map((n) => plateau(n, 150));
     if (suite === 'load') return [10, 25, 50, 100].map((n) => plateau(n, 60));
     if (suite === 'stress') return [plateau(250, 60)];
     if (suite === 'pvp') return [plateau(2, 90)];
@@ -233,7 +236,11 @@ export function prepare(
   );
   const extras = config.extraJourneys ?? {};
   const assets = config.assets ?? [];
-  if (execute && environment === 'staging' && ['load', 'soak', 'stress', 'spike'].includes(suite)) {
+  if (suite === 'mixed-local') assert(config.pvp === true, 'Local mixed rehearsal requires PvP');
+  if (
+    suite === 'mixed-local' ||
+    (execute && environment === 'staging' && ['load', 'soak', 'stress', 'spike'].includes(suite))
+  ) {
     assert(
       ['drill', 'tryout', 'pretest'].every((key) => assessmentWrites.includes(key)),
       'Full staging workload requires all three assessment journeys',
@@ -258,7 +265,7 @@ export function prepare(
     'Assets must be explicit Next.js static paths',
   );
   for (const key of assessmentWrites) {
-    for (const operation of assessmentOperations(key)) operations.add(operation);
+    for (const operation of assessmentOperations(key, suite)) operations.add(operation);
   }
   if (assessmentWrites.includes('drill'))
     operations.add('PATCH /api/v1/assessment-attempts/{attemptId}/drill-clock');
@@ -365,11 +372,11 @@ export function phaseActors(actorFile, phase, plan) {
             ...extraSteps.map((step) => step.operation),
           ];
           if (plan.assessmentWrites.includes(role)) {
-            paths.push(assessmentOperations(role)[0]);
+            paths.push(assessmentOperations(role, plan.suite)[0]);
             if (role !== 'drill') paths.push(...readJourneys.browse);
           }
           if (plan.assessmentWrites.includes(role)) {
-            const required = { drill: 'levelId', pretest: 'chapterId', tryout: 'batchId' }[role];
+            const required = assessmentFor(role, plan.suite).parameter ?? 'batchId';
             assert(
               uuid.test(actor.vars?.[required] || ''),
               'Assessment requires fixture ' + required,

@@ -19,6 +19,7 @@ coverage/
 !.env.example
 !.env.cloud.example
 !.env.test.example
+!.env.staging.example
 .qa-seed/
 
 # local tooling

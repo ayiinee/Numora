@@ -75,6 +75,23 @@ test('mixed staging accounts include PvP plus the additional teacher and admin l
   });
 });
 
+test('mixed local rehearsal uses fixture Tryout only on loopback', () => {
+  const config = { ...dev, assessmentWrites: ['drill', 'tryout', 'pretest'], pvp: true };
+  const plan = prepare(config, {}, 'dev', 'mixed-local', contracts);
+  assert.deepEqual(
+    plan.phases.map(({ students }) => students),
+    [20, 100, 500, 1000],
+  );
+  assert.ok(plan.operations.includes('POST /api/v1/tryout/attempts'));
+  assert.ok(!plan.operations.includes('POST /api/v1/tryout/batches/{batchId}/attempts'));
+  assert.throws(
+    () => prepare({ ...config, pvp: false }, {}, 'dev', 'mixed-local', contracts),
+    /PvP/,
+  );
+  assert.throws(() => workload('prod', 'mixed-local'), /limited/);
+  assert.throws(() => workload('staging', 'mixed-local'), /Unknown staging/);
+});
+
 test('cohort validation rejects a one-time assessment reused at another plateau', () => {
   const plan = prepare(dev, {}, 'dev', 'smoke', contracts);
   const phase = { name: 'first', students: 1, seconds: 60 };

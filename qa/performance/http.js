@@ -4,6 +4,7 @@ import { SharedArray } from 'k6/data';
 import { sleep } from 'k6';
 import { Counter, Rate, Trend } from 'k6/metrics';
 import {
+  assessmentFor,
   assessments,
   identity,
   readJourneys,
@@ -13,7 +14,10 @@ import {
 } from './catalog.mjs';
 
 const { phase, plan } = JSON.parse(open(__ENV.NUMORA_CAPACITY_INPUT));
-const drillCapacity = ['drill-capacity', 'drill-scale', 'drill-steady'].includes(plan.suite);
+const mixedLocal = plan.suite === 'mixed-local';
+const drillCapacity = ['drill-capacity', 'drill-scale', 'drill-steady', 'mixed-local'].includes(
+  plan.suite,
+);
 
 function loadActors(includeRole) {
   return Object.entries(JSON.parse(open(__ENV.NUMORA_CAPACITY_ACTORS)))
@@ -243,7 +247,7 @@ function runExtras(actor) {
 }
 
 function start(actor) {
-  const definition = assessments[actor.role];
+  const definition = assessmentFor(actor.role, plan.suite);
   const body = definition.parameter
     ? { [definition.parameter]: actor.vars[definition.parameter] }
     : actor.vars.schoolId
@@ -371,7 +375,7 @@ function submit(actor, attemptId, concurrent = false) {
 
 function exerciseAssessment(actor) {
   const path = assessments[actor.role].path;
-  if (finished) return read(actor, actor.role) && read(actor, 'browse');
+  if (finished) return (mixedLocal || read(actor, actor.role)) && read(actor, 'browse');
   if (!assessment) {
     const attempt = start(actor);
     if (!attempt) return false;
@@ -429,7 +433,9 @@ function exerciseAssessment(actor) {
 }
 
 function think(actor) {
-  const until = Date.now() + (8 + Math.random() * 12) * 1000;
+  const compactAnswerPacing = mixedLocal && assessment !== null && !finished;
+  const seconds = compactAnswerPacing ? 1.2 + Math.random() * 1.6 : 8 + Math.random() * 12;
+  const until = Date.now() + seconds * 1000;
   const sessionId = assessment?.attempt.clock?.sessionId;
   if (actor.role !== 'drill' || !sessionId) {
     sleep(Math.max(0, (until - Date.now()) / 1000));
@@ -463,13 +469,20 @@ export function mixed() {
   const actor = regularActors[index];
   if (!actor) throw new Error('VU has no provisioned actor');
   if (!claimed && drillCapacity) {
-    sleep(plan.suite === 'drill-steady' ? (index / regularActors.length) * 60 : Math.random() * 8);
+    if (mixedLocal) sleep((index / regularActors.length) * 20);
+    else
+      sleep(
+        plan.suite === 'drill-steady' ? (index / regularActors.length) * 60 : Math.random() * 8,
+      );
   }
   countActor();
   integrity.add(0);
+  const assessmentManagesNavigation = mixedLocal
+    ? assessment !== null || finished
+    : actor.role === 'drill' && assessment !== null;
   const ok =
     signIn(actor) &&
-    ((actor.role === 'drill' && assessment !== null) || read(actor, actor.role)) &&
+    (assessmentManagesNavigation || read(actor, actor.role)) &&
     (extrasDone || (extrasDone = runExtras(actor))) &&
     (!plan.assessmentWrites.includes(actor.role) || exerciseAssessment(actor));
   const clockOk = think(actor);

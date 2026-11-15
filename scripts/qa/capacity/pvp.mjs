@@ -69,9 +69,11 @@ function client(io, origin, web, actor, signal, connected) {
       throw new Error('missing-ack-' + event);
     }
     if (event === 'answer:submit') durations.push(performance.now() - started);
+    const code = answer?.payload?.error?.code;
+    const reason = /^[A-Z][A-Z0-9_]{0,63}$/.test(code ?? '') ? ':' + code : '';
     requireState(
       answer?.requestId === requestId && answer?.payload?.ok === true,
-      'rejected-' + event,
+      'rejected-' + event + reason,
     );
     return answer.payload.state;
   }

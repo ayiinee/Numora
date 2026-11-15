@@ -47,8 +47,13 @@ export const assessments = {
   },
 };
 
-export const assessmentOperations = (name) => {
-  const { start, path } = assessments[name];
+export const assessmentFor = (name, suite) =>
+  name === 'tryout' && suite === 'mixed-local'
+    ? { ...assessments.tryout, start: 'POST /api/v1/tryout/attempts', parameter: 'packageId' }
+    : assessments[name];
+
+export const assessmentOperations = (name, suite) => {
+  const { start, path } = assessmentFor(name, suite);
   return [
     start,
     'GET ' + path,
@@ -67,7 +72,7 @@ export const productionReads = new Set([
 export const drillClock = 'PATCH /api/v1/assessment-attempts/{attemptId}/drill-clock';
 export const productionWrites = new Set([
   drillClock,
-  ...Object.keys(assessments).flatMap(assessmentOperations),
+  ...Object.keys(assessments).flatMap((name) => assessmentOperations(name)),
 ]);
 
 export const statGroup = (operation) =>

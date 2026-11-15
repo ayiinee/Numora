@@ -18,7 +18,10 @@ import {
 } from './schema/index.js';
 
 /** Synthetic transport/lifecycle fixtures. Never a Curriculum-approved bank. */
-export async function seedLifecycleDemo(namespace = randomUUID()) {
+export async function seedLifecycleDemo(
+  namespace = randomUUID(),
+  { tryoutSingleChoice = false } = {},
+) {
   const target = new URL(process.env.DATABASE_URL ?? '');
   if (
     !allowSyntheticContent() ||
@@ -135,7 +138,7 @@ export async function seedLifecycleDemo(namespace = randomUUID()) {
       .values({
         familyCode: `DEMO-TRYOUT-${namespace}`,
         packageVersion: 1,
-        name: 'DEMO · Tryout tiga format',
+        name: tryoutSingleChoice ? 'DEMO · Tryout PG' : 'DEMO · Tryout tiga format',
         assessmentType: 'TRYOUT',
         chapterId: chapter!.id,
         isDemo: true,
@@ -149,7 +152,7 @@ export async function seedLifecycleDemo(namespace = randomUUID()) {
     for (let i = 0; i < 50; i++) {
       const pretestItem = i < 20;
       const type =
-        pretestItem || (i - 20) % 3 === 0
+        pretestItem || tryoutSingleChoice || (i - 20) % 3 === 0
           ? 'SINGLE_CHOICE'
           : (i - 20) % 3 === 1
             ? 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
