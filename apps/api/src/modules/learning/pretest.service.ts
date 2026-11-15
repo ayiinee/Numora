@@ -54,14 +54,14 @@ export function pretestInitialLevel(correct: number) {
 export class PretestService {
   constructor(private readonly identity: IdentityService) {}
   private async student(auth?: string) {
-    const user = await this.identity.me(auth);
+    const user = await this.identity.me(auth, 'access');
     if (user.role !== 'STUDENT' || (user.status && user.status !== 'ACTIVE'))
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student aktif diperlukan.'));
     return user.id;
   }
-  private async readyChapter(chapterId: string) {
-    const [chapter] = await getDatabase()
-      .db.select()
+  private async readyChapter(chapterId: string, db: AssessmentReader = getDatabase().db) {
+    const [chapter] = await db
+      .select()
       .from(chapters)
       .where(and(eq(chapters.id, chapterId), eq(chapters.status, 'READY')));
     if (!chapter) throw new NotFoundException(problem('CHAPTER_NOT_FOUND', 'Bab tidak ditemukan.'));
@@ -79,8 +79,10 @@ export class PretestService {
     return !!policy && isPretestPartialPolicy(policy);
   }
   private async state(studentId: string, chapterId: string) {
-    const chapter = await this.readyChapter(chapterId);
-    const db = getDatabase().db;
+    return getDatabase().db.transaction((tx) => this.chapterState(tx, studentId, chapterId));
+  }
+  private async chapterState(db: AssessmentReader, studentId: string, chapterId: string) {
+    const chapter = await this.readyChapter(chapterId, db);
     const [attempt] = await db
       .select()
       .from(assessmentAttempts)
@@ -103,7 +105,7 @@ export class PretestService {
           eq(pretestChapterStates.chapterId, chapterId),
         ),
       );
-    const selected = await this.package(chapterId);
+    const selected = await this.package(chapterId, db);
     const [pinned] = attempt
       ? await db
           .select({ isDemo: assessmentPackages.isDemo })

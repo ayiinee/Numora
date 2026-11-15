@@ -799,24 +799,26 @@ export class TryoutService {
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
       const [attempt] = await tx
-        .select()
+        .select({
+          studentId: assessmentAttempts.studentId,
+          assessmentType: assessmentAttempts.assessmentType,
+          status: assessmentAttempts.status,
+          deadlineAt: sql<Date | null>`case when ${assessmentAttempts.tryoutBatchId} is not null
+            then ${assessmentAttempts.deadlineAt}
+            else least(${assessmentAttempts.deadlineAt}, ${assessmentPackages.closeAt}) end`.mapWith(
+            (value) => (value ? new Date(value) : null),
+          ),
+        })
         .from(assessmentAttempts)
+        .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
         .where(eq(assessmentAttempts.id, attemptId))
-        .for('update')
+        .for('update', { of: assessmentAttempts })
         .limit(1);
       if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Tryout sudah selesai.'));
-      const [pkg] = await tx
-        .select({ closeAt: assessmentPackages.closeAt })
-        .from(assessmentPackages)
-        .where(eq(assessmentPackages.id, attempt.packageId));
-      const deadlineAt = attempt.tryoutBatchId
-        ? attempt.deadlineAt
-        : earlierDeadline(attempt.deadlineAt, pkg?.closeAt ?? null);
-      if (deadlineAt && deadlineAt <= (await databaseTime(tx)))
-        throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
+      const { deadlineAt } = attempt;
       const [item] = await tx
         .select({
           id: attemptItems.id,

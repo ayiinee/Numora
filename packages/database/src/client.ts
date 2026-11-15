@@ -1,6 +1,5 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from './schema/index.js';
 import { allowSyntheticContent } from './package-runtime.js';
 import {
   gaugeRuntime,
@@ -59,7 +58,9 @@ export function getDatabase(): DatabaseConnection {
 
   connection = {
     client,
-    db: drizzle(client, { schema }),
+    // Runtime callers use the SQL query builder. Omitting the relational schema
+    // avoids rebuilding unused relational query objects for every transaction.
+    db: drizzle(client),
   };
 
   return connection;

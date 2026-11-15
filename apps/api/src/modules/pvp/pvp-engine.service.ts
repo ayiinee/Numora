@@ -1125,9 +1125,41 @@ export class PvpEngineService implements OnModuleDestroy {
     }
     const match = snapshot.match;
     const members = await tx
-      .select({ player: pvpPlayers, name: users.displayName })
+      .select({
+        player: pvpPlayers,
+        name: users.displayName,
+        question: {
+          id: pvpMatchQuestions.id,
+          displayOrder: pvpMatchQuestions.displayOrder,
+          deadlineAt: pvpMatchQuestions.deadlineAt,
+        },
+        version: {
+          questionType: questionVersions.questionType,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
+        },
+        submitted: { id: pvpAnswers.id, answer: pvpAnswers.answer },
+      })
       .from(pvpPlayers)
       .innerJoin(users, eq(users.id, pvpPlayers.studentId))
+      .leftJoin(
+        pvpMatchQuestions,
+        and(
+          eq(pvpMatchQuestions.matchId, pvpPlayers.matchId),
+          eq(pvpMatchQuestions.status, 'ACTIVE'),
+          match.status === 'RUNNING' ? undefined : sql`false`,
+        ),
+      )
+      .leftJoin(questionVersions, eq(questionVersions.id, pvpMatchQuestions.questionVersionId))
+      .leftJoin(
+        pvpAnswers,
+        and(
+          eq(pvpAnswers.playerId, pvpPlayers.id),
+          eq(pvpAnswers.matchQuestionId, pvpMatchQuestions.id),
+        ),
+      )
       .where(eq(pvpPlayers.matchId, matchId))
       .orderBy(asc(pvpPlayers.playerSlot));
     const requested = [
@@ -1140,47 +1172,11 @@ export class PvpEngineService implements OnModuleDestroy {
       });
     const players = members.filter((p) => !p.player.leftAt);
     const recipients = players.filter((p) => requested.includes(p.player.studentId));
-    const [active] =
-      match.status === 'RUNNING' && recipients.length > 0
-        ? await tx
-            .select({
-              question: {
-                id: pvpMatchQuestions.id,
-                displayOrder: pvpMatchQuestions.displayOrder,
-                deadlineAt: pvpMatchQuestions.deadlineAt,
-              },
-              version: {
-                questionType: questionVersions.questionType,
-                stem: questionVersions.stem,
-                optionsOrStatements: questionVersions.optionsOrStatements,
-                answerKey: questionVersions.answerKey,
-                explanation: questionVersions.explanation,
-              },
-            })
-            .from(pvpMatchQuestions)
-            .innerJoin(
-              questionVersions,
-              eq(questionVersions.id, pvpMatchQuestions.questionVersionId),
-            )
-            .where(
-              and(eq(pvpMatchQuestions.matchId, matchId), eq(pvpMatchQuestions.status, 'ACTIVE')),
-            )
-        : [];
-    const answers =
-      active && recipients.length
-        ? await tx
-            .select({ playerId: pvpAnswers.playerId, answer: pvpAnswers.answer })
-            .from(pvpAnswers)
-            .where(
-              and(
-                inArray(
-                  pvpAnswers.playerId,
-                  recipients.map((p) => p.player.id),
-                ),
-                eq(pvpAnswers.matchQuestionId, active.question.id),
-              ),
-            )
-        : [];
+    const current = recipients[0];
+    const active =
+      current?.question && current.version
+        ? { question: current.question, version: current.version }
+        : null;
     const content = active ? decodeSingleChoice(active.version) : null;
     if (active && content && recipients.length) {
       const ids = [...new Set(recipients.map((p) => p.player.studentId))].sort();
@@ -1193,7 +1189,7 @@ export class PvpEngineService implements OnModuleDestroy {
     const views = new Map<string, PvpSnapshotDto>();
     for (const studentId of requested) {
       const self = players.find((p) => p.player.studentId === studentId);
-      const answer = self ? answers.find((row) => row.playerId === self.player.id) : undefined;
+      const answer = self?.submitted;
       const value = answer?.answer as { optionId?: string | null } | undefined;
       const state: PvpSnapshotDto = {
         matchId,
