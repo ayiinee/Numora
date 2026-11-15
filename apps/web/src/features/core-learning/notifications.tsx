@@ -135,7 +135,6 @@ export function NotificationsScreen() {
   return (
     <AppShell
       title="Notifikasi"
-      focus
       backHref="/student"
       mobileHeader={header}
       className="notifications-shell"

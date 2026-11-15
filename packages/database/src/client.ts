@@ -2,6 +2,14 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema/index.js';
 import { allowSyntheticContent } from './package-runtime.js';
+import {
+  gaugeRuntime,
+  instrumentSql,
+  metricsEnabled,
+  runtimeInstanceId,
+  runtimeNamespace,
+  runtimeService,
+} from './runtime-metrics.js';
 
 type DatabaseConnection = {
   client: ReturnType<typeof postgres>;
@@ -34,10 +42,20 @@ export function getDatabase(): DatabaseConnection {
     throw new Error('DATABASE_URL is not configured.');
   }
 
-  const client = postgres(requireTlsDatabaseUrl(databaseUrl), {
-    max: Number(process.env.DB_POOL_MAX ?? 10),
-    idle_timeout: 20,
-  });
+  const client = instrumentSql(
+    postgres(requireTlsDatabaseUrl(databaseUrl), {
+      max: Number(process.env.DB_POOL_MAX ?? 10),
+      idle_timeout: 20,
+      ...(metricsEnabled()
+        ? {
+            connection: {
+              application_name: `numora:${runtimeNamespace()}:${runtimeService()}:${runtimeInstanceId.slice(0, 8)}`,
+            },
+          }
+        : {}),
+    }),
+  );
+  gaugeRuntime('numora_db_pool_max', Number(process.env.DB_POOL_MAX ?? 10));
 
   connection = {
     client,

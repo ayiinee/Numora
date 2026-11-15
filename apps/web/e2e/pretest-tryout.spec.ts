@@ -360,7 +360,11 @@ test('delegated Tryout asks multi-school students to choose one school before st
   await expect(rules).toBeVisible();
   const closeBox = await rules.getByRole('button', { name: 'Tutup dialog' }).boundingBox();
   const dialogBox = await rules.boundingBox();
-  expect(closeBox!.x - dialogBox!.x).toBeLessThan(24);
+  const closeRightGap = dialogBox!.x + dialogBox!.width - closeBox!.x - closeBox!.width;
+  expect(closeRightGap).toBeGreaterThanOrEqual(0);
+  expect(closeRightGap).toBeLessThan(24);
+  expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
   expect(closeBox!.y - dialogBox!.y).toBeLessThan(24);
   await expect(rules.locator('.numora-dialog__actions button')).toHaveText([
     'Mulai pengerjaan',

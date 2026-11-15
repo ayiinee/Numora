@@ -180,32 +180,52 @@ function SubchapterContent({
           </p>
         </div>
       </header>
-      {levels.length ? (
-        <LevelPath
-          key={query.data.subchapter.id}
-          data={query.data}
-          chapterLabel={chapterLabel}
-          placementLevelId={placementLevel?.id}
-          pending={start.isPending}
-          requestedLevelId={start.variables}
-          startError={start.error?.message}
-          onStart={(id) => {
-            if (starting.current) return;
-            starting.current = true;
-            start.mutate(id, {
-              onError: () => {
-                starting.current = false;
-              },
-            });
-          }}
-        />
-      ) : (
-        <EmptyState
-          icon={<Icon name="target" />}
-          title="Level belum tersedia"
-          description="Level latihan akan muncul setelah diterbitkan."
-        />
-      )}
+      <div className="adventure-body">
+        <div>
+          {levels.length ? (
+            <LevelPath
+              key={query.data.subchapter.id}
+              data={query.data}
+              chapterLabel={chapterLabel}
+              placementLevelId={placementLevel?.id}
+              pending={start.isPending}
+              requestedLevelId={start.variables}
+              startError={start.error?.message}
+              onStart={(id) => {
+                if (starting.current) return;
+                starting.current = true;
+                start.mutate(id, {
+                  onError: () => {
+                    starting.current = false;
+                  },
+                });
+              }}
+            />
+          ) : (
+            <EmptyState
+              icon={<Icon name="target" />}
+              title="Level belum tersedia"
+              description="Level latihan akan muncul setelah diterbitkan."
+            />
+          )}
+        </div>
+        <aside className="adventure-context" aria-label="Ringkasan latihan subbab">
+          <Card>
+            <h2>Langkah belajarmu</h2>
+            <p>
+              {completed} dari {levels.length} level sudah tuntas.
+            </p>
+            <p>
+              Raih nilai minimal 80 untuk membuka level berikutnya. Bintang dan nilai terbaikmu
+              tetap tersimpan.
+            </p>
+            <p>Pilih medali level untuk melihat nilai terakhir, nilai terbaik, dan riwayatnya.</p>
+            <Link className="button-link button-link--secondary" href="/student/assessment">
+              Lihat progres & riwayat
+            </Link>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 }

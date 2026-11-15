@@ -20,14 +20,16 @@ export function PvpHeader({
   onLeave,
   showProfile = true,
   leaveLabel = 'Keluar',
-  back = { href: '/student/pvp', label: 'Kembali ke PvP' },
+  backHref = '/student/pvp',
+  backLabel = 'Kembali ke PvP',
 }: {
   title: string;
   connected?: boolean | undefined;
   onLeave?: (() => void) | undefined;
   showProfile?: boolean;
   leaveLabel?: string;
-  back?: { href: string; label: string };
+  backHref?: string;
+  backLabel?: string;
 }) {
   return (
     <header className="pvp-header">
@@ -43,7 +45,7 @@ export function PvpHeader({
           {leaveLabel}
         </Button>
       ) : (
-        <Link className="pvp-header__back" href={back.href} aria-label={back.label}>
+        <Link className="pvp-header__back" href={backHref} aria-label={backLabel}>
           <Icon name="back" width={18} height={18} />
           Kembali
         </Link>
@@ -231,7 +233,7 @@ export function PvpRules() {
           <li>
             <Icon name="trophy" />
             <span>
-              <strong>Peringkat:</strong> Skor terbaik masuk leaderboard PvP.
+              <strong>Peringkat:</strong> Skor terbaik masuk peringkat PvP.
             </span>
           </li>
 

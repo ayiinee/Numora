@@ -1,4 +1,5 @@
 'use client';
+import { formatStudentNumber } from './student-format';
 
 import Link from 'next/link';
 import { useId, useState, type ReactNode } from 'react';
@@ -66,7 +67,7 @@ export function ProfileIdentity({
                 ? classCount > 1
                   ? 'Siswa sekolah'
                   : (data?.class?.schoolName ?? 'Siswa sekolah')
-                : 'User Mandiri'}
+                : 'Siswa mandiri'}
             </p>
             <small>
               {school
@@ -83,14 +84,12 @@ export function ProfileIdentity({
             variant="ghost"
             size="sm"
             className="student-profile-identity__edit"
-            aria-label="Edit profil"
+            aria-label={editing ? 'Tutup editor profil' : 'Edit profil'}
             aria-expanded={editing}
             aria-controls={editorId}
             onClick={() => setEditing((open) => !open)}
           >
-            <span>
-              Edit<span className="student-profile-identity__edit-label"> profil</span>
-            </span>
+            <span>{editing ? 'Tutup editor' : 'Edit profil'}</span>
             <Icon name="chevron" width={12} height={12} />
           </Button>
         )}
@@ -142,7 +141,9 @@ export function ProfileStats({ data }: { data: StudentDashboardDto }) {
           <Icon name="chart" width={14} height={14} /> Nilai Drill terakhir
         </h3>
         <p>
-          <strong>{data.latestDrillScore ?? '—'}</strong>
+          <strong>
+            {data.latestDrillScore == null ? '—' : formatStudentNumber(data.latestDrillScore)}
+          </strong>
           <small>{data.latestDrillScore === null ? 'Belum ada hasil' : '/ 100'}</small>
         </p>
         {data.latestDrillScore !== null && (
@@ -186,7 +187,7 @@ export function ProfileTryout({ data }: { data: TryoutSummary }) {
         <strong>{data.title ?? 'Tryout Matematika'}</strong>
         <small>
           {data.state === 'waitingIrt'
-            ? 'Hasil dibuka setelah dirilis oleh server.'
+            ? 'Buka status untuk melihat ketersediaan hasil dan pembahasan.'
             : 'Tryout gratis untuk seluruh siswa.'}
         </small>
       </span>

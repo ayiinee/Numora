@@ -32,7 +32,7 @@ export function StudentHomeIdentityHeader({
         </Link>
         <div className="sh-identity__greeting">
           <h1>{data.displayName}</h1>
-          <p>{data.class?.schoolName ?? 'Belajar Mandiri'}</p>
+          <p>{data.class?.schoolName ?? 'Siswa mandiri'}</p>
         </div>
         <Link
           className="sh-identity__xp"
@@ -149,7 +149,7 @@ export function StudentIdentityHeader({
           <span className="student-identity__name">
             <strong>{data.displayName}</strong>
             <small>
-              <span>{data.affiliation === 'SCHOOL' ? 'User Sekolah' : 'User Mandiri'}</span>
+              <span>{data.affiliation === 'SCHOOL' ? 'Siswa sekolah' : 'Siswa mandiri'}</span>
               {data.class?.schoolName && (
                 <>
                   {' · '}
@@ -241,19 +241,19 @@ export function HomeTryoutHero({ data }: { data: TryoutSummary }) {
       ? 'Paket belum tersedia. Sambil menunggu, kamu bisa lanjut berlatih.'
       : data.state === 'overdue'
         ? 'Hasil belum tersedia dan melewati tenggat.'
-      : data.state === 'scheduled'
-        ? `Dibuka ${releaseDate(data.releaseAt)}.`
-      : data.state === 'checking'
-        ? 'Periksa apakah sesi masih bisa dilanjutkan.'
-      : data.state === 'waitingIrt'
-        ? 'Jawaban sudah terkirim. Hasil dan pembahasan menunggu rilis.'
-        : data.state === 'resultReady'
-          ? 'Hasil dan pembahasan paketmu sudah tersedia.'
-          : data.state === 'inProgress'
-            ? 'Pengerjaanmu masih berlangsung. Lanjutkan sesi Tryout.'
-            : data.eligible
-              ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
-              : 'Paket belum dapat dimulai. Ketersediaan mengikuti status server.';
+        : data.state === 'scheduled'
+          ? `Dibuka ${releaseDate(data.releaseAt)}.`
+          : data.state === 'checking'
+            ? 'Periksa apakah sesi masih bisa dilanjutkan.'
+            : data.state === 'waitingIrt'
+              ? 'Jawaban sudah terkirim. Hasil dan pembahasan menunggu rilis.'
+              : data.state === 'resultReady'
+                ? 'Hasil dan pembahasan paketmu sudah tersedia.'
+                : data.state === 'inProgress'
+                  ? 'Pengerjaanmu masih berlangsung. Lanjutkan sesi Tryout.'
+                  : data.eligible
+                    ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
+                    : 'Paket belum dapat dimulai. Ketersediaan mengikuti status server.';
   return (
     <StudentIllustratedHero
       variant="tryout"

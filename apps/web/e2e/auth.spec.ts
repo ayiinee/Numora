@@ -584,7 +584,7 @@ for (const role of ['STUDENT', 'TEACHER'] as const) {
     expect(state.posts).toEqual([{ role }, { role }]);
     if (role === 'STUDENT') {
       await expect(
-        page.locator('.sh-identity:visible').getByText('Belajar Mandiri', { exact: true }),
+        page.locator('.sh-identity:visible').getByText('Siswa mandiri', { exact: true }),
       ).toBeVisible();
       await expect(page.getByRole('link', { name: /Latihan Soal/ })).toBeVisible();
     } else await expect(page.getByRole('combobox', { name: 'Sekolah', exact: true })).toBeVisible();

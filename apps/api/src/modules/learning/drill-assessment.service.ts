@@ -636,26 +636,28 @@ export class DrillAssessmentService {
                 : undefined,
             )
           : null;
-      for (const item of graded) {
+      if (graded.length) {
         await tx
           .insert(attemptAnswers)
-          .values({
-            attemptItemId: item.id,
-            answer: item.answer === null ? sql`'null'::jsonb` : item.answer,
-            savedAt: now,
-            awardedPoints: String(item.awardedPoints),
-            gradedAt: now,
-            scoreCategory: item.scoreCategory,
-            fullyCorrect: item.fullyCorrect,
-            responseState: item.responseState,
-          })
-          .onConflictDoUpdate({
-            target: attemptAnswers.attemptItemId,
-            set: {
+          .values(
+            graded.map((item) => ({
+              attemptItemId: item.id,
+              answer: item.answer === null ? sql`'null'::jsonb` : item.answer,
+              savedAt: now,
               awardedPoints: String(item.awardedPoints),
+              gradedAt: now,
               scoreCategory: item.scoreCategory,
               fullyCorrect: item.fullyCorrect,
               responseState: item.responseState,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: attemptAnswers.attemptItemId,
+            set: {
+              awardedPoints: sql`excluded.awarded_points`,
+              scoreCategory: sql`excluded.score_category`,
+              fullyCorrect: sql`excluded.fully_correct`,
+              responseState: sql`excluded.response_state`,
               gradedAt: now,
             },
           });

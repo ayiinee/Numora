@@ -1,4 +1,5 @@
 'use client';
+import { formatStudentNumber } from './student-format';
 
 import { Button, Dialog, Icon } from '@tka/ui';
 import Link from 'next/link';
@@ -147,13 +148,15 @@ export function LevelPath({
           <dl className="level-path__scores">
             <div>
               <dt>Nilai terakhir</dt>
-              <dd>{selected.latestScore ?? '—'}</dd>
+              <dd>
+                {selected.latestScore == null ? '—' : formatStudentNumber(selected.latestScore)}
+              </dd>
             </div>
             <div className="level-path__best">
               <dt>
                 <Icon name="star" width={14} height={14} /> Nilai terbaik
               </dt>
-              <dd>{selected.bestScore ?? '—'}</dd>
+              <dd>{selected.bestScore == null ? '—' : formatStudentNumber(selected.bestScore)}</dd>
             </div>
           </dl>
           <Link

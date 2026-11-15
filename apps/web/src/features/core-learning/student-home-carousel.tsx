@@ -86,6 +86,8 @@ export function StudentHomeCarousel({
   retryTryout: () => void;
 }) {
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const pauseRef = useRef<(value: boolean) => void>(() => {});
   const carouselRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -104,6 +106,7 @@ export function StudentHomeCarousel({
     let stride = 0;
     let hovered = false;
     let focused = false;
+    let manuallyPaused = false;
     let dragging = false;
     let horizontal = false;
     let startX = 0;
@@ -138,9 +141,22 @@ export function StudentHomeCarousel({
 
     function scheduleAuto() {
       clearAuto();
-      if (reducedMotion || hovered || focused || dragging || animating || document.hidden) return;
+      if (
+        manuallyPaused ||
+        reducedMotion ||
+        hovered ||
+        focused ||
+        dragging ||
+        animating ||
+        document.hidden
+      )
+        return;
       autoTimer = window.setTimeout(() => moveTo(position + 1), holdMs);
     }
+    pauseRef.current = (value) => {
+      manuallyPaused = value;
+      scheduleAuto();
+    };
 
     function finishTransition() {
       window.clearTimeout(fallbackTimer);
@@ -347,6 +363,7 @@ export function StudentHomeCarousel({
       document.removeEventListener('visibilitychange', scheduleAuto);
       media?.removeEventListener('change', onMotionChange);
       goSlideRef.current = () => {};
+      pauseRef.current = () => {};
     };
   }, []);
 
@@ -387,6 +404,18 @@ export function StudentHomeCarousel({
         </div>
       </div>
       <div className="sh-carousel__controls">
+        <button
+          type="button"
+          className="sh-carousel__pause"
+          aria-pressed={paused}
+          aria-label={paused ? 'Lanjutkan pergantian banner' : 'Jeda pergantian banner'}
+          onClick={() => {
+            pauseRef.current(!paused);
+            setPaused(!paused);
+          }}
+        >
+          {paused ? 'Lanjutkan banner' : 'Jeda banner'}
+        </button>
         <div className="sh-carousel__indicators" aria-label="Pilih slide">
           {['Drill', 'Tryout'].map((label, index) => (
             <button

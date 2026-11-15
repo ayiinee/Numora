@@ -24,6 +24,58 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 describe('leaderboard scopes, archives and ties', () => {
+  it('offers class membership recovery without requesting an unauthorized class ranking, and keeps pending data distinct from empty', async () => {
+    vi.mocked(learningApi.dashboard).mockResolvedValue({
+      displayName: 'Siswa uji',
+      totalXp: 0,
+      affiliation: 'MANDIRI',
+      classes: [],
+      class: null,
+      completedLevels: 0,
+      availableLevels: 0,
+      latestDrillScore: null,
+      bestDrillScore: null,
+      activities: [],
+      activeDrill: null,
+      features: {
+        drill: true,
+        tryout: true,
+        pretest: true,
+        pvp: true,
+        classLeaderboard: true,
+        pendingPolicies: [],
+      },
+    });
+    vi.mocked(request).mockImplementation(
+      async <T,>(_token: string, path: string) =>
+        (path.startsWith('/leaderboards/periods')
+          ? { periods: [] }
+          : {
+              available: false,
+              policyPending: false,
+              entries: [],
+              ownEntry: null,
+            }) as T,
+    );
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <LeaderboardsScreen />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText('Peringkat sedang diperbarui')).toBeTruthy();
+    expect(screen.queryByText('Belum ada rekor pada periode ini.')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Kembali ke beranda' }).getAttribute('href')).toBe(
+      '/student',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Kelas' }));
+    const join = await screen.findByRole('link', { name: 'Gabung kelas' });
+    expect(join.getAttribute('href')).toBe('/student/profile#gabung-kelas');
+    expect(
+      vi.mocked(request).mock.calls.some(([, path]) => path.startsWith('/leaderboards/class')),
+    ).toBe(false);
+  });
   it('shows server ties as a list, keeps decimal XP/self rank and selects authorized class archives', async () => {
     const period = {
       id: 'current',

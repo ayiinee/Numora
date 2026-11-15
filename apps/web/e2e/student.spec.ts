@@ -617,7 +617,18 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.locator('.sh-shortcuts__grid > a')).toHaveCount(3);
     await expect(page.locator('.sh-shortcuts .sh-section__heading a')).toHaveCount(0);
     await expect(page.locator('.sh-shortcut__arrow')).toHaveCount(0);
-    await expect(page.locator('.sh-carousel__arrow, .sh-carousel__pause')).toHaveCount(0);
+    await expect(page.locator('.sh-carousel__arrow')).toHaveCount(0);
+    const pauseBanner = page.getByRole('button', { name: 'Jeda pergantian banner', exact: true });
+    await expect(pauseBanner).toHaveAttribute('aria-pressed', 'false');
+    const pauseBox = await pauseBanner.boundingBox();
+    expect(pauseBox!.width).toBeGreaterThanOrEqual(44);
+    expect(pauseBox!.height).toBeGreaterThanOrEqual(44);
+    await pauseBanner.click();
+    const resumeBanner = page.getByRole('button', { name: 'Lanjutkan pergantian banner', exact: true });
+    await expect(resumeBanner).toHaveAttribute('aria-pressed', 'true');
+    await resumeBanner.click();
+    await expect(pauseBanner).toHaveAttribute('aria-pressed', 'false');
+    expect(mutations).toEqual([]);
     await expect(page.locator('.sh-identity__xp:visible svg')).toHaveCount(1);
     await expect(page.locator('.student-identity__affiliation')).toHaveCount(0);
     await expect(
@@ -1218,8 +1229,13 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
   page,
 }) => {
   await fixtures(page);
+  const classRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/leaderboards/class')
+      classRequests.push(request.url());
+  });
   await page.goto('/student');
-  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(page.locator('.sh-identity:visible').getByText('Siswa mandiri', { exact: true })).toBeVisible();
   await page.goto(`/student/drill/${attemptId}`);
   await expect(page.getByText('Fixture: 1 + 1?')).toBeVisible();
   await page.goto('/student/pvp');
@@ -1231,8 +1247,11 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
   );
   await expect(page.getByRole('heading', { name: 'Peringkat belum tersedia' })).toBeVisible();
   await page.getByRole('button', { name: 'Kelas', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
-  await page.goto('/student/profile');
+  await expect(page.getByRole('heading', { name: 'Gabung kelas untuk melihat peringkat' })).toBeVisible();
+  expect(classRequests).toEqual([]);
+  const joinClass = page.getByRole('link', { name: 'Gabung kelas', exact: true });
+  await expect(joinClass).toHaveAttribute('href', '/student/profile#gabung-kelas');
+  await joinClass.click();
   await expect(page.getByLabel('Kode kelas')).toBeVisible();
 });
 
@@ -1242,9 +1261,9 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profil dan progres' }).getByText('Siswa mandiri', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profil dan progres' }).getByText('Siswa mandiri', { exact: true })).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {
@@ -1711,12 +1730,12 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   expect(pauseCount).toBe(0);
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17px');
-  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
   await expect(exitDialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(exitDialog).toBeHidden();
-  await expect(page.getByRole('link', { name: 'Kembali ke materi' })).toBeFocused();
-  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await expect(page.getByRole('link', { name: 'Kembali ke latihan' })).toBeFocused();
+  await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
   await page.screenshot({ path: testInfo.outputPath('drill-exit-1280.png') });
   await exitDialog.getByRole('button', { name: 'Ya, keluar dulu' }).click();
   await expect(page).toHaveURL('/student/learn');

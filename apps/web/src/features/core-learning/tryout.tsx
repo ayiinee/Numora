@@ -229,7 +229,13 @@ function CurrentTryout({
                       />
                     ) : available &&
                       (current.state === 'resultReady' || current.state === 'waitingIrt') ? (
-                      <Status title={current.state === 'waitingIrt' ? 'Jawaban terkirim · Menunggu hasil' : 'Hasil tersedia'}>
+                      <Status
+                        title={
+                          current.state === 'waitingIrt'
+                            ? 'Jawaban terkirim · Menunggu hasil'
+                            : 'Hasil tersedia'
+                        }
+                      >
                         {current.attemptId && (
                           <Link
                             className="button-link"
@@ -314,9 +320,10 @@ function CurrentTryout({
                                 key={item.attemptId}
                                 item={item}
                                 resultState={
-                                  (batchError ? undefined : batches?.find(
-                                    (batch) => batch.attemptId === item.attemptId,
-                                  )?.resultState) ?? item.tryoutResultState
+                                  (batchError
+                                    ? undefined
+                                    : batches?.find((batch) => batch.attemptId === item.attemptId)
+                                        ?.resultState) ?? item.tryoutResultState
                                 }
                               />
                             ))}
@@ -395,9 +402,15 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
   if (!query.data || attemptNoLongerAccessible(query.error))
     return (
       <>
-        <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
+        <DataState
+          pending={query.isPending}
+          error={query.error}
+          retry={() => void query.refetch()}
+        />
         {attemptNoLongerAccessible(query.error) && (
-          <Link className="button-link button-link--secondary" href="/student/tryout">Kembali ke Tryout</Link>
+          <Link className="button-link button-link--secondary" href="/student/tryout">
+            Kembali ke Tryout
+          </Link>
         )}
       </>
     );
@@ -427,7 +440,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
   return (
     <>
       {query.isError && (
-        <Status title="Status server belum dapat diperbarui">
+        <Status title="Status pengerjaan belum dapat diperbarui">
           Jawaban lokal tetap ditampilkan. Periksa koneksi dan status pengiriman sebelum keluar.
           <Button variant="secondary" onClick={() => void query.refetch()}>
             Periksa status sesi
@@ -446,8 +459,10 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
 }
 
 function attemptNoLongerAccessible(error: unknown) {
-  return error instanceof LearningApiError &&
-    (error.code === 'ATTEMPT_NOT_ACTIVE' || [401, 403, 404].includes(error.status));
+  return (
+    error instanceof LearningApiError &&
+    (error.code === 'ATTEMPT_NOT_ACTIVE' || [401, 403, 404].includes(error.status))
+  );
 }
 
 function TryoutForm({
@@ -473,7 +488,7 @@ function TryoutForm({
         questions={attempt.questions}
         notice={
           attempt.resultPendingReason ? (
-            <Card fullWidth>Penilaian belum tersedia. Jawaban tetap disimpan di server.</Card>
+            <Card fullWidth>Penilaian belum tersedia. Jawaban yang tersimpan tetap aman.</Card>
           ) : undefined
         }
         deadlineAt={attempt.deadlineAt}
@@ -542,10 +557,13 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
       <>
         {attempt.isError && (
           <Status title="Status sesi belum dapat dimuat">
-            <Button variant="secondary" onClick={() => {
-              void attempt.refetch();
-              void query.refetch();
-            }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                void attempt.refetch();
+                void query.refetch();
+              }}
+            >
               Coba lagi
             </Button>
           </Status>
@@ -565,7 +583,8 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
             )}
           </Status>
         ) : (
-          !attempt.isError && attempt.data?.status === 'submitted' && (
+          !attempt.isError &&
+          attempt.data?.status === 'submitted' && (
             <TryoutWaiting
               xp={attempt.data?.xp ?? null}
               closeAt={attempt.data?.closeAt}
