@@ -98,6 +98,9 @@ jobs:
       - name: PostgreSQL VPS config and HBA on a second disposable Linux cluster
         run: bash scripts/test-postgres-vps-config.sh '${{ job.services.postgres.id }}'
       - name: Unit and integration tests (no cached test results)
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
+          NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
         run: pnpm exec turbo run test --force --concurrency=1
       - name: QA Admin provisioning tests
         run: pnpm test:qa-admins
