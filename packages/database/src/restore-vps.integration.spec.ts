@@ -11,6 +11,7 @@ import { writerKinds } from './backup-config.js';
 import { prepareVpsRestore, restoreVps } from './restore-vps.js';
 import { migrateIntegratedDatabase } from './integrated-migrations.js';
 import { verifyProductionDatabase } from './production-runtime.js';
+import { inspectRestoredRuntime, readRestoreEvidence } from './post-restore-runtime.js';
 
 const base = process.env.TEST_DATABASE_URL,
   tls = process.env.TEST_DATABASE_TLS_URL,
@@ -226,6 +227,66 @@ it.skipIf(!base || !tls || !ca || process.platform === 'win32')(
           login,
           databaseRole: login,
         });
+      const evidence = await readRestoreEvidence(report, planFile);
+      const runtimeTarget = (login: string) => ({
+        profile: 'production-vps' as const,
+        host: 'localhost',
+        port: Number(sourceBase.port || 5432),
+        database: targetName,
+        login,
+        databaseRole: login,
+      });
+      const beforeInspection = await targetAdmin`SELECT count(*)::int AS count FROM public.users`;
+      for (const [client, service] of [
+        [api, 'api'],
+        [worker, 'worker'],
+      ] as const) {
+        const inspected = await inspectRestoredRuntime(
+          client,
+          service,
+          runtimeTarget('numora_' + service),
+          evidence,
+        );
+        expect(inspected).toMatchObject({
+          result: 'PASS',
+          runtimeReady: false,
+          cutoverReady: false,
+        });
+      }
+      expect(await targetAdmin`SELECT count(*)::int AS count FROM public.users`).toEqual(
+        beforeInspection,
+      );
+      await targetAdmin.unsafe('GRANT DELETE ON public.users TO numora_compute');
+      await expect(
+        inspectRestoredRuntime(api, 'api', runtimeTarget('numora_api'), evidence),
+      ).rejects.toThrow(/drifted/);
+      await targetAdmin.unsafe('REVOKE DELETE ON public.users FROM numora_compute');
+      await targetAdmin.unsafe('GRANT numora_main_runtime TO numora_api WITH ADMIN TRUE');
+      await expect(
+        inspectRestoredRuntime(api, 'api', runtimeTarget('numora_api'), evidence),
+      ).rejects.toThrow(/membership/);
+      await targetAdmin.unsafe('GRANT numora_main_runtime TO numora_api WITH ADMIN FALSE');
+      if (process.env.NUMORA_RESTORE_RUNTIME_PROBE === 'true') {
+        const probe = await promisify(execFile)(
+          process.execPath,
+          ['--dns-result-order=ipv4first', resolve('../../scripts/probe-restored-runtime.mjs')],
+          {
+            timeout: 60000,
+            env: {
+              PATH: process.env.PATH,
+              NODE_EXTRA_CA_CERTS: ca,
+              NODE_ENV: 'test',
+              RESTORED_API_URL: runtimeUrl('numora_api').toString(),
+              RESTORED_WORKER_URL: runtimeUrl('numora_worker').toString(),
+              RESTORED_TEST_USER_ID: id,
+              RESTORED_TEST_AUTH_ID: authId,
+              TEST_REDIS_URL: process.env.TEST_REDIS_URL,
+              TEST_DATABASE_TLS_CA_FILE: ca,
+            },
+          },
+        );
+        expect(probe.stdout).toContain('Restored API and worker rehearsal passed.');
+      }
       expect((await api`SELECT public.restore_probe() AS count`)[0]!.count).toBe('1');
       await expect(compute`SELECT * FROM public.users`).rejects.toMatchObject({ code: '42501' });
       await expect(compute`SELECT public.restore_probe()`).rejects.toMatchObject({ code: '42501' });

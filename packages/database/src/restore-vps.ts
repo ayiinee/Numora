@@ -45,7 +45,7 @@ export function vpsRestoreTarget(env: NodeJS.ProcessEnv) {
   return url;
 }
 
-async function newReport(path: string) {
+export async function newReport(path: string) {
   backupCheck(isAbsolute(path), 'Use an absolute private restore-plan/report path');
   await privatePath(dirname(path), true);
   backupCheck(
@@ -372,6 +372,8 @@ export async function restoreVps(url: URL, folder: string, planFile: string, rep
           planSha256,
           result: 'PASS',
           target: {
+            host: url.hostname,
+            port: Number(url.port || 5432),
             database: decodeURIComponent(url.pathname.slice(1)),
             owner: 'numora_owner',
             login: 'numora_migrator',
