@@ -21,6 +21,9 @@ Cloudflare R2 is used for owned object media.
 
 Supabase and Redis cloud reduce local infrastructure work and keep the same service types across environments. Use an isolated development Supabase branch/project; staging contains real-user data. If Redis is shared, isolate BullMQ keys with distinct prefixes and credentials where available.
 
+For a manual Redis switch on the existing Ubuntu/systemd VPS, see
+[Mengganti Redis Production melalui PuTTY](REDIS_SWITCH.md).
+
 A full self-hosted fallback needs a separate operational review. The choice of a deployment container is independent of the no-Docker development setup.
 
 ## Environments
