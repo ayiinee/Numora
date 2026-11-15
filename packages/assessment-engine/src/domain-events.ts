@@ -180,7 +180,9 @@ export async function saveAssessmentAnswerWithEvent(
       answer = excluded.answer, saved_at = excluded.saved_at,
       awarded_points = null, graded_at = null, score_category = null,
       fully_correct = null, response_state = null
-    where attempt_answers.answer is distinct from excluded.answer
+    where (case when jsonb_typeof(attempt_answers.answer) = 'string'
+      then (attempt_answers.answer #>> '{}')::jsonb else attempt_answers.answer end)
+      is distinct from excluded.answer
     returning exists(select 1 from previous) as existed
   `);
   if (!changed || (input.answer === null && !changed.existed)) return;

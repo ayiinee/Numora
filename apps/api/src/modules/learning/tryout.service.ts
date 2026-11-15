@@ -834,7 +834,15 @@ export class TryoutService {
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'),
         );
-      const content = decodeAssessmentContent(item);
+      const content = decodeAssessmentContent({
+        questionType: item.questionType,
+        stem: questionVersions.stem.mapFromDriverValue(item.stem),
+        optionsOrStatements: questionVersions.optionsOrStatements.mapFromDriverValue(
+          item.optionsOrStatements,
+        ),
+        answerKey: questionVersions.answerKey.mapFromDriverValue(item.answerKey),
+        explanation: questionVersions.explanation.mapFromDriverValue(item.explanation),
+      });
       let answer;
       try {
         answer = normalizeAssessmentAnswer(

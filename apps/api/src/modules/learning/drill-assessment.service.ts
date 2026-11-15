@@ -482,13 +482,27 @@ export class DrillAssessmentService {
       if (item.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Drill sudah selesai.'));
       const now = new Date(item.now);
-      if (item.drillTimer && !drillClock(item.drillTimer, now.getTime()).sessionId)
+      const timer =
+        item.drillTimer === null
+          ? null
+          : (assessmentAttempts.drillTimer.mapFromDriverValue(
+              item.drillTimer,
+            ) as (typeof assessmentAttempts.$inferSelect)['drillTimer']);
+      if (timer && !drillClock(timer, now.getTime()).sessionId)
         throw new ConflictException(problem('DRILL_PAUSED', 'Lanjutkan latihan untuk menjawab.'));
       if (!item.id || !item.questionVersionId)
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Drill ini.'),
         );
-      const content = decodeAssessmentContent(item);
+      const content = decodeAssessmentContent({
+        questionType: item.questionType,
+        stem: questionVersions.stem.mapFromDriverValue(item.stem),
+        optionsOrStatements: questionVersions.optionsOrStatements.mapFromDriverValue(
+          item.optionsOrStatements,
+        ),
+        answerKey: questionVersions.answerKey.mapFromDriverValue(item.answerKey),
+        explanation: questionVersions.explanation.mapFromDriverValue(item.explanation),
+      });
       let answer;
       try {
         answer = normalizeAssessmentAnswer(

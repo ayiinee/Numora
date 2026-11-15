@@ -56,9 +56,11 @@ describe('Drill access and duplicate submit', () => {
 
   it('refuses to change an answer after finalization', async () => {
     const tx = {
-      select: vi.fn(() =>
-        query([{ studentId, assessmentType: 'DRILL', purpose: 'REGULAR', status: 'GRADED' }]),
-      ),
+      execute: vi.fn(async () => [
+        { studentId, assessmentType: 'DRILL', purpose: 'REGULAR', status: 'GRADED' },
+      ]),
+      insert: vi.fn(),
+      update: vi.fn(),
     };
     vi.mocked(getDatabase).mockReturnValue({
       db: { transaction: (run: (value: typeof tx) => unknown) => run(tx) },
@@ -66,7 +68,9 @@ describe('Drill access and duplicate submit', () => {
     await expect(learning().saveAnswer('Bearer valid', attemptId, otherId, 'A')).rejects.toThrow(
       ConflictException,
     );
-    expect(tx.select).toHaveBeenCalledTimes(1);
+    expect(tx.execute).toHaveBeenCalledTimes(1);
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(tx.update).not.toHaveBeenCalled();
   });
 
   it('returns the prior result on duplicate submit without writing another outbox event', async () => {

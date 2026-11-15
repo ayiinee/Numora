@@ -323,11 +323,19 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBe(
       'B',
     );
+    // Older database clients could persist a JSON string inside the JSONB column.
+    await db.execute(sql`update public.attempt_answers set answer = to_jsonb(answer::text)
+      where attempt_item_id = ${attempt.questions[0]!.questionInstanceId}`);
     await Promise.all(
       [1, 2].map(() =>
         learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, 'B'),
       ),
     );
+    const [legacyEncoding] = await db.execute<{ encoding: string }>(sql`
+      select jsonb_typeof(answer) as encoding from public.attempt_answers
+      where attempt_item_id = ${attempt.questions[0]!.questionInstanceId}
+    `);
+    expect(legacyEncoding!.encoding).toBe('string');
     const beforeFailure = (
       await db
         .select()
