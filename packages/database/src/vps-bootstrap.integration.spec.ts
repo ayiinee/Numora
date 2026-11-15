@@ -183,12 +183,15 @@ it.skipIf(!base || !tlsUrl || !caFile)(
       await admin`GRANT numora_irt_runtime TO numora_api`;
       await expect(psql('roles.sql')).rejects.toThrow();
       await admin`REVOKE numora_irt_runtime FROM numora_api`;
+      await admin`GRANT numora_owner TO postgres`;
+      await expect(psql('roles.sql')).rejects.toThrow();
+      await admin`REVOKE numora_owner FROM postgres`;
       await admin.unsafe(`ALTER DATABASE ${database} OWNER TO postgres`);
       await expect(psql('database.sql')).rejects.toThrow();
       await admin.unsafe(`ALTER DATABASE ${database} OWNER TO numora_owner`);
     } finally {
       for (const client of clients) await client.end({ timeout: 5 });
-      if (created) await admin.unsafe(`DROP DATABASE ${database} WITH (FORCE)`);
+      if (created) await admin.unsafe(`DROP DATABASE IF EXISTS ${database} WITH (FORCE)`);
       for (const role of newRoles.reverse()) await admin.unsafe(`DROP ROLE IF EXISTS ${role}`);
       await admin.end({ timeout: 5 });
     }
