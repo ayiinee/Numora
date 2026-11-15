@@ -1,0 +1,46 @@
+{
+  "maxConnections": 60,
+  "superuserReservedConnections": 3,
+  "operationsConnections": 5,
+  "headroomConnections": 10,
+  "services": [
+    {
+      "name": "api",
+      "login": "numora_api",
+      "connectionLimit": 12,
+      "instances": 1,
+      "overlapInstances": 1,
+      "pools": [
+        { "name": "main", "max": 3 },
+        { "name": "irt-orchestration", "max": 2 }
+      ]
+    },
+    {
+      "name": "worker",
+      "login": "numora_worker",
+      "connectionLimit": 12,
+      "instances": 1,
+      "overlapInstances": 1,
+      "pools": [
+        { "name": "main", "max": 3 },
+        { "name": "irt-orchestration", "max": 2 }
+      ]
+    },
+    {
+      "name": "compute-reservation",
+      "login": "numora_compute",
+      "connectionLimit": 4,
+      "instances": 1,
+      "overlapInstances": 1,
+      "pools": [{ "name": "compute-example-verify-against-actual-service", "max": 2 }]
+    },
+    {
+      "name": "migration-runner",
+      "login": "numora_migrator",
+      "connectionLimit": 2,
+      "instances": 1,
+      "overlapInstances": 0,
+      "pools": [{ "name": "migration-and-readonly-check", "max": 2 }]
+    }
+  ]
+}

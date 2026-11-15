@@ -71,6 +71,8 @@ CI generates a short-lived test CA/key outside Git and enables TLS only on its d
 
 Still required before cutover: VPS/source inventory, resource/connection budget, restricted-role/bootstrap provisioning, complete `public` + `irt_compute` + `drizzle` backup/restore, integrity/authorization and critical-flow QA, off-host backups, restore rehearsal and rollback. Current health endpoints are `/api/v1/health` and `/api/v1/health/database`; these do not prove restore/capacity readiness.
 
+Preparation PR 2 supplies the [reviewable PostgreSQL/bootstrap files and connection-budget procedure](POSTGRES_VPS_BOOTSTRAP.md). Disposable tests do not establish that those operator steps have been performed on the VPS; source-major compatibility and inventory still gate installation/cutover.
+
 ## Local verification — 15 November 2026
 
 Using Node 24.22.1 and a dedicated localhost PostgreSQL 16 fixture with a generated test CA: 56 database/config/content-guard tests, two real API subprocess startup tests, nine worker lifecycle/startup tests, and three existing Development/test guard checks pass. Required TLS cases run rather than skip, including trusted CA success, untrusted CA/hostname failure, direct/inherited excessive privileges, ownership/CREATE and plaintext rejection. Catalog identity checks pin `search_path=pg_catalog` and are tested against a conflicting role default. Fixture business rows remain unchanged. Tests do not contact Supabase Auth, a real Redis endpoint, the VPS or cloud data.

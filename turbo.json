@@ -22,6 +22,7 @@
         "TEST_DATABASE_URL",
         "TEST_DATABASE_TLS_URL",
         "TEST_DATABASE_TLS_CA_FILE",
+        "TEST_PSQL_PATH",
         "TEST_REDIS_URL",
         "BULLMQ_PREFIX",
         "TEACHER_TOKEN_PEPPER"
