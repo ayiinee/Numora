@@ -1,5 +1,6 @@
 import { lstat, mkdir, readFile, realpath, rmdir, unlink } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { lookup } from 'node:dns/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import type { Sql, TransactionSql } from 'postgres';
 import { backupCheck, backupTarget } from './backup-config.js';
@@ -169,22 +170,25 @@ async function runtimeRoleBoundary(sql: Sql) {
 async function targetPreflight(sql: Sql, url: URL, major: number) {
   await sql.begin('READ ONLY', async (tx) => {
     await sessionSettings(tx);
-    backupCheck(
-      (await assertIdentity(tx, url)) === major,
-      'Archive, restore tools and VPS server major must match',
-    );
     const [state] = await tx`SELECT current_user AS actor,session_user AS login,
-      pg_get_userbyid(d.datdba) AS owner,inet_server_addr()::text AS address,
+      pg_get_userbyid(d.datdba) AS owner,
       (SELECT count(*)::int FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid()) AS others
       FROM pg_database d WHERE datname=current_database()`;
     backupCheck(
       state?.actor === 'numora_owner' &&
         state.login === 'numora_migrator' &&
         state.owner === 'numora_owner' &&
-        ['127.0.0.1', '::1'].includes(state.address) &&
         state.others === 0,
       'Restore must run locally as migrator/owner on a new dedicated owner database without other sessions',
     );
+    // pg_stat_ssl masks session details when current_user is the NOLOGIN owner rather
+    // than the backend login. Inspect as the original migrator, then restore its owner context.
+    await tx.unsafe('SET LOCAL ROLE NONE');
+    backupCheck(
+      (await assertIdentity(tx, url)) === major,
+      'Archive, restore tools and VPS server major must match',
+    );
+    await tx.unsafe('SET LOCAL ROLE numora_owner');
     await assertConnectionFence(tx);
     const schemas =
       await tx`SELECT nspname,pg_get_userbyid(nspowner) AS owner FROM pg_namespace WHERE nspname !~ '^pg_' AND nspname<>'information_schema'`;
@@ -295,6 +299,11 @@ export async function restoreVps(url: URL, folder: string, planFile: string, rep
     decodeURIComponent(url.username) === 'numora_migrator' &&
       /^\/(?:numora_production|numora_test_vps_restore_[a-f0-9]{32})$/.test(url.pathname),
     'Mapped restore is restricted to the dedicated migrator and reviewed target names',
+  );
+  const addresses = await lookup(url.hostname, { all: true });
+  backupCheck(
+    addresses.length > 0 && addresses.every((item) => ['127.0.0.1', '::1'].includes(item.address)),
+    'Run mapped restore only against a TLS DNS endpoint resolving exclusively to loopback',
   );
   await newReport(report);
   await privatePath(planFile, false);

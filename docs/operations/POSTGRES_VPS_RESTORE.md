@@ -6,7 +6,7 @@ This PR implements operator tooling and tests. No real source backup, VPS access
 
 ## What is supported
 
-The initial mapped profile supports a PostgreSQL **16** archive, same-major utilities and direct PostgreSQL 16 on the operator's host/VPS. The URL uses an explicit TLS DNS name/pins; after connecting, the server must report a loopback address (`127.0.0.1` or `::1`). A private DNS name such as `db.numora.internal` can resolve to loopback and match the certificate. The TLS CA must be trusted by both Node and libpq. Proxies, transaction poolers, external/foreign-schema dependencies, unsupported grants, unknown RLS roles and colliding owner defaults stop preparation/restore rather than being silently removed.
+The initial mapped profile supports a PostgreSQL **16** archive, same-major utilities and direct PostgreSQL 16 on the operator's host/VPS. The URL uses an explicit TLS DNS name/pins; that endpoint must resolve exclusively to loopback (`127.0.0.1` or `::1`) on the operator host before a restore connection is opened. A private DNS name such as `db.numora.internal` can resolve to loopback and match the certificate. A directly published local container endpoint is tested as well: its backend interface can be a container address while the client endpoint remains local. The TLS CA must be trusted by both Node and libpq. Transaction poolers, unreviewed proxies, external/foreign-schema dependencies, unsupported grants, unknown RLS roles and colliding owner defaults stop preparation/restore rather than being silently removed.
 
 The target is either `numora_production` or an isolated `numora_test_vps_restore_<32 lowercase hex>` database, owned by `numora_owner`. It must contain **only the empty PR 2 public schema**, with no application tables/functions/types and no existing owner default privileges. It must be connection-fenced, without other sessions. The login is `numora_migrator`, whose database-specific effective role is `numora_owner`; it is not a superuser and has no CREATE ROLE/DB, replication or BYPASSRLS. The tool creates/drops no database or cluster role, terminates no session, and supports no overwrite or `--clean` option.
 
@@ -63,6 +63,8 @@ pnpm db:backup restore-vps /PRIVATE_PATH/run-001 /PRIVATE_PATH/restore-plan.json
 ```
 
 Before mutation, the tool verifies artifact permissions/checksums, the plan/manifest binding, schema scope, major versions, real TLS/identity, loopback topology, fixed role/membership boundaries, zero other sessions, an empty owner target and its database connection fence. Main/Compute must have no ownership/admin/BYPASSRLS or ability to SET the owner/other group. The separate migrator must have only the reviewed owner membership.
+
+The TLS/session check temporarily uses `SET LOCAL ROLE NONE` to inspect the original migrator's own backend (PostgreSQL otherwise masks that session's SSL metadata from the NOLOGIN owner), then returns to `numora_owner` within the same read-only preflight transaction. No role grants are added and certificate verification remains mandatory.
 
 `pg_restore` runs once with `--no-owner --no-acl --role=numora_owner --single-transaction --exit-on-error` and the exact TOC selection. These flags prevent copying source owners/provider grants; **they are not a complete restore procedure on their own**. Every restored object, including SECURITY DEFINER functions, is created as the fixed non-superuser owner. The archive's frozen data and Drizzle history are copied; canonical migrations, seeds, grading, XP posting, IRT jobs or outbox delivery are not run.
 
