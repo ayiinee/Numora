@@ -88,6 +88,8 @@ IRT authorization/resource pins can refer to the old database endpoint, service 
 
 ## Verification scope
 
+Preparation PR 5 adds [read-only runtime inspections and a disposable restored API/worker rehearsal](POSTGRES_VPS_RUNTIME_TESTING.md). New restore reports record endpoint host/port for binding those inspections; runtime CONNECT remains closed and must be reviewed separately before inspection. This does not open access or change this restore's acceptance scope.
+
 Unit tests cover mapping completeness, reviewed dropped grantees, unknown/administrative/delegated grants, conflicting defaults, identifier quoting, exact TOC selection and target pins. A real local canonical-schema smoke maps 1,845 ACL objects and verifies structure/data/sequences. Linux CI additionally exercises fresh three-schema backup, non-superuser migrator restore, original-owner-to-NOLOGIN mapping, quarantine refusal/retention, provider-grant removal, actual TLS runtime logins, column privileges, future table/function defaults, SECURITY DEFINER execution and the real PvP cache invalidation trigger under restricted Main rights. Disposable tests never connect to Supabase or VPS.
 
 Primary references: [pg_restore owner/ACL/role options](https://www.postgresql.org/docs/16/app-pgrestore.html), [ALTER DEFAULT PRIVILEGES creator semantics](https://www.postgresql.org/docs/16/sql-alterdefaultprivileges.html), [ACL inspection functions](https://www.postgresql.org/docs/16/functions-info.html), and [GRANT](https://www.postgresql.org/docs/16/sql-grant.html).

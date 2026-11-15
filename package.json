@@ -15,6 +15,7 @@
     "env:check:production": "pnpm --filter @tka/database env:check:production",
     "db:vps:budget": "node scripts/check-postgres-budget.mjs",
     "db:backup": "pnpm --filter @tka/database db:backup",
+    "db:vps:runtime-check": "pnpm --filter @tka/database db:vps:runtime-check",
     "db:check": "dotenv -e .env -- pnpm --filter @tka/database db:check",
     "build": "turbo run build",
     "lint": "eslint . --max-warnings=0",

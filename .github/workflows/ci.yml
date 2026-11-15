@@ -112,6 +112,14 @@ jobs:
           NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
           NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
         run: pnpm exec turbo run test --force --concurrency=1
+      - name: Restored API and worker with restricted TLS logins and an isolated queue
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
+          NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
+          NUMORA_RESTORE_RUNTIME_PROBE: 'true'
+        run: |
+          pnpm exec turbo run build --filter=@tka/api --filter=@tka/worker
+          pnpm --filter @tka/database exec vitest run src/restore-vps.integration.spec.ts
       - name: QA Admin provisioning tests
         run: pnpm test:qa-admins
       - name: Database upgrade checks
