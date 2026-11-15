@@ -335,7 +335,7 @@ export async function createBackup(url: URL, output: string, writersFile: string
   }
 }
 
-type Inventory = Awaited<ReturnType<typeof catalog>> & {
+export type Inventory = Awaited<ReturnType<typeof catalog>> & {
   tableProofs: Awaited<ReturnType<typeof tableProofs>>;
   sequenceBefore: Awaited<ReturnType<typeof sequenceProofs>>;
   sequenceAfter: Awaited<ReturnType<typeof sequenceProofs>>;
@@ -520,3 +520,16 @@ export function backupFailure(error: unknown) {
     ? error.message
     : 'Backup operation failed; no recovery acceptance is recorded. Check private configuration, permissions and utility compatibility.';
 }
+
+// Shared only by operator restore tooling; not exported through the application database barrel.
+export {
+  privatePath,
+  privateWrite,
+  fileHash,
+  toolEnvironment,
+  toolRun,
+  toolVersion,
+  database,
+  sessionSettings,
+  assertIdentity,
+};

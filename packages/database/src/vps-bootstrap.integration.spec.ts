@@ -50,6 +50,8 @@ it.skipIf(!base || !tlsUrl || !caFile)(
     let created = false;
     const newRoles: string[] = [];
     try {
+      // Serialize fixtures using the bootstrap's fixed cluster role names.
+      await admin`SELECT pg_advisory_lock(1940261115)`;
       const existing = await admin<
         { rolname: string }[]
       >`SELECT rolname FROM pg_roles WHERE rolname=ANY(${allRoles})`;
