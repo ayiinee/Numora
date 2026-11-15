@@ -3610,12 +3610,19 @@ describe.skipIf(!testUrl)(
         (await request(`tryout/attempts/${attempts[0].id}`, 'GET', undefined, 'otherStudent'))
           .status,
       ).toBe(404);
-      const independent = await ok<TryoutAttemptDto>(
-        `tryout/batches/${activeId}/attempts`,
-        'POST',
-        {},
-        'otherStudent',
-      );
+      // Another student can start while the batch is already share-locked.
+      const independent = await owner.begin(async (tx) => {
+        await tx`SELECT id FROM tryout_batches WHERE id=${activeId} FOR SHARE`;
+        const response = await fetch(`${base}/tryout/batches/${activeId}/attempts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer otherStudent' },
+          body: '{}',
+          signal: AbortSignal.timeout(10_000),
+        });
+        const body = await response.json();
+        expect(response.status, JSON.stringify(body)).toBe(201);
+        return body as TryoutAttemptDto;
+      });
       const [independentAssignment] =
         await owner`SELECT package_id FROM tryout_student_assignments WHERE attempt_id=${independent.id}`;
       expect(independentAssignment!.package_id).toBe(packageIds[0]);

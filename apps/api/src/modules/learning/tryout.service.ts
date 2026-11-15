@@ -78,7 +78,7 @@ export class TryoutService {
   ) {}
 
   private async student(authorization?: string) {
-    const user = await this.identity.me(authorization);
+    const user = await this.identity.me(authorization, 'access');
     if (user.role !== 'STUDENT')
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
     return user.id;
@@ -465,10 +465,14 @@ export class TryoutService {
         isDemo: assessmentPackages.isDemo,
         deadlineAt: assessmentAttempts.deadlineAt,
         xpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
+        xp: xpLedger.xpAmount,
+        score: assessmentAttempts.score0To100,
+        now: sql<Date>`clock_timestamp()`.mapWith((value) => new Date(value)),
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .leftJoin(tryoutBatches, eq(tryoutBatches.id, assessmentAttempts.tryoutBatchId))
+      .leftJoin(xpLedger, eq(xpLedger.attemptId, assessmentAttempts.id))
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
@@ -478,7 +482,11 @@ export class TryoutService {
 
   private async presentAttempt(studentId: string, attemptId: string) {
     let attempt = await this.forStudent(studentId, attemptId);
-    if (attempt.status === 'IN_PROGRESS') {
+    if (
+      attempt.status === 'IN_PROGRESS' &&
+      attempt.deadlineAt &&
+      attempt.deadlineAt <= attempt.now
+    ) {
       await this.finalizeForStudent(studentId, attemptId, 'automatic');
       attempt = await this.forStudent(studentId, attemptId);
     }
@@ -516,20 +524,20 @@ export class TryoutService {
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
       serverTime: now.toISOString(),
-      xp: await this.storedXp(attemptId),
+      xp: attempt.xp === null ? null : Number(attempt.xp),
       xpPolicyVersion: attempt.xpPolicyVersion,
-      questions: rows.map((row) => ({
-        ...activeRuntimeQuestion(
-          decodeRuntimeQuestion(row),
-          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
-        ),
-        ...presentAssessmentQuestion(
-          decodeAssessmentContent(row),
-          row.id,
-          row.answer,
-          row.questionVersionId,
-        ),
-      })),
+      questions: rows.map((row) => {
+        const question = decodeRuntimeQuestion(row);
+        return {
+          ...activeRuntimeQuestion(question, validateRuntimeAnswer(question, row.answer ?? null)),
+          ...presentAssessmentQuestion(
+            decodeAssessmentContent(row),
+            row.id,
+            row.answer,
+            row.questionVersionId,
+          ),
+        };
+      }),
     };
   }
 
@@ -575,24 +583,30 @@ export class TryoutService {
         throw new ConflictException(
           problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'),
         );
-      const [membership] = await tx
-        .select({ classId: classMemberships.classId })
-        .from(classMemberships)
-        .where(and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)))
-        .limit(1);
-      const [existing] = await tx
-        .select({ id: assessmentAttempts.id })
-        .from(assessmentAttempts)
-        .where(
-          and(
-            eq(assessmentAttempts.studentId, studentId),
-            eq(assessmentAttempts.packageId, packageId),
-            eq(assessmentAttempts.assessmentType, 'TRYOUT'),
-            isNull(assessmentAttempts.tryoutBatchId),
-          ),
-        )
-        .limit(1);
-      if (!selected && existing) return existing.id;
+      let classIdAtStart = selected?.classId ?? null;
+      if (!selected) {
+        const [existing] = await tx
+          .select({ id: assessmentAttempts.id })
+          .from(assessmentAttempts)
+          .where(
+            and(
+              eq(assessmentAttempts.studentId, studentId),
+              eq(assessmentAttempts.packageId, packageId),
+              eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+              isNull(assessmentAttempts.tryoutBatchId),
+            ),
+          )
+          .limit(1);
+        if (existing) return existing.id;
+        const [membership] = await tx
+          .select({ classId: classMemberships.classId })
+          .from(classMemberships)
+          .where(
+            and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)),
+          )
+          .limit(1);
+        classIdAtStart = membership?.classId ?? null;
+      }
       if (!current.scoringPolicyVersionId)
         throw new ServiceUnavailableException(
           problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'),
@@ -696,7 +710,7 @@ export class TryoutService {
             items.some((item) => item.questionType !== 'SINGLE_CHOICE')
               ? null
               : TRYOUT_XP_POLICY.version,
-          classIdAtStart: selected ? selected.classId : (membership?.classId ?? null),
+          classIdAtStart,
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
           deadlineAt,
@@ -852,18 +866,9 @@ export class TryoutService {
     const attempt = await this.forStudent(studentId, attemptId);
     return {
       state: 'waitingIrt' as const,
-      xp: await this.storedXp(attemptId),
+      xp: attempt.xp === null ? null : Number(attempt.xp),
       xpPolicyVersion: attempt.xpPolicyVersion,
     };
-  }
-
-  private async storedXp(attemptId: string) {
-    const [reward] = await getDatabase()
-      .db.select({ xp: xpLedger.xpAmount })
-      .from(xpLedger)
-      .where(eq(xpLedger.attemptId, attemptId))
-      .limit(1);
-    return reward ? Number(reward.xp) : null;
   }
 
   async result(authorization: string | undefined, attemptId: string) {
@@ -872,28 +877,23 @@ export class TryoutService {
     const { db } = getDatabase();
     const { ready, canonical: published } = await this.releases.studentPublications(
       [attempt],
-      await databaseTime(db),
+      attempt.now,
     );
     if (!ready.has(attemptId))
       throw new ConflictException(
         problem('TRYOUT_RESULT_PENDING', 'Hasil Tryout menunggu rilis IRT.'),
       );
-    const [score] = await db
-      .select({ rawPoints: assessmentAttempts.rawPoints, score: assessmentAttempts.score0To100 })
-      .from(assessmentAttempts)
-      .where(eq(assessmentAttempts.id, attemptId))
-      .limit(1);
     const canonical = published.get(attemptId);
     const rows = await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
-    const xp = await this.storedXp(attemptId);
+    const xp = attempt.xp === null ? null : Number(attempt.xp);
     return {
       attemptId,
       packageTitle: presentFixtureText(attempt.packageId, 'name', attempt.title),
       xp,
       xpPolicyVersion: attempt.xpPolicyVersion,
-      score: canonical ? canonical.score : Number(score?.score ?? 0),
+      score: canonical ? canonical.score : Number(attempt.score ?? 0),
       mode: canonical?.mode ?? 'DEMO',
       publicationVersion: canonical?.version ?? null,
       correctCount: rows.filter(

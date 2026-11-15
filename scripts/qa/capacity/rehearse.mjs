@@ -92,8 +92,9 @@ async function build(target, action = 'build', runtime = env) {
       : await launch('pnpm', args, log, runtime);
   if (code !== 0) throw new Error('Rehearsal ' + action + ' failed for ' + target);
 }
-async function ready(url) {
-  for (let attempts = 0; attempts < 120; attempts++) {
+async function ready(url, timeoutMs = 60_000) {
+  const deadline = performance.now() + timeoutMs;
+  while (performance.now() < deadline) {
     shutdown.signal.throwIfAborted();
     const response = await fetch(url, {
       signal: AbortSignal.timeout(1000),
@@ -131,7 +132,7 @@ try {
   await build('web', 'build', webEnv);
   const apiExit = launch(process.execPath, ['qa/runtime/serve.mjs'], 'api');
   await Promise.race([
-    ready(api + '/api/v1/health/database'),
+    ready(api + '/api/v1/health/database', 300_000),
     apiExit.then(() => {
       throw new Error('Local QA API exited during setup. See api.log.');
     }),

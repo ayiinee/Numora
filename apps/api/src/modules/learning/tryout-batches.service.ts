@@ -253,12 +253,12 @@ export class TryoutBatchesService {
       };
     });
   }
-  async batch(tx: AdminTransaction, id: string, lock = false) {
+  async batch(tx: AdminTransaction, id: string, lock?: 'share' | 'update') {
     const query = tx
       .select()
       .from(tryoutBatches)
       .where(and(eq(tryoutBatches.id, id), isNotNull(tryoutBatches.adminTitle)));
-    const [b] = lock ? await query.for('update') : await query;
+    const [b] = lock ? await query.for(lock) : await query;
     if (!b) throw new NotFoundException('Batch Tryout tidak ditemukan.');
     return b;
   }
@@ -342,7 +342,7 @@ export class TryoutBatchesService {
       'tryout_batch',
       async (tx) => {
         await lockTryoutBatchSchedule(tx);
-        const b = await this.batch(tx, id, true);
+        const b = await this.batch(tx, id, 'update');
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         if (body.expectedRevision !== b.configRevision)
           throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
@@ -371,7 +371,7 @@ export class TryoutBatchesService {
       'tryout_batch',
       async (tx) => {
         await lockTryoutBatchSchedule(tx);
-        const old = id ? await this.batch(tx, id, true) : null;
+        const old = id ? await this.batch(tx, id, 'update') : null;
         if (old) await this.mutable(tx, old, body.expectedRevision);
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         validateBatchInput(body, new Date(clock!.now));
@@ -427,7 +427,7 @@ export class TryoutBatchesService {
       'tryout_batch_delegations_updated',
       'tryout_batch',
       async (tx) => {
-        const b = await this.batch(tx, id, true);
+        const b = await this.batch(tx, id, 'update');
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         if (!['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, new Date(clock!.now))))
           throw new ConflictException('Penerima hanya dapat diubah sebelum batch berakhir.');
@@ -494,7 +494,7 @@ export class TryoutBatchesService {
   publish(actor: string, id: string, revision: number) {
     return adminMutation(actor, 'tryout_batch_published', 'tryout_batch', async (tx) => {
       await lockTryoutBatchSchedule(tx);
-      const b = await this.batch(tx, id, true);
+      const b = await this.batch(tx, id, 'update');
       await this.mutable(tx, b, revision);
       if (b.adminPublishedAt) return { id };
       const packages = await tx
@@ -527,7 +527,7 @@ export class TryoutBatchesService {
       'tryout_batch_cancelled',
       'tryout_batch',
       async (tx) => {
-        const b = await this.batch(tx, id, true);
+        const b = await this.batch(tx, id, 'update');
         await this.mutable(tx, b, revision);
         await tx
           .update(tryoutBatches)
@@ -635,7 +635,8 @@ export class TryoutBatchesService {
       .from(users)
       .where(eq(users.id, studentId))
       .for('no key update');
-    const b = await this.batch(tx, batchId, true);
+    // Starts only read the batch. Share the lock across students while excluding Admin edits.
+    const b = await this.batch(tx, batchId, 'share');
     const [existing] = await tx
       .select({ id: assessmentAttempts.id })
       .from(assessmentAttempts)

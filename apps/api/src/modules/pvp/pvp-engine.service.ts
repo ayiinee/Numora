@@ -26,7 +26,7 @@ import {
   scoringPolicyVersions,
   users,
 } from '@tka/database';
-import { and, asc, desc, eq, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import {
   PVP_POLICY,
   TEMPORARY_PVP_CONTENT_NOTICE,
@@ -486,17 +486,21 @@ export class PvpEngineService implements OnModuleDestroy {
     await db.transaction(async (tx) => {
       const match = await this.locked(tx, matchId);
       const player = await this.member(tx, matchId, studentId);
-      const [replay] = await tx
-        .select()
+      const previous = await tx
+        .select({
+          requestId: pvpAnswers.requestId,
+          questionId: pvpAnswers.matchQuestionId,
+        })
         .from(pvpAnswers)
-        .where(and(eq(pvpAnswers.playerId, player.id), eq(pvpAnswers.requestId, requestId)));
-      if (replay && replay.matchQuestionId !== questionId)
+        .where(
+          and(
+            eq(pvpAnswers.playerId, player.id),
+            or(eq(pvpAnswers.requestId, requestId), eq(pvpAnswers.matchQuestionId, questionId)),
+          ),
+        );
+      if (previous.some((row) => row.requestId === requestId && row.questionId !== questionId))
         throw failure('REQUEST_ID_REUSED', 'Request ID sudah digunakan untuk soal lain.');
-      const [previous] = await tx
-        .select()
-        .from(pvpAnswers)
-        .where(and(eq(pvpAnswers.playerId, player.id), eq(pvpAnswers.matchQuestionId, questionId)));
-      if (previous) return; // The original answer remains immutable, including retries after timeout.
+      if (previous.some((row) => row.questionId === questionId)) return;
       if (match.status !== 'RUNNING' || player.connectionStatus !== 'CONNECTED')
         throw failure('MATCH_NOT_RUNNING', 'Pertandingan tidak sedang berjalan.');
       const disconnected = await tx
@@ -542,10 +546,10 @@ export class PvpEngineService implements OnModuleDestroy {
         speedBonus: String(points.speedBonus),
       });
       const answers = await tx
-        .select()
+        .select({ playerId: pvpAnswers.playerId })
         .from(pvpAnswers)
         .where(eq(pvpAnswers.matchQuestionId, questionId));
-      if (answers.length === 2) await this.resolveQuestion(tx, match, item.question);
+      if (answers.length === 2) await this.resolveQuestion(tx, match, item.question, true);
     });
     return this.snapshot(studentId, matchId);
   }
@@ -554,34 +558,37 @@ export class PvpEngineService implements OnModuleDestroy {
     tx: Transaction,
     match: Match,
     question: typeof pvpMatchQuestions.$inferSelect,
+    bothAnswered = false,
   ) {
     if (question.status !== 'ACTIVE') return;
-    const players = await tx
-      .select()
-      .from(pvpPlayers)
-      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
-    for (const player of players) {
-      await tx
-        .insert(pvpAnswers)
-        .values({
-          playerId: player.id,
-          matchId: match.id,
-          matchQuestionId: question.id,
-          answer: { optionId: null },
-          receivedAt: this.now(),
-        })
-        .onConflictDoNothing();
-      const [total] = await tx
-        .select({
-          points: sql<string>`coalesce(sum(${pvpAnswers.basePoints} + ${pvpAnswers.speedBonus}), 0)`,
-        })
-        .from(pvpAnswers)
-        .where(eq(pvpAnswers.playerId, player.id));
-      await tx
-        .update(pvpPlayers)
-        .set({ totalPoints: total!.points })
-        .where(eq(pvpPlayers.id, player.id));
+    if (!bothAnswered) {
+      const activePlayers = await tx
+        .select({ id: pvpPlayers.id })
+        .from(pvpPlayers)
+        .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
+      if (activePlayers.length)
+        await tx
+          .insert(pvpAnswers)
+          .values(
+            activePlayers.map((player) => ({
+              playerId: player.id,
+              matchId: match.id,
+              matchQuestionId: question.id,
+              answer: { optionId: null },
+              receivedAt: this.now(),
+            })),
+          )
+          .onConflictDoNothing();
     }
+    await tx
+      .update(pvpPlayers)
+      .set({
+        totalPoints: sql`(
+          select coalesce(sum(${pvpAnswers.basePoints} + ${pvpAnswers.speedBonus}), 0)
+          from ${pvpAnswers} where ${pvpAnswers.playerId} = ${pvpPlayers.id}
+        )`,
+      })
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
     await tx
       .update(pvpMatchQuestions)
       .set({ status: 'RESOLVED' })

@@ -11,7 +11,7 @@ export class PvpService {
     readonly engine: PvpEngineService,
   ) {}
   async student(authorization?: string) {
-    const user = await this.identity.me(authorization);
+    const user = await this.identity.me(authorization, 'access');
     if (user.role !== 'STUDENT')
       throw new ForbiddenException({
         code: 'STUDENT_REQUIRED',
