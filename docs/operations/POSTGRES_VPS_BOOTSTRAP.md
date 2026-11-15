@@ -146,6 +146,8 @@ After the restore/rehearsal, run PR 1's read-only production preflight with the 
 
 ## 7. Evidence and remaining gates
 
+Preparation PR 3 adds the [source inventory, three-schema archive and original-owner local restore rehearsal](POSTGRES_BACKUP_INVENTORY.md). It does not perform the operator's actual source inventory/backup or the VPS ownership-remapped restore described above.
+
 Automated tests exercise fresh role/database bootstrap, null initial passwords, canonical migration replay as the non-superuser migrator/NOLOGIN owner, both Main production preflights, allowed Main writes, Compute view access, denied DDL/escalation/profile/artifact/history access, safe reruns and rejection of unexpected existing privilege/membership/ownership. They use dedicated localhost databases, never cloud credentials. CI also starts a **second disposable Linux PostgreSQL 16 cluster** using the actual server/HBA templates, tests TLS/SCRAM, rejects plaintext/wrong passwords/TCP admin, checks peer-admin access and parses effective configuration/HBA. The connection-budget tests run in the normal script-check suite.
 
 These checks verify bootstrap compatibility and isolation, not actual VPS provisioning/capacity, source compatibility, imported data or application acceptance. Required next: source inventory/version decision, backup/restore tooling and rehearsal, off-host backup retention/recovery, disk/availability monitoring, resource tests, critical-flow QA, then a reviewed cutover/rollback window.

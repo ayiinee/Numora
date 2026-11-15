@@ -23,6 +23,8 @@
         "TEST_DATABASE_TLS_URL",
         "TEST_DATABASE_TLS_CA_FILE",
         "TEST_PSQL_PATH",
+        "NODE_EXTRA_CA_CERTS",
+        "NUMORA_BACKUP_PG_BIN",
         "TEST_REDIS_URL",
         "BULLMQ_PREFIX",
         "TEACHER_TOKEN_PEPPER"

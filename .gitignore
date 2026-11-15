@@ -34,6 +34,10 @@ supabase/.branches/
 # logs
 *.log
 
+# Database archives contain private application data and must stay outside Git.
+*.dump
+.numora-backups/
+
 # generated
 apps/web/next-env.d.ts
 __pycache__/

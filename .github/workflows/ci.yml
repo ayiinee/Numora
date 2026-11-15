@@ -97,7 +97,20 @@ jobs:
         run: bash scripts/prepare-test-postgres-tls.sh '${{ job.services.postgres.id }}'
       - name: PostgreSQL VPS config and HBA on a second disposable Linux cluster
         run: bash scripts/test-postgres-vps-config.sh '${{ job.services.postgres.id }}'
+      - name: Install explicit PostgreSQL 16 backup clients
+        run: |
+          # ubuntu-latest now uses 26.04; do not assume its default client matches the 16 fixture.
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-common ca-certificates curl
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client-16
+          /usr/lib/postgresql/16/bin/pg_dump --version
+          /usr/lib/postgresql/16/bin/pg_restore --version
       - name: Unit and integration tests (no cached test results)
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
+          NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
         run: pnpm exec turbo run test --force --concurrency=1
       - name: QA Admin provisioning tests
         run: pnpm test:qa-admins
