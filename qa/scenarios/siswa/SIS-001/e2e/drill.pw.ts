@@ -45,12 +45,13 @@ test('SIS-001 TC-001 real browser saves, resumes, submits 80 and retains one XP 
   await first.check();
   await expect(student.getByRole('status').filter({ hasText: /^Belum tersimpan$/ })).toBeVisible();
   await student.context().setOffline(false);
+  const answerRoute = '/assessment-attempts/' + attempt.id + '/answers/';
   const retried = student.waitForResponse(
-    (r) => r.request().method() === 'PATCH' && r.status() === 200,
+    (r) => r.url().includes(answerRoute) && r.request().method() === 'PATCH' && r.status() === 200,
   );
   await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
   await retried;
-  await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+  await student.getByRole('link', { name: 'Kembali ke latihan', exact: true }).click();
   const [paused] = await Promise.all([
     student.waitForResponse(
       (r) =>
@@ -83,7 +84,8 @@ test('SIS-001 TC-001 real browser saves, resumes, submits 80 and retains one XP 
       .and(student.locator('input[value="' + (i <= 8 ? 'B' : 'A') + '"]'));
     if (!(await option.isChecked())) {
       const saved = student.waitForResponse(
-        (r) => r.request().method() === 'PATCH' && r.status() === 200,
+        (r) =>
+          r.url().includes(answerRoute) && r.request().method() === 'PATCH' && r.status() === 200,
       );
       await option.check();
       await saved;

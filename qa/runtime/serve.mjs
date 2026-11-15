@@ -47,6 +47,7 @@ const ids = {
   levelTwo: '00000000-0000-4000-8000-000000000103',
 };
 const actors = {};
+const usersByAuthorization = new Map();
 async function actor(alias, role = 'STUDENT') {
   const authId = randomUUID();
   const [profile] = await client.unsafe(
@@ -80,6 +81,7 @@ async function actor(alias, role = 'STUDENT') {
     ).toString('base64url'),
     randomUUID(),
   ].join('.');
+  usersByAuthorization.set('Bearer ' + jwt, user);
   actors[alias] = {
     profileId: profile.id,
     session: {
@@ -119,10 +121,8 @@ const authServer = createServer(async (req, res) => {
   try {
     if (req.method === 'OPTIONS') return send(200, {});
     if (req.url === '/auth/v1/user') {
-      const found = Object.values(actors).find(
-        (a) => 'Bearer ' + a.session.access_token === req.headers.authorization,
-      );
-      return send(found ? 200 : 401, found?.session.user || { message: 'Invalid fixture session' });
+      const user = usersByAuthorization.get(req.headers.authorization);
+      return send(user ? 200 : 401, user || { message: 'Invalid fixture session' });
     }
     if (req.url?.startsWith('/auth/v1/logout')) return send(200, {});
     if (req.url === '/fixtures')

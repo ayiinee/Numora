@@ -2,6 +2,8 @@
 
 **ENGINEERING DECISION — workflow tim QA, 27 Oktober 2026.** Mulai dengan prompt: **Mulai QA Numora untuk role siswa** (atau guru/admin). Ikuti [workflow](QA_WORKFLOW.md), [prompt pendek](QA_PROMPTS.md), [strategi terkini](TEST_STRATEGY.md), dan [setup QA Windows](../development/GETTING_STARTED.md#qa-scenario-workflow--27-oktober-2026).
 
+Untuk load, spike, stress dan konfirmasi Prod 1.000 sesi, gunakan [runbook uji kapasitas](CAPACITY_1000.md).
+
 ## Aturan aktif untuk semua anggota
 
 - Pengguna sudah menyetujui eksekusi workflow tim dan menutup review PIC. Ikuti [persetujuan eksekusi tim](QA_WORKFLOW.md#persetujuan-eksekusi-tim); anggota langsung melakukan setup dan pengujian tanpa mengulang persetujuan tersebut.
