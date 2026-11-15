@@ -100,4 +100,18 @@ describe('per-arm release decisions (arithmetic fixture only)', () => {
       'POLICY_UNSUPPORTED',
     );
   });
+  it('blocks production release policy until stability evidence is approved', () => {
+    const { input } = setup();
+    expect(() => decideTryoutReleaseV1(input, null, {
+      ...policy,
+      purpose: 'PRODUCTION',
+    })).toThrow('IRT_RELEASE_STABILITY_NOT_APPROVED');
+    expect(decideTryoutReleaseV1(input, null, {
+      ...policy,
+      purpose: 'PRODUCTION',
+      stabilityGate: {
+        bank: 'SEALED', linking: 'PASSED', precision: 'PASSED', adoption: 'ADOPTED', scientificApproval: 'APPROVED',
+      },
+    }).results.length).toBe(input.respondents.length);
+  });
 });

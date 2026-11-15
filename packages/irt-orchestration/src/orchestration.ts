@@ -99,20 +99,27 @@ export async function prepareTryoutAnalysis(
         id: string;
         approved_digest: string;
         kind: string;
-        scope: { ecosystem?: string; contextId?: string };
+        scope: { ecosystem?: string; contextId?: string; purpose?: string };
       }[]
     >`
       SELECT a.id,a.approved_digest,t.kind,a.scope FROM configuration_approvals a JOIN irt_compute.technical_policy_versions t ON t.id=a.technical_policy_version_id
       WHERE a.id=ANY(${pins.map((p) => p.approvalId)}::uuid[]) AND a.revoked_at IS NULL AND t.status='SEALED' AND a.approved_digest=t.digest`;
+    const production = process.env.NUMORA_IRT_MODE === 'PRODUCTION';
+    // Fallback is pinned separately by batch.releaseApprovalId; configurationPins
+    // contain the five input resources only.
+    const requiredKinds = production
+      ? ['IRT_MODEL', 'QUALITY_GATE', 'IRT_ELIGIBILITY', 'IRT_SCORING', 'SCORE_MAPPING']
+      : ['IRT_MODEL', 'QUALITY_GATE'];
     if (
       approvals.length !== pins.length ||
-      !['IRT_MODEL', 'QUALITY_GATE'].every(
+      !requiredKinds.every(
         (kind) => approvals.filter((a) => a.kind === kind).length === 1,
       ) ||
       approvals.some(
         (a) =>
           a.approved_digest !== pins.find((p) => p.approvalId === a.id)?.digest ||
           a.scope.ecosystem !== 'TRYOUT' ||
+          (production && a.scope.purpose !== 'PRODUCTION') ||
           (a.scope.contextId && a.scope.contextId !== input.contextId),
       )
     )
