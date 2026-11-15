@@ -163,14 +163,14 @@ describe('Student account and feedback', () => {
     vi.mocked(request).mockImplementation(async (_token, path) => {
       if (path.endsWith('/summary')) return { unreadCount: 1, latest: [note] };
       if (path.includes('offset=20')) {
-        if (failed) throw new LearningApiError('Halaman kedua gagal.', 403);
+        if (failed) throw new LearningApiError('Halaman kedua gagal.', 503);
         return { items: [note, next], nextOffset: null };
       }
       return { items: [note], nextOffset: 20 };
     });
     mount(<FeedbackScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Muat lainnya' }));
-    const retry = await screen.findByRole('button', { name: 'Coba muat catatan lagi' });
+    const retry = await screen.findByRole('button', { name: 'Coba muat catatan lagi' }, { timeout: 4000 });
     expect(screen.getByText(note.body)).toBeTruthy();
     failed = false;
     fireEvent.click(retry);

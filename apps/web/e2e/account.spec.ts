@@ -80,6 +80,7 @@ async function setup(page: Page) {
     reads: 0,
     failRead: false,
     failList: false,
+    denyList: false,
     nextPage: false,
     failPage: false,
     failJoin: false,
@@ -133,9 +134,9 @@ async function setup(page: Page) {
         latest: state.notes.slice(0, 3),
       };
     else if (path === '/students/me/feedback') {
-      if (state.failList || (url.searchParams.get('offset') === '20' && state.failPage))
+      if (state.denyList || state.failList || (url.searchParams.get('offset') === '20' && state.failPage))
         return route.fulfill({
-          status: 403,
+          status: state.denyList ? 403 : 503,
           contentType: 'application/problem+json',
           json: { detail: 'Catatan belum tersedia.', code: 'FEEDBACK_DENIED' },
         });
@@ -286,11 +287,17 @@ test('feedback failure, pagination retry and refresh preserve messages without f
   await page.getByRole('button', { name: 'Perbarui catatan' }).click();
   await expect(page.getByRole('button', { name: 'Coba muat ulang catatan' })).toBeVisible();
   await expect(page.locator('.student-feedback-card')).toHaveCount(3);
+  state.denyList = true;
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
+  await expect(page.locator('.student-feedback-card')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Semua Catatan', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Perbarui catatan' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Kembali ke Belajar' })).toHaveAttribute('href', '/student');
   await capture(page, 'feedback-forbidden', 390);
   state.failList = false;
-  await page.getByRole('button', { name: 'Coba lagi', exact: true }).click();
+  state.denyList = false;
+  await page.reload();
   await expect(page.getByRole('button', { name: 'Semua Catatan (1)' })).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -313,6 +320,7 @@ test('Mandiri join failure preserves input; successful join refreshes identity; 
     page.locator('.student-profile-identity').getByText('SMPN 1 Jakarta', { exact: true }),
   ).toBeVisible();
   expect(state.joins).toEqual(['BAD999', 'FIX234']);
+  await expect(page.getByRole('status').filter({ hasText: 'Berhasil bergabung dengan kelas.' })).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
   await expect(page).toHaveURL('http://localhost:3300/login');

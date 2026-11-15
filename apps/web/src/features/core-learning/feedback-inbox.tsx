@@ -27,6 +27,7 @@ function FeedbackInbox({ token }: { token: string }) {
   const cache = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [notice, setNotice] = useState('');
+  const denied = query.error instanceof LearningApiError && [401, 403].includes(query.error.status);
   const unreadButton = useRef<HTMLButtonElement>(null);
   const marking = useRef(false);
   const read = useMutation({
@@ -71,7 +72,7 @@ function FeedbackInbox({ token }: { token: string }) {
     ).values(),
   ];
   const visible = filter === 'unread' ? items.filter((item) => item.readAt === null) : items;
-  const hasUnread = !summary.isError && (summary.data?.unreadCount ?? 0) > 0;
+  const hasUnread = !denied && !summary.isError && (summary.data?.unreadCount ?? 0) > 0;
   useEffect(() => {
     const target = window.location.hash.match(/^#feedback-([0-9a-f-]{36})$/i)?.[1];
     if (!target || filter !== 'all') return;
@@ -98,7 +99,7 @@ function FeedbackInbox({ token }: { token: string }) {
         <div className="student-feedback-main">
           <div className="student-feedback-filters" role="group" aria-label="Filter catatan">
             <button type="button" aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>
-              Semua Catatan ({items.length})
+              Semua Catatan{!denied && query.data ? ` (${items.length})` : ''}
             </button>
             <button
               ref={unreadButton}
@@ -108,20 +109,21 @@ function FeedbackInbox({ token }: { token: string }) {
             >
               {hasUnread && <span aria-hidden="true">●</span>}
               Baru & Belum Dibaca
-              {summary.data && !summary.isError ? ` (${summary.data.unreadCount})` : ''}
+              {!denied && summary.data && !summary.isError ? ` (${summary.data.unreadCount})` : ''}
             </button>
           </div>
-          {(query.hasNextPage || filter === 'unread') && (
+          {!denied && (query.hasNextPage || filter === 'unread') && (
             <p className="student-feedback-pagination-note">
               Filter menampilkan catatan yang sudah dimuat.
               {query.hasNextPage && ' Muat lainnya untuk memeriksa catatan berikutnya.'}
             </p>
           )}
-          {query.isPending || (query.isError && !query.data) ? (
+          {denied || query.isPending || (query.isError && !query.data) ? (
             <DataState
               pending={query.isPending}
               error={query.error}
               retry={() => void query.refetch()}
+              recovery={{ href: '/student', label: 'Kembali ke Belajar' }}
             />
           ) : (
             <>
@@ -195,16 +197,13 @@ function FeedbackInbox({ token }: { token: string }) {
           <p className="sr-only" role="status">
             {notice}
           </p>
-          {((read.error instanceof LearningApiError && read.error.status === 401) ||
-            (query.data &&
-              query.error instanceof LearningApiError &&
-              query.error.status === 401)) && (
+          {!denied && read.error instanceof LearningApiError && read.error.status === 401 && (
             <Link className="button-link" href="/login">
               Sesi berakhir. Masuk kembali
             </Link>
           )}
         </div>
-        <aside className="student-feedback-context">
+        {!denied && <aside className="student-feedback-context">
           <Card>
             <h2>
               <Icon name="chat" width={18} height={18} /> Catatan untukmu
@@ -228,16 +227,16 @@ function FeedbackInbox({ token }: { token: string }) {
               </p>
             )}
             <p>Catatan tidak otomatis ditandai dibaca saat kamu membuka halaman.</p>
-            <Button
+            {query.data && !query.isRefetchError && <Button
               variant="secondary"
               fullWidth
               disabled={query.isFetching || read.isPending}
               onClick={() => void query.refetch()}
             >
               Perbarui catatan
-            </Button>
+            </Button>}
           </Card>
-        </aside>
+        </aside>}
       </div>
     </AppShell>
   );

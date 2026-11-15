@@ -83,6 +83,9 @@ export function LeaderboardsScreen() {
     >
       <PvpHeader
         showProfile={false}
+        back={tab === 'pvp'
+          ? { href: '/student/pvp', label: 'Kembali ke PvP' }
+          : { href: '/student', label: 'Kembali ke Belajar' }}
         title={
           tab === 'class'
             ? 'Leaderboard Kelas'

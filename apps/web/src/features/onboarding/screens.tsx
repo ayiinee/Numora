@@ -9,6 +9,7 @@ import { destination, useAuth } from './auth';
 import { postLoginDestination } from './class-invitation';
 import { AuthFrame, AuthStatus, GoogleIdentity } from './auth-presentation';
 import { LoginLayout } from './login-layout';
+import { LogoutButton } from './logout-button';
 import { signInStudent } from './student-password';
 import { getSupabase } from '@/lib/supabase';
 import { ApiProblem, getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
@@ -46,39 +47,6 @@ function Notice({ title, message, retry }: { title: string; message: string; ret
   );
 }
 
-function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
-  const { logout } = useAuth();
-  const router = useRouter();
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  return (
-    <>
-      <Button
-        className="secondary-button"
-        fullWidth={fullWidth}
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          setError('');
-          try {
-            await logout();
-            router.replace('/login');
-          } catch {
-            setError('Belum dapat keluar. Coba lagi.');
-            setBusy(false);
-          }
-        }}
-      >
-        {busy ? 'Sedang keluar…' : 'Keluar'}
-      </Button>
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
-    </>
-  );
-}
 
 function Avatar({ name, photo }: { name: string; photo: unknown }) {
   const [failed, setFailed] = useState(false);

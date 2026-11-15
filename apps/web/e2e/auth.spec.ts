@@ -109,7 +109,11 @@ async function setup(page: Page, signedIn = false) {
         return fail(
           state.identityError,
           state.identityError === 403 ? 'ACCOUNT_DISABLED' : 'FIXTURE_ERROR',
-          state.identityError === 401 ? 'Sesi berakhir.' : 'Akun belum dapat diperiksa.',
+          state.identityError === 401
+            ? 'Sesi berakhir.'
+            : state.identityError === 403
+              ? 'Akun ini tidak aktif.'
+              : 'Akun belum dapat diperiksa.',
         );
       if (!state.role) return fail(404, 'ACCOUNT_NOT_REGISTERED', 'Pilih role untuk melanjutkan.');
       data = {
@@ -345,6 +349,7 @@ test('Completion: Student manages multiple memberships and updates name and phot
   expect(mutations).toEqual([]);
   await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi keluar kelas' }).click();
   await expect(page.getByText('1/5 kelas aktif', { exact: true })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Berhasil keluar dari kelas.' })).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toBeEnabled();
   await page.getByRole('button', { name: 'Edit profil', exact: true }).click();
   await page.getByLabel('Nama tampilan').fill('  Kirino Baru  ');
@@ -600,8 +605,11 @@ test('identity retry, disabled account logout, and expired session retain recove
   await page.goto('/');
   await expect(page.getByText('Akun ini tidak aktif.')).toBeVisible();
   await capture(page, 'account-disabled', 390);
+  await page.goto('/student');
+  await expect(page.getByRole('heading', { name: 'Akun tidak aktif' })).toBeVisible();
+  await expect(page.getByText('Akun ini tidak aktif.')).toBeVisible();
   await page.getByRole('button', { name: 'Keluar', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
+  await expect(page).toHaveURL('/login');
   await page.evaluate(
     (value) => localStorage.setItem('sb-numora-e2e-auth-token', JSON.stringify(value)),
     session(),
