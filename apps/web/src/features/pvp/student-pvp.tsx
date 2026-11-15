@@ -110,8 +110,8 @@ export function PvpScreen() {
             </Status>
           ) : (
             <>
-              {!socket.connected && (
-                <Status title="Menghubungkan PvP">
+              {socket.connectionState === 'disconnected' && (
+                <Status title="Koneksi PvP terputus">
                   <Button variant="secondary" onClick={socket.reconnect}>
                     Sambungkan lagi
                   </Button>
@@ -141,7 +141,7 @@ export function PvpScreen() {
                         />
                         <Button
                           fullWidth
-                          loading={socket.busy}
+                          loading={socket.busy || socket.connectionState === 'connecting'}
                           disabled={
                             disabled || !selectedAvailable || !!availability.data.activeMatchId
                           }
@@ -527,7 +527,7 @@ export function PvpMatchScreen() {
         {availability.data?.available === false && !active && !closed && (
           <Status title="PvP belum tersedia">{availability.data.message}</Status>
         )}
-        {active && !socket.connected && !closed && !left && (
+        {active && socket.connectionState === 'disconnected' && !closed && !left && (
           <Status title="Koneksi terputus" illustration={<StudentMascot pose="offline" compact />}>
             Server memberi kesempatan reconnect selama 20 detik.
             <Button variant="secondary" onClick={socket.reconnect}>
@@ -614,16 +614,14 @@ export function PvpMatchScreen() {
         }
         actions={
           <>
-            <Button
-              variant="secondary"
-              disabled={socket.busy}
-              onClick={closeLeave}
-            >
+            <Button variant="secondary" disabled={socket.busy} onClick={closeLeave}>
               Tetap di sini
             </Button>
             {!socket.connected ? (
               <>
-                <Button variant="secondary" disabled={socket.busy} onClick={socket.reconnect}>Sambungkan lagi</Button>
+                <Button variant="secondary" disabled={socket.busy} onClick={socket.reconnect}>
+                  Sambungkan lagi
+                </Button>
                 <Button
                   variant="danger-outline"
                   disabled={socket.busy}
@@ -653,10 +651,16 @@ export function PvpMatchScreen() {
         }
       >
         {!socket.connected && (
-          <p>Jika kamu keluar halaman saat offline, server tetap menentukan hasil atau status room.</p>
+          <p>
+            Jika kamu keluar halaman saat offline, server tetap menentukan hasil atau status room.
+          </p>
         )}
         {socket.busy && leaveRequested && <p role="status">Menunggu konfirmasi server…</p>}
-        {socket.error && <p role="alert" className="pvp-command-error">{socket.error}</p>}
+        {socket.error && (
+          <p role="alert" className="pvp-command-error">
+            {socket.error}
+          </p>
+        )}
       </Dialog>
     </LearningFrame>
   );
