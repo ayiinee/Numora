@@ -20,7 +20,7 @@ export function backupCheck(value: unknown, message: string): asserts value {
   if (!value) throw new BackupError(message);
 }
 
-export function backupTarget(env: NodeJS.ProcessEnv, purpose: 'SOURCE' | 'REHEARSAL') {
+export function backupTarget(env: NodeJS.ProcessEnv, purpose: 'SOURCE' | 'REHEARSAL' | 'TARGET') {
   const prefix = `NUMORA_BACKUP_${purpose}_`;
   let url: URL;
   try {

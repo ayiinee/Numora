@@ -1,0 +1,7 @@
+{
+  "format": "NUMORA_VPS_OWNER_MAPPING_V1",
+  "reviewedBy": "REPLACE_OPERATOR_ALIAS",
+  "reviewedAt": "REPLACE_WITH_REVIEW_TIME_IN_UTC",
+  "owners": { "postgres": "numora_owner", "pg_database_owner": "numora_owner" },
+  "dropGrantees": ["anon", "authenticated", "service_role"]
+}

@@ -6,11 +6,30 @@ import {
   rehearseBackup,
   verifyBackup,
 } from './backup-runtime.js';
+import { prepareVpsRestore, restoreVps, vpsRestoreTarget } from './restore-vps.js';
 
 async function run() {
   process.umask(0o077);
   const [command, ...args] = process.argv.slice(2);
-  if (command === 'inventory') {
+  if (command === 'plan-vps') {
+    backupCheck(
+      args.length === 3,
+      'Usage: db:backup plan-vps /private/archive /private/mapping.json /private/new-plan.json',
+    );
+    await prepareVpsRestore(args[0]!, args[1]!, args[2]!);
+    console.log(
+      'Offline VPS restore plan prepared. Review original-owner mapping and dropped grants before using it.',
+    );
+  } else if (command === 'restore-vps') {
+    backupCheck(
+      args.length === 3,
+      'Usage: db:backup restore-vps /private/archive /private/plan.json /private/new-report.json',
+    );
+    await restoreVps(vpsRestoreTarget(process.env), args[0]!, args[1]!, args[2]!);
+    console.log(
+      'Mapped VPS restore verified. Database remains connection-fenced; runtime/cutover approval is separate.',
+    );
+  } else if (command === 'inventory') {
     backupCheck(
       args.length === 2,
       'Usage: db:backup inventory /private/new-inventory.json /private/writers.json',
@@ -44,7 +63,7 @@ async function run() {
   } else
     backupCheck(
       false,
-      'Expected inventory, create, verify or rehearse; run without database credentials for verify',
+      'Expected inventory, create, verify, rehearse, plan-vps or restore-vps; offline verify/plan require no database credentials',
     );
 }
 void run().catch((error: unknown) => {

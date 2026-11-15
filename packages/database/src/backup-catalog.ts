@@ -1,5 +1,6 @@
 import type { Sql, TransactionSql } from 'postgres';
 import { backupCheck, backupSchemas } from './backup-config.js';
+import { restoreAccess } from './restore-access.js';
 
 type Query = Sql | TransactionSql;
 export const qualifiedRelation = (sql: Query, schema: string, name: string) =>
@@ -58,7 +59,7 @@ export async function catalog(sql: Query) {
   const relations = await sql`
     SELECT n.nspname AS schema,c.relname AS name,c.relkind AS kind,pg_get_userbyid(c.relowner) AS owner,
       c.relrowsecurity AS rls,c.relforcerowsecurity AS "forceRls",
-      coalesce(c.relacl,acldefault((CASE WHEN c.relkind='S' THEN 'S' ELSE 'r' END)::"char",c.relowner))::text AS acl,
+      coalesce(c.relacl,acldefault((CASE WHEN c.relkind='S' THEN 's' ELSE 'r' END)::"char",c.relowner))::text AS acl,
       CASE WHEN c.relkind IN ('v','m') THEN pg_get_viewdef(c.oid,true) ELSE NULL END AS definition,
       c.reloptions AS options FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
     WHERE n.nspname=ANY(${schemas}) ORDER BY 1,2`;
@@ -148,6 +149,7 @@ export async function catalog(sql: Query) {
     memberships,
     sessions,
     history,
+    restoreAccess: await restoreAccess(sql),
   };
 }
 
