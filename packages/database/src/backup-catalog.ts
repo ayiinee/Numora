@@ -109,7 +109,7 @@ export async function catalog(sql: Query) {
     FROM pg_depend d CROSS JOIN LATERAL pg_identify_object(d.classid,d.objid,d.objsubid) src
     CROSS JOIN LATERAL pg_identify_object(d.refclassid,d.refobjid,d.refobjsubid) dst
     WHERE src.schema=ANY(${schemas}) AND dst.schema IS NOT NULL AND NOT dst.schema=ANY(${schemas})
-      AND dst.schema NOT LIKE 'pg_%' AND dst.schema<>'information_schema' ORDER BY 1,2,3,4`;
+      AND dst.schema !~ '^pg_' AND dst.schema<>'information_schema' ORDER BY 1,2,3,4`;
   const roles =
     await sql`SELECT rolname AS name,rolsuper AS superuser,rolinherit AS inherit,rolcreaterole AS "createRole",
     rolcreatedb AS "createDb",rolcanlogin AS login,rolreplication AS replication,rolbypassrls AS "bypassRls",

@@ -418,10 +418,16 @@ export async function rehearseBackup(url: URL, folder: string, report: string) {
         'Rehearsal server major must match source',
       );
       const schemas =
-        await sql`SELECT nspname FROM pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname<>'information_schema'`;
+        await sql`SELECT nspname FROM pg_namespace WHERE nspname !~ '^pg_' AND nspname<>'information_schema'`;
       backupCheck(
         schemas.length === 0,
         'Rehearsal database must have no user schemas, including public; never overwrite an existing target',
+      );
+      const [ownership] =
+        await sql`SELECT pg_get_userbyid(datdba)=session_user AS owned FROM pg_database WHERE datname=current_database()`;
+      backupCheck(
+        ownership?.owned === true,
+        'Rehearsal login must own its disposable target database',
       );
       const available = await sql<{ rolname: string }[]>`SELECT rolname FROM pg_roles`;
       const needed = new Set<string>([

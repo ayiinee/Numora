@@ -119,6 +119,10 @@ it.skipIf(!base || !tlsUrl || !ca || process.platform === 'win32')(
       expect((await lstat(join(folder, 'application.dump'))).mode & 0o077).toBe(0);
       const restore = new URL(url);
       restore.pathname = '/' + targetName;
+      // A user schema whose name starts with "pg" is not a system schema.
+      await target.unsafe('CREATE SCHEMA pgx_user_data');
+      await expect(rehearseBackup(restore, folder, report)).rejects.toThrow(/no user schemas/);
+      await target.unsafe('DROP SCHEMA pgx_user_data');
       await rehearseBackup(restore, folder, report);
       expect(JSON.parse(await readFile(report, 'utf8')).result).toBe('PASS');
       expect(
