@@ -4,13 +4,19 @@ export interface ResearchReleasePolicy {
   purpose: 'RESEARCH_ONLY' | 'PRODUCTION'; minimumValidItems: number; rounding: 'HALF_UP_2';
   weights: { SINGLE_CHOICE: 2; MULTIPLE_CHOICE_MULTIPLE_ANSWER: 3; CATEGORY: 3 };
   partialArm: 'FALLBACK_WHOLE_ARM';
+  /** Production policy must carry external evidence approvals before release. */
+  stabilityGate?: {
+    bank: 'SEALED'; linking: 'PASSED'; precision: 'PASSED'; adoption: 'ADOPTED'; scientificApproval: 'APPROVED';
+  } | null;
 }
 export const RESEARCH_RELEASE_POLICY_V1: ResearchReleasePolicy = {
   purpose: 'RESEARCH_ONLY', minimumValidItems: 24, rounding: 'HALF_UP_2',
   weights: { SINGLE_CHOICE: 2, MULTIPLE_CHOICE_MULTIPLE_ANSWER: 3, CATEGORY: 3 }, partialArm: 'FALLBACK_WHOLE_ARM',
 };
 // Candidate only: database production approval is still mandatory.
-export const PRODUCTION_RELEASE_POLICY_CANDIDATE_V1: ResearchReleasePolicy = { ...RESEARCH_RELEASE_POLICY_V1, purpose: 'PRODUCTION' };
+export const PRODUCTION_RELEASE_POLICY_CANDIDATE_V1: ResearchReleasePolicy = {
+  ...RESEARCH_RELEASE_POLICY_V1, purpose: 'PRODUCTION', stabilityGate: null,
+};
 const error = (code: string): never => { throw new Error(code); };
 const cents = (v: string) => {
   if (!/^\d+(?:\.\d{1,2})?$/.test(v)) throw new Error('IRT_RELEASE_POINTS_INVALID');
@@ -23,6 +29,10 @@ const rounded = (n: bigint, d: bigint, places: number) => {
 export function decideTryoutReleaseV1(input: CalibrationInput, output: CalibrationResult | null, policy: ResearchReleasePolicy) {
   if (!['RESEARCH_ONLY','PRODUCTION'].includes(policy.purpose) || policy.minimumValidItems !== 24 || policy.rounding !== 'HALF_UP_2' || policy.partialArm !== 'FALLBACK_WHOLE_ARM'
     || (['SINGLE_CHOICE','MULTIPLE_CHOICE_MULTIPLE_ANSWER','CATEGORY'] as const).some(kind => policy.weights?.[kind] !== RESEARCH_RELEASE_POLICY_V1.weights[kind])) error('IRT_RELEASE_POLICY_UNSUPPORTED');
+  if (policy.purpose === 'PRODUCTION' && (!policy.stabilityGate ||
+    policy.stabilityGate.bank !== 'SEALED' || policy.stabilityGate.linking !== 'PASSED' ||
+    policy.stabilityGate.precision !== 'PASSED' || policy.stabilityGate.adoption !== 'ADOPTED' ||
+    policy.stabilityGate.scientificApproval !== 'APPROVED')) error('IRT_RELEASE_STABILITY_NOT_APPROVED');
   if (!input.respondents.length) error('IRT_RELEASE_EMPTY_BATCH');
   const itemMap = new Map(input.items.map(i => [i.questionVersionId,i]));
   const byAttempt = new Map<string, CalibrationInput['responses']>();
