@@ -8,7 +8,7 @@ import {
 } from '@tka/database';
 import { databaseTime } from './database-time.js';
 import { AssessmentFinalizationError } from './errors.js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 type Transaction = Parameters<
   Parameters<ReturnType<typeof getDatabase>['db']['transaction']>[0]
@@ -159,11 +159,6 @@ export async function saveAssessmentAnswerWithEvent(
     deadlineAt?: Date | null;
   },
 ) {
-  const [previous] = await tx
-    .select()
-    .from(attemptAnswers)
-    .where(eq(attemptAnswers.attemptItemId, input.questionInstanceId))
-    .limit(1);
   const now = input.deadlineAt ? await databaseTime(tx) : input.now;
   if (input.deadlineAt && input.deadlineAt <= now)
     throw new AssessmentFinalizationError('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.');
@@ -175,36 +170,21 @@ export async function saveAssessmentAnswerWithEvent(
       : input.questionFormat === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
         ? { optionIds: [] }
         : { optionId: null });
-  const stable = (value: unknown): string => {
-    if (Array.isArray(value)) return '[' + value.map(stable).join(',') + ']';
-    if (value && typeof value === 'object')
-      return (
-        '{' +
-        Object.entries(value)
-          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-          .map(([key, v]) => JSON.stringify(key) + ':' + stable(v))
-          .join(',') +
-        '}'
-      );
-    return JSON.stringify(value) ?? 'null';
-  };
-  if (previous && stable(previous.answer) === stable(stored)) return;
-  await tx
-    .insert(attemptAnswers)
-    .values({ attemptItemId: input.questionInstanceId, answer: stored, savedAt: now })
-    .onConflictDoUpdate({
-      target: attemptAnswers.attemptItemId,
-      set: {
-        answer: stored,
-        savedAt: now,
-        awardedPoints: null,
-        gradedAt: null,
-        scoreCategory: null,
-        fullyCorrect: null,
-        responseState: null,
-      },
-    });
-  if (input.answer === null && !previous) return;
+  const [changed] = await tx.execute<{ existed: boolean }>(sql`
+    with previous as materialized (
+      select 1 from public.attempt_answers where attempt_item_id = ${input.questionInstanceId}
+    )
+    insert into public.attempt_answers (attempt_item_id, answer, saved_at)
+    values (${input.questionInstanceId}, ${JSON.stringify(stored)}::jsonb, ${now.toISOString()}::timestamptz)
+    on conflict (attempt_item_id) do update set
+      answer = excluded.answer, saved_at = excluded.saved_at,
+      awarded_points = null, graded_at = null, score_category = null,
+      fully_correct = null, response_state = null
+    where attempt_answers.answer is distinct from excluded.answer
+    returning exists(select 1 from previous) as existed
+  `);
+  if (!changed || (input.answer === null && !changed.existed)) return;
+  if (process.env.DOMAIN_ANALYTICS_ENABLED !== 'true') return;
   let questionVersionId = input.questionVersionId;
   if (!questionVersionId) {
     const [pin] = await tx

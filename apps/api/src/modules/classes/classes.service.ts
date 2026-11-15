@@ -378,59 +378,55 @@ export class ClassesService {
 
   async students(authorization: string | undefined, classId: string, studentId?: string) {
     const teacherId = await this.teacher(authorization);
-    const { db } = getDatabase();
-    const [ownedClass] = await db
-      .select({
-        id: classes.id,
-        name: classes.name,
-        schoolId: classes.schoolId,
-        teacherUserId: classes.teacherUserId,
-        archivedAt: classes.archivedAt,
-      })
-      .from(classes)
-      .where(eq(classes.id, classId))
-      .limit(1);
+    const rows = await getDatabase().client<
+      {
+        classId: string;
+        className: string;
+        teacherUserId: string | null;
+        archivedAt: Date | null;
+        verifiedSchool: boolean;
+        activeSchool: boolean;
+        id: string | null;
+        displayName: string | null;
+      }[]
+    >`
+      with target as materialized (
+        select c.id as "classId", c.name as "className",
+          c.teacher_user_id as "teacherUserId", c.archived_at as "archivedAt",
+          exists (
+            select 1 from public.teacher_school_memberships tm
+            where tm.teacher_user_id = ${teacherId} and tm.school_id = c.school_id
+              and tm.ended_at is null
+          ) as "verifiedSchool",
+          exists (
+            select 1 from public.schools s where s.id = c.school_id and s.status = 'ACTIVE'
+          ) as "activeSchool"
+        from public.classes c where c.id = ${classId}
+      )
+      select target.*, u.id, u.display_name as "displayName"
+      from target
+      left join public.class_memberships cm on cm.class_id = target."classId"
+        and cm.left_at is null
+        and (${studentId ?? null}::uuid is null or cm.student_user_id = ${studentId ?? null}::uuid)
+      left join public.users u on u.id = cm.student_user_id and u.role = 'STUDENT'
+      order by u.display_name, u.id
+    `;
+    const [ownedClass] = rows;
     if (!ownedClass || ownedClass.archivedAt) {
       throw new NotFoundException({ code: 'CLASS_NOT_FOUND', detail: 'Class tidak ditemukan.' });
     }
     if (ownedClass.teacherUserId !== teacherId) {
       throw new ForbiddenException({ code: 'CLASS_FORBIDDEN', detail: 'Akses Class ditolak.' });
     }
-    const [membership] = await db
-      .select({ id: teacherSchoolMemberships.id })
-      .from(teacherSchoolMemberships)
-      .where(
-        and(
-          eq(teacherSchoolMemberships.teacherUserId, teacherId),
-          eq(teacherSchoolMemberships.schoolId, ownedClass.schoolId),
-          isNull(teacherSchoolMemberships.endedAt),
-        ),
-      )
-      .limit(1);
-    if (!membership) {
+    if (!ownedClass.verifiedSchool) {
       throw new ForbiddenException({ code: 'SCHOOL_FORBIDDEN', detail: 'Akses sekolah ditolak.' });
     }
-    const [activeSchool] = await db
-      .select({ id: schools.id })
-      .from(schools)
-      .where(and(eq(schools.id, ownedClass.schoolId), eq(schools.status, 'ACTIVE')))
-      .limit(1);
-    if (!activeSchool) {
+    if (!ownedClass.activeSchool) {
       throw new ForbiddenException({ code: 'SCHOOL_FORBIDDEN', detail: 'Sekolah tidak aktif.' });
     }
-    const items = await db
-      .select({ id: users.id, displayName: users.displayName })
-      .from(classMemberships)
-      .innerJoin(users, eq(users.id, classMemberships.studentUserId))
-      .where(
-        and(
-          eq(classMemberships.classId, classId),
-          isNull(classMemberships.leftAt),
-          eq(users.role, 'STUDENT'),
-          studentId ? eq(classMemberships.studentUserId, studentId) : undefined,
-        ),
-      )
-      .orderBy(asc(users.displayName), asc(users.id));
-    return { class: { id: ownedClass.id, name: ownedClass.name }, items };
+    const items = rows.flatMap((row) =>
+      row.id ? [{ id: row.id, displayName: row.displayName! }] : [],
+    );
+    return { class: { id: ownedClass.classId, name: ownedClass.className }, items };
   }
 }

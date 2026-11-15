@@ -798,41 +798,39 @@ export class TryoutService {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
-      const [attempt] = await tx
-        .select({
-          studentId: assessmentAttempts.studentId,
-          assessmentType: assessmentAttempts.assessmentType,
-          status: assessmentAttempts.status,
-          deadlineAt: sql<Date | null>`case when ${assessmentAttempts.tryoutBatchId} is not null
-            then ${assessmentAttempts.deadlineAt}
-            else least(${assessmentAttempts.deadlineAt}, ${assessmentPackages.closeAt}) end`.mapWith(
-            (value) => (value ? new Date(value) : null),
-          ),
-        })
-        .from(assessmentAttempts)
-        .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
-        .where(eq(assessmentAttempts.id, attemptId))
-        .for('update', { of: assessmentAttempts })
-        .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
+      const [item] = await tx.execute<
+        Parameters<typeof decodeAssessmentContent>[0] & {
+          id: string | null;
+          questionVersionId: string | null;
+          studentId: string;
+          assessmentType: string;
+          status: string;
+          deadlineAt: string | null;
+          now: string;
+        }
+      >(sql`
+        with locked as materialized (
+          select a.id, a.student_id, a.assessment_type, a.status,
+            case when a.tryout_batch_id is not null then a.deadline_at
+              else least(a.deadline_at, p.close_at) end as deadline_at
+          from public.assessment_attempts a
+          join public.assessment_packages p on p.id = a.package_id
+          where a.id = ${attemptId} for update of a
+        )
+        select a.student_id as "studentId", a.assessment_type as "assessmentType",
+          a.status, a.deadline_at::text as "deadlineAt", clock_timestamp()::text as now,
+          i.id, q.id as "questionVersionId", q.question_type as "questionType", q.stem,
+          q.options_or_statements as "optionsOrStatements", q.answer_key as "answerKey", q.explanation
+        from locked a
+        left join public.attempt_items i on i.attempt_id = a.id and i.id = ${questionInstanceId}
+        left join public.question_versions q on q.id = i.question_version_id
+      `);
+      if (!item || item.studentId !== studentId || item.assessmentType !== 'TRYOUT')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
-      if (attempt.status !== 'IN_PROGRESS')
+      if (item.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Tryout sudah selesai.'));
-      const { deadlineAt } = attempt;
-      const [item] = await tx
-        .select({
-          id: attemptItems.id,
-          questionType: questionVersions.questionType,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-        })
-        .from(attemptItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-        .where(and(eq(attemptItems.id, questionInstanceId), eq(attemptItems.attemptId, attemptId)))
-        .limit(1);
-      if (!item)
+      const deadlineAt = item.deadlineAt ? new Date(item.deadlineAt) : null;
+      if (!item.id || !item.questionVersionId)
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'),
         );
@@ -848,13 +846,14 @@ export class TryoutService {
           throw new BadRequestException(problem(error.code, error.message));
         throw error;
       }
-      const now = await databaseTime(tx);
+      const now = new Date(item.now);
       if (deadlineAt && deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       try {
         await saveAssessmentAnswerWithEvent(tx, {
           attemptId,
           questionInstanceId: item.id,
+          questionVersionId: item.questionVersionId,
           answer,
           questionFormat: content.type,
           now,

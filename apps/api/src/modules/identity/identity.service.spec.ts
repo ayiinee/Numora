@@ -50,7 +50,7 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 vi.mock('@tka/database', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tka/database')>()),
-  getDatabase: () => ({ db: mocks.db }),
+  getDatabase: () => ({ db: mocks.db, client: async () => mocks.selectRows.shift() ?? [] }),
 }));
 
 const authUser = {
@@ -66,6 +66,10 @@ const profile = {
   status: 'ACTIVE' as const,
   displayName: 'Demo Student',
   email: authUser.email,
+  profilePhotoObjectKey: null,
+  adminRole: null,
+  teacherVerified: null,
+  studentAffiliation: 'MANDIRI',
 };
 const session = (method: string) =>
   `Bearer fixture.${Buffer.from(JSON.stringify({ amr: [{ method }] })).toString('base64url')}.signature`;
@@ -123,9 +127,9 @@ describe('IdentityService', () => {
   it('keeps account status, role and affiliation fresh after identity was verified', async () => {
     const service = new IdentityService();
     await request(async () => {
-      mocks.selectRows.push([profile], []);
+      mocks.selectRows.push([profile]);
       expect((await service.me('Bearer valid')).studentAffiliation).toBe('MANDIRI');
-      mocks.selectRows.push([profile], [{ id: 'new-membership' }]);
+      mocks.selectRows.push([{ ...profile, studentAffiliation: 'SCHOOL' }]);
       expect((await service.me('Bearer valid')).studentAffiliation).toBe('SCHOOL');
       mocks.selectRows.push([{ ...profile, role: 'ADMIN', adminRole: 'OPERATIONS' }]);
       expect((await service.me('Bearer valid')).adminRole).toBe('OPERATIONS');
@@ -208,7 +212,7 @@ describe('IdentityService', () => {
   });
 
   it('creates one Google Student profile with Mandiri affiliation', async () => {
-    mocks.selectRows.push([profile], []);
+    mocks.selectRows.push([profile]);
     const result = await new IdentityService().registerProfile('Bearer valid', { role: 'STUDENT' });
     expect(result).toMatchObject({ role: 'STUDENT', studentAffiliation: 'MANDIRI' });
     expect(mocks.getUser).toHaveBeenCalledWith('valid');
@@ -233,7 +237,7 @@ describe('IdentityService', () => {
 
   it('creates a Mandiri Student profile for a confirmed, provisioned password account', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: provisionedStudent }, error: null });
-    mocks.selectRows.push([profile], []);
+    mocks.selectRows.push([profile]);
     await expect(
       new IdentityService().registerProfile(session('password'), { role: 'STUDENT' }),
     ).resolves.toMatchObject({ role: 'STUDENT', studentAffiliation: 'MANDIRI' });
@@ -256,7 +260,9 @@ describe('IdentityService', () => {
 
   it('reports an unverified Teacher and rejects disabled accounts', async () => {
     const service = new IdentityService();
-    mocks.selectRows.push([{ ...profile, role: 'TEACHER' }], []);
+    mocks.selectRows.push([
+      { ...profile, role: 'TEACHER', teacherVerified: false, studentAffiliation: null },
+    ]);
     await expect(service.getProfile('Bearer valid')).resolves.toMatchObject({
       role: 'TEACHER',
       teacherVerified: false,
@@ -267,7 +273,7 @@ describe('IdentityService', () => {
 
   it('keeps registration diagnostics free of credentials, profile data and raw database errors', async () => {
     const token = 'fixture-private-bearer-token';
-    mocks.selectRows.push([profile], []);
+    mocks.selectRows.push([profile]);
     await new IdentityService().registerProfile(`Bearer ${token}`, { role: 'STUDENT' });
     const failure = Object.assign(new Error(`insert rejected for ${authUser.email}: ${token}`), {
       code: 'XX000',

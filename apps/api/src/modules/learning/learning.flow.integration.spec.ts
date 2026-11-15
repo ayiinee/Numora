@@ -302,6 +302,23 @@ integration('Drill lifecycle against PostgreSQL', () => {
     ]);
     expect(concurrentStarts.map((item) => item.id)).toEqual([attempt.id, attempt.id]);
     await expect(learning.attempt('stranger', attempt.id)).rejects.toMatchObject({ status: 404 });
+    await learning.saveAnswer(
+      'student',
+      attempt.id,
+      attempt.questions[0]!.questionInstanceId,
+      null,
+    );
+    expect(
+      await db
+        .select()
+        .from(analyticsOutbox)
+        .where(
+          and(
+            eq(analyticsOutbox.entityId, attempt.id),
+            eq(analyticsOutbox.eventName, 'question_answered'),
+          ),
+        ),
+    ).toHaveLength(0);
     await learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, 'B');
     expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBe(
       'B',

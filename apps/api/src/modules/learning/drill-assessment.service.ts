@@ -446,45 +446,45 @@ export class DrillAssessmentService {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
-      const [attempt] = await tx
-        .select({
-          studentId: assessmentAttempts.studentId,
-          assessmentType: assessmentAttempts.assessmentType,
-          purpose: assessmentAttempts.purpose,
-          status: assessmentAttempts.status,
-          drillTimer: assessmentAttempts.drillTimer,
-        })
-        .from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, attemptId))
-        .for('update')
-        .limit(1);
+      const [item] = await tx.execute<
+        Parameters<typeof decodeAssessmentContent>[0] & {
+          id: string | null;
+          questionVersionId: string | null;
+          studentId: string;
+          assessmentType: string;
+          purpose: string;
+          status: string;
+          drillTimer: (typeof assessmentAttempts.$inferSelect)['drillTimer'];
+          now: string;
+        }
+      >(sql`
+        with locked as materialized (
+          select id, student_id, assessment_type, purpose, status, drill_timer
+          from public.assessment_attempts where id = ${attemptId} for update
+        ), tick as materialized (
+          select locked.*, clock_timestamp()::text as now from locked
+        )
+        select a.student_id as "studentId", a.assessment_type as "assessmentType",
+          a.purpose, a.status, a.drill_timer as "drillTimer", a.now,
+          i.id, q.id as "questionVersionId", q.question_type as "questionType",
+          q.stem, q.options_or_statements as "optionsOrStatements", q.answer_key as "answerKey", q.explanation
+        from tick a
+        left join public.attempt_items i on i.attempt_id = a.id and i.id = ${questionInstanceId}
+        left join public.question_versions q on q.id = i.question_version_id
+      `);
       if (
-        !attempt ||
-        attempt.studentId !== studentId ||
-        attempt.assessmentType !== 'DRILL' ||
-        attempt.purpose !== 'REGULAR'
+        !item ||
+        item.studentId !== studentId ||
+        item.assessmentType !== 'DRILL' ||
+        item.purpose !== 'REGULAR'
       )
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
-      if (attempt.status !== 'IN_PROGRESS')
+      if (item.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Drill sudah selesai.'));
-      const now = await databaseTime(tx);
-      if (attempt.drillTimer && !drillClock(attempt.drillTimer, now.getTime()).sessionId)
+      const now = new Date(item.now);
+      if (item.drillTimer && !drillClock(item.drillTimer, now.getTime()).sessionId)
         throw new ConflictException(problem('DRILL_PAUSED', 'Lanjutkan latihan untuk menjawab.'));
-      const [item] = await tx
-        .select({
-          id: attemptItems.id,
-          questionVersionId: questionVersions.id,
-          questionType: questionVersions.questionType,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-        })
-        .from(attemptItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-        .where(and(eq(attemptItems.id, questionInstanceId), eq(attemptItems.attemptId, attemptId)))
-        .limit(1);
-      if (!item)
+      if (!item.id || !item.questionVersionId)
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Drill ini.'),
         );
