@@ -759,6 +759,7 @@ export class PvpEngineService implements OnModuleDestroy {
     await this.event(tx, match, 'pvp_match_forfeited');
   }
   async disconnect(studentId: string, matchId: string) {
+    const disconnectedAt = this.now();
     const { db } = getDatabase();
     await db.transaction(async (tx) => {
       const match = await this.locked(tx, matchId);
@@ -774,8 +775,8 @@ export class PvpEngineService implements OnModuleDestroy {
         .set({
           connectionStatus: 'DISCONNECTED',
           ...(match.status !== 'RUNNING' ? { ready: false } : {}),
-          disconnectedAt: this.now(),
-          reconnectDeadlineAt: new Date(this.now().getTime() + 20_000),
+          disconnectedAt,
+          reconnectDeadlineAt: new Date(disconnectedAt.getTime() + 20_000),
         })
         .where(eq(pvpPlayers.id, player.id));
     });

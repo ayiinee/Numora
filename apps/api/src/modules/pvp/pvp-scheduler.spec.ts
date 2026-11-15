@@ -48,6 +48,31 @@ it('keeps processing other deadlines when a notification fails', async () => {
   expect(engine.setSchedulerReady).toHaveBeenCalledWith(true);
 });
 
+it('keeps sweeping expired reconnects while a live snapshot is stalled', async () => {
+  const live = Promise.withResolvers<void>();
+  const engine = {
+    sweepCandidates: vi
+      .fn()
+      .mockResolvedValueOnce([{ id: 'live', due: false }])
+      .mockResolvedValueOnce([{ id: 'expired', due: true }]),
+    tick: vi.fn().mockResolvedValue(undefined),
+    setSchedulerReady: vi.fn(),
+  };
+  const scheduler = new PvpSchedulerService(engine as unknown as PvpEngineService, null);
+  scheduler.notify = vi.fn((id: string) => (id === 'live' ? live.promise : Promise.resolve()));
+  const sweep = () => (scheduler as unknown as { sweep(): Promise<void> }).sweep();
+  try {
+    await sweep();
+    expect(scheduler.notify).toHaveBeenCalledWith('live');
+    await sweep();
+    expect(engine.tick).toHaveBeenCalledExactlyOnceWith('expired');
+    expect(scheduler.notify).toHaveBeenCalledWith('expired');
+  } finally {
+    live.resolve();
+    await scheduler.onModuleDestroy();
+  }
+});
+
 it('does not report readiness when durable deadline processing fails', async () => {
   const engine = {
     sweepCandidates: vi.fn().mockResolvedValue([{ id: 'match', due: true }]),

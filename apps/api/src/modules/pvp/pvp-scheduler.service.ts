@@ -27,6 +27,9 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
   private worker?: Worker;
   private timer?: ReturnType<typeof setInterval>;
   private busy: Promise<void> | undefined;
+  private liveSync: Promise<void> | undefined;
+  private readonly deadlineRefreshes = new Set<Promise<void>>();
+  private stopping = false;
   notify: (matchId: string, includeCreator?: boolean) => Promise<PvpSnapshotDto | void> =
     async () => {};
   constructor(
@@ -102,18 +105,34 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     const matches = await this.engine.sweepCandidates();
     gaugeRuntime('numora_pvp_active_matches', matches.length);
     for (const match of matches) {
-      if (match.due) {
-        await this.engine.tick(match.id);
-        await this.refresh(match.id);
-      } else {
-        // Keep local sockets synchronized even if another API handled the last command.
-        await this.notify(match.id).catch(() => {
-          this.logger.warn('PvP deadline notification delayed; durable state retained.');
-        });
-      }
+      if (!match.due) continue;
+      await this.engine.tick(match.id);
+      const refresh = this.refresh(match.id)
+        .catch(() => this.logger.warn('PvP deadline notification delayed; durable state retained.'))
+        .finally(() => this.deadlineRefreshes.delete(refresh));
+      this.deadlineRefreshes.add(refresh);
     }
     this.engine.setSchedulerReady(true);
+    // A slow client snapshot cannot postpone a later PostgreSQL deadline sweep.
+    if (!this.liveSync && !this.stopping) {
+      this.liveSync = this.syncLiveMatches(matches.filter((match) => !match.due)).finally(() => {
+        this.liveSync = undefined;
+      });
+    }
   }
+
+  private async syncLiveMatches(matches: readonly { id: string }[]) {
+    for (const { id } of matches) {
+      if (this.stopping) return;
+      // Another API process may have handled the last command.
+      try {
+        await this.notify(id);
+      } catch {
+        this.logger.warn('PvP room notification delayed; durable state retained.');
+      }
+    }
+  }
+
   private async refresh(matchId: string) {
     const caching = this.redis?.status === 'ready';
     let prepared: PvpSnapshotDto | void = undefined;
@@ -191,9 +210,11 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     }
   }
   async onModuleDestroy() {
-    this.engine.setSchedulerReady(false);
+    this.stopping = true;
     if (this.timer) clearInterval(this.timer);
     await this.busy;
+    this.engine.setSchedulerReady(false);
+    await Promise.all([this.liveSync, ...this.deadlineRefreshes]);
     await this.worker?.close();
     await this.queue?.close();
     this.redis?.disconnect();
