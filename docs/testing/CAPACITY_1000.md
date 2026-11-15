@@ -38,6 +38,8 @@ Profil `drill-steady` menguji 1.000 siswa selama enam menit. Semua akun mulai se
 
 Jalankan `pnpm qa doctor --profile full`, lalu `node scripts/qa/capacity/rehearse.mjs`. Skrip memakai PostgreSQL dan Redis dari konfigurasi uji localhost, membuat database/namespace sendiri, membangun web/API, dan menjalankan listener loopback pada port 3520–3522. Jalankan dari checkout kandidat dan simpan versi di `qa/.local/capacity`. Perintah menghasilkan path laporan dan file `STOP`. Database sementara dan bundel sesi dibersihkan setelah run.
 
+Pool koneksi rehearsal dapat dipilih dengan `QA_CAPACITY_DB_POOL_MAX`, berupa bilangan bulat positif. Default tetap 10. Nilai efektif dicatat sebagai `dbPoolMax` di `candidate.json`. Jalankan seluruh tahapan dengan nilai yang sama dan rekam perbedaan konfigurasi ketika membandingkan run.
+
 Profil `mixed-local` menjalankan 20 → 100 → 500 → 1.000 siswa dengan 150 detik per tahap. Siswa menjawab dengan jeda 1,2–2,8 detik. Navigasi dan pemantauan memakai jeda 8–20 detik, dan halaman awal asesmen hanya dibaca saat masuk atau memulai percobaan berikutnya. Ia menguji akun sekolah/mandiri, Pretest, Drill, Tryout pilihan ganda demo melalui endpoint paket, PvP, guru dan admin. Gate latensi, kelengkapan submit, dan rekonsiliasi tetap berlaku. Durasi, tipe Tryout, autentikasi sintetis, dan dependensi loopback membatasi perbandingan dengan uji staging yang memakai endpoint batch, OAuth, serta infrastruktur nyata.
 
 ## Pemeriksaan sebelum uji staging
