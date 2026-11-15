@@ -229,12 +229,17 @@ it.skipIf(!base || !tls || !ca || process.platform === 'win32')(
       expect((await api`SELECT public.restore_probe() AS count`)[0]!.count).toBe('1');
       await expect(compute`SELECT * FROM public.users`).rejects.toMatchObject({ code: '42501' });
       await expect(compute`SELECT public.restore_probe()`).rejects.toMatchObject({ code: '42501' });
-      await expect(api.unsafe('CREATE TABLE public.forbidden(id int)')).rejects.toMatchObject({
+      await expect(
+        api.begin('READ WRITE', async (tx) => tx.unsafe('CREATE TABLE public.forbidden(id int)')),
+      ).rejects.toMatchObject({
         code: '42501',
       });
       await expect(api.unsafe('SET ROLE numora_owner')).rejects.toMatchObject({ code: '42501' });
       await expect(
-        api`UPDATE irt_compute.compute_outputs SET sequence_number=1 WHERE false`,
+        api.begin(
+          'READ WRITE',
+          async (tx) => tx`UPDATE irt_compute.compute_outputs SET sequence_number=1 WHERE false`,
+        ),
       ).rejects.toMatchObject({ code: '42501' });
       const before = (await api`SELECT revision FROM public.pvp_content_revision`)[0]!.revision;
       await api.begin('READ WRITE', async (tx) => {
