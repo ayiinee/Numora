@@ -34,7 +34,10 @@ export function PvpHeader({
       {onLeave ? (
         <Button
           variant="ghost"
-          onClick={onLeave}
+          onClick={(event) => {
+            event.currentTarget.focus({ preventScroll: true });
+            onLeave();
+          }}
           leftIcon={<Icon name="back" width={16} height={16} />}
         >
           {leaveLabel}

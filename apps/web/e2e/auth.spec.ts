@@ -267,10 +267,12 @@ test('Completion: class invitation survives signed-out login and first registrat
 test('Completion: Student manages multiple memberships and updates name and photo without losing XP', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 740 });
   const { state, errors } = await setup(page, true);
   state.role = 'STUDENT';
   let displayName = 'Kirino S.';
   let photoKey: string | null = null;
+  let rejectLeave = true;
   let memberships = [1, 2].map((number) => ({
     id: `00000000-0000-4000-8000-00000000000${number}`,
     name: `IX ${number}`,
@@ -329,6 +331,13 @@ test('Completion: Student manages multiple memberships and updates name and phot
         },
       };
     else if (path.endsWith('/leave')) {
+      if (rejectLeave) {
+        rejectLeave = false;
+        return route.fulfill({
+          status: 503,
+          json: { detail: 'Belum dapat keluar kelas. Coba lagi.' },
+        });
+      }
       memberships = memberships.filter((value) => !path.includes(value.id));
       mutations.push(path);
       data = { left: true };
@@ -344,10 +353,18 @@ test('Completion: Student manages multiple memberships and updates name and phot
   );
   await page.goto('/student/profile');
   await page.getByText('Sekolah & Kelas', { exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Keluar dari IX 2', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Keluar dari IX 2', exact: true }).click();
+  const leave = page.getByRole('button', { name: 'Keluar dari IX 2', exact: true });
+  const leaveDialog = page.getByRole('dialog');
+  const confirmLeave = leaveDialog.getByRole('button', { name: 'Konfirmasi keluar kelas' });
+  await leave.click();
+  await leaveDialog.getByRole('button', { name: 'Tutup dialog' }).click();
+  await expect(leave).toBeFocused();
   expect(mutations).toEqual([]);
-  await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi keluar kelas' }).click();
+  await leave.click();
+  await confirmLeave.click();
+  await expect(leaveDialog.getByRole('alert')).toHaveText('Belum dapat keluar kelas. Coba lagi.');
+  expect(mutations).toEqual([]);
+  await confirmLeave.click();
   await expect(page.getByText('1/5 kelas aktif', { exact: true })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: 'Berhasil keluar dari kelas.' })).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toBeEnabled();

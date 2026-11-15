@@ -268,7 +268,8 @@ function ProfileContent({ token }: { token: string }) {
                       <Button
                         variant="danger-outline"
                         disabled={busy}
-                        onClick={() => {
+                        onClick={(event) => {
+                          event.currentTarget.focus({ preventScroll: true });
                           setLeaveError('');
                           setLeaving(cls);
                         }}
