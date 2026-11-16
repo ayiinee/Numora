@@ -12,6 +12,9 @@ const root = fileURLToPath(new URL('../../../', import.meta.url));
 const { environment, problems } = testEnvironment(root, { ...process.env, NODE_ENV: 'test' });
 if (problems.length) throw new Error(problems.join('\n'));
 const dbPoolMax = Number(environment.QA_CAPACITY_DB_POOL_MAX ?? 10);
+const httpWorkers = Number(environment.QA_CAPACITY_HTTP_WORKERS ?? 0);
+if (!Number.isSafeInteger(httpWorkers) || httpWorkers < 0 || httpWorkers > 8)
+  throw new Error('QA_CAPACITY_HTTP_WORKERS must be between zero and eight');
 if (!Number.isSafeInteger(dbPoolMax) || dbPoolMax < 1)
   throw new Error('QA_CAPACITY_DB_POOL_MAX must be a positive integer');
 const isolate = (env) =>
@@ -44,6 +47,7 @@ const env = {
   QA_K6_BIN: environment.QA_K6_BIN || 'k6',
   QA_LOCAL_CAPACITY: 'true',
   DB_POOL_MAX: String(dbPoolMax),
+  NUMORA_API_HTTP_WORKERS: String(httpWorkers),
 };
 const web = 'http://localhost:3520';
 const api = 'http://localhost:3521';
@@ -111,7 +115,12 @@ async function ready(url, timeoutMs = 60_000) {
   throw new Error('Local QA readiness timed out');
 }
 try {
-  for (const port of [3520, 3521, 3522]) {
+  for (const port of [
+    3520,
+    3521,
+    3522,
+    ...(httpWorkers ? Array.from({ length: httpWorkers + 1 }, (_, i) => 3523 + i) : []),
+  ]) {
     const server = createServer();
     server.listen(port, '127.0.0.1');
     await once(server, 'listening');
@@ -126,7 +135,11 @@ try {
   }).trim();
   writeFileSync(
     resolve(evidence, 'candidate.json'),
-    JSON.stringify({ baseCommit: sha, trackedChanges: isDirty, runId, dbPoolMax }, null, 2),
+    JSON.stringify(
+      { baseCommit: sha, trackedChanges: isDirty, runId, dbPoolMax, httpWorkers },
+      null,
+      2,
+    ),
   );
   await administrator.unsafe('create database ' + database);
   owned = true;

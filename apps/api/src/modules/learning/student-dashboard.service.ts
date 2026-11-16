@@ -79,7 +79,7 @@ export class StudentDashboardService {
         .where(eq(xpLedger.studentId, user.id)),
     ]);
     const membership = memberships[0] ?? null;
-    const pvpAvailable = this.pvp ? (await this.pvp.engine.availability()).available : false;
+    const pvpAvailable = this.pvp ? await this.pvp.dashboardAvailable(authorization) : false;
     return {
       displayName: user.displayName,
       totalXp: Number(xp[0]?.total ?? 0),

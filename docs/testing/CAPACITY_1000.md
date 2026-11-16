@@ -40,6 +40,8 @@ Jalankan `pnpm qa doctor --profile full`, lalu `node scripts/qa/capacity/rehears
 
 Pool koneksi rehearsal dapat dipilih dengan `QA_CAPACITY_DB_POOL_MAX`, berupa bilangan bulat positif. Default tetap 10. Nilai efektif dicatat sebagai `dbPoolMax` di `candidate.json`. Jalankan seluruh tahapan dengan nilai yang sama dan rekam perbedaan konfigurasi ketika membandingkan run.
 
+Untuk mengukur beberapa inti CPU pada satu host, `QA_CAPACITY_HTTP_WORKERS=2` memilih [runtime opsional](../operations/API_CAPACITY_RUNTIME.md) dengan dua worker HTTP dan satu pemilik PvP. Default tetap `0` (satu API). Pool dibagi sebagai anggaran total worker API; `httpWorkers` dicatat pada kandidat. Hasil dengan topologi berbeda dilaporkan terpisah.
+
 Inisialisasi VU k6 memiliki batas 120 detik tersendiri. Waktu workload dimulai saat hook `setup` mengirim tanda siap; PvP dan sampel browser menunggu tanda yang sama. `http.startupMs` mencatat waktu inisialisasi. Durasi fase, ambang latensi dan kelengkapan tetap berlaku. Preflight sesi dan jendela remote mencadangkan 120 detik inisialisasi serta 35 detik penyelesaian per fase; eksekusi remote berhenti saat izin berakhir. Laporan tanpa tanda siap atau ringkasan k6 tidak dianggap lulus.
 
 **ENGINEERING IMPLEMENTATION — autosave.** Saat analytics domain nonaktif, API memvalidasi konten yang dipin lalu menyimpan jawaban dengan satu perintah atomik yang mengunci ulang attempt dan memeriksa pemilik, status, pin, timer/deadline serta waktu database. Perubahan kondisi saat menunggu lock menjalankan ulang jalur validasi terkunci. Saat analytics aktif, jawaban dan event tetap ditulis dalam transaksi yang sama. Tidak ada perubahan rumus nilai, XP atau durasi sesi.
