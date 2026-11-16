@@ -8,6 +8,7 @@ import type { PvpAvailabilityDto, PvpSnapshotDto } from '@/features/core-learnin
 import type { Acknowledgement, PvpEnvelope } from './generated-protocol';
 type Command = Extract<PvpEnvelope, { requestId: string }>['event'];
 type Ack = { payload: Acknowledgement };
+type ConnectionState = 'idle' | 'connecting' | 'connected' | 'disconnected';
 const availabilityKey = ['pvp-availability'] as const;
 export function usePvpSocket(enabled: boolean, matchId?: string) {
   const token = useStudentToken();
@@ -17,7 +18,8 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
   const [state, setState] = useState<PvpSnapshotDto | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
+  const connected = connectionState === 'connected';
   const sending = useRef(false);
   const pending = useRef<{
     event: Command;
@@ -56,7 +58,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     if (!enabled || pendingMatch.current !== matchId) pending.current = null;
     pendingMatch.current = matchId;
     setState(null);
-    setConnected(false);
+    setConnectionState(enabled ? 'connecting' : 'idle');
     setError(pending.current ? 'Periksa permintaan sebelumnya setelah koneksi pulih.' : '');
     setBusy(false);
     setUncertain(pending.current !== null);
@@ -73,7 +75,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     });
     socket.current = s;
     s.on('connect', () => {
-      setConnected(true);
+      setConnectionState('connected');
       setError('');
       if (matchId)
         s.timeout(7000).emit(
@@ -94,14 +96,15 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
           },
         );
     });
-    s.on('disconnect', () => setConnected(false));
-    s.on('connect_error', (err: Error) =>
+    s.on('disconnect', () => setConnectionState('disconnected'));
+    s.on('connect_error', (err: Error) => {
+      setConnectionState('disconnected');
       setError(
         err.message === 'PVP_AUTH_REQUIRED'
           ? 'Sesi berakhir. Masuk kembali untuk melanjutkan.'
           : 'Koneksi PvP terputus. Coba sambungkan lagi.',
-      ),
-    );
+      );
+    });
     s.on('room:state', (event: { payload: PvpSnapshotDto }) => {
       if (socket.current === s && (!matchId || event.payload.matchId === matchId))
         receiveSnapshot(event.payload);
@@ -184,6 +187,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     error,
     busy,
     connected,
+    connectionState,
     uncertain,
     command,
     retry: () => {
@@ -193,7 +197,11 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       if (socket.current?.connected) {
         setState(null);
         void client.invalidateQueries({ queryKey: ['pvp-match', matchId] });
-      } else socket.current?.connect();
+      } else if (socket.current) {
+        setConnectionState('connecting');
+        setError('');
+        socket.current.connect();
+      }
     },
   };
 }

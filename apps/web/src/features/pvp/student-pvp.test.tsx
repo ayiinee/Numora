@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   connect: vi.fn(),
   io: vi.fn(),
+  autoConnect: true,
   token: 'TEST-only-token',
   matchId: 'TEST-match',
   listeners: [] as Map<string, (event?: unknown) => void>[],
@@ -56,6 +57,7 @@ beforeEach(() => {
   mocks.token = 'TEST-only-token';
   mocks.matchId = 'TEST-match';
   mocks.listeners = [];
+  mocks.autoConnect = true;
   mocks.qr.mockResolvedValue('TEST-QR');
   vi.mocked(request).mockImplementation(async (_token, path) =>
     path === '/pvp/availability'
@@ -68,10 +70,10 @@ beforeEach(() => {
     const listeners = new Map<string, (event?: unknown) => void>();
     mocks.listeners.push(listeners);
     const socket = {
-      connected: true,
+      connected: mocks.autoConnect,
       on: (event: string, callback: () => void) => {
         listeners.set(event, callback);
-        if (event === 'connect') queueMicrotask(callback);
+        if (event === 'connect' && mocks.autoConnect) queueMicrotask(callback);
       },
       timeout: () => socket,
       emitWithAck: mocks.emit,
@@ -94,6 +96,41 @@ afterEach(() => {
 function availabilityRequestCount() {
   return vi.mocked(request).mock.calls.filter(([, path]) => path === '/pvp/availability').length;
 }
+
+it('keeps initial connection in the create button and offers recovery only after a connection failure', async () => {
+  mocks.autoConnect = false;
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  const create = await screen.findByRole('button', { name: /^Buat room/ });
+  await waitFor(() => expect(mocks.listeners).toHaveLength(1));
+  expect(create.hasAttribute('disabled')).toBe(true);
+  expect(create.getAttribute('aria-busy')).toBe('true');
+  expect(screen.queryByText('Menghubungkan PvP')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Sambungkan lagi' })).toBeNull();
+  fireEvent.click(create);
+  expect(mocks.emit).not.toHaveBeenCalled();
+
+  act(() => mocks.listeners[0]!.get('connect_error')!(new Error('TEST connection failure')));
+  expect(screen.getByText('Koneksi PvP terputus')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Sambungkan lagi' }));
+  expect(mocks.connect).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('button', { name: 'Sambungkan lagi' })).toBeNull();
+  expect(create.hasAttribute('disabled')).toBe(true);
+
+  mocks.io.mock.results[0]!.value.connected = true;
+  act(() => mocks.listeners[0]!.get('connect')!());
+  expect(create.hasAttribute('disabled')).toBe(false);
+  expect(create.getAttribute('aria-busy')).toBe('false');
+  expect(screen.queryByRole('alert')).toBeNull();
+
+  mocks.io.mock.results[0]!.value.connected = false;
+  act(() => mocks.listeners[0]!.get('disconnect')!());
+  expect(screen.getByRole('button', { name: 'Sambungkan lagi' })).toBeTruthy();
+  expect(create.hasAttribute('disabled')).toBe(true);
+});
 
 it('reuses a timed-out create request ID on explicit retry instead of creating a second room', async () => {
   mocks.emit
