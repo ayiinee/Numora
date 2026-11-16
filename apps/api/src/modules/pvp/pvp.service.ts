@@ -3,7 +3,8 @@ import { classMemberships, getDatabase, pvpInvites, pvpMatches, users } from '@t
 import { and, asc, eq, gt, inArray, isNull } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { PvpEngineService } from './pvp-engine.service';
-import { apiRole, pvpInternalOrigin } from '../../runtime/api-role';
+import { apiRole } from '../../runtime/api-role';
+import { pvpOwnerReady } from '../../runtime/pvp-owner-readiness';
 
 @Injectable()
 export class PvpService {
@@ -24,25 +25,9 @@ export class PvpService {
     const student = await this.student(authorization);
     return this.engine.availability(student.id);
   }
-  async dashboardAvailable(authorization?: string) {
-    if (apiRole() !== 'http') return (await this.engine.availability()).available;
-    try {
-      const response = await fetch(pvpInternalOrigin() + '/api/v1/pvp/availability', {
-        headers: authorization ? { Authorization: authorization } : {},
-        signal: AbortSignal.timeout(2000),
-        redirect: 'error',
-      });
-      if (!response.ok) {
-        await response.body?.cancel();
-        return false;
-      }
-      const value: unknown = await response.json();
-      return (
-        !!value && typeof value === 'object' && 'available' in value && value.available === true
-      );
-    } catch {
-      return false;
-    }
+  async dashboardAvailable() {
+    const ownerReady = apiRole() === 'http' ? await pvpOwnerReady() : undefined;
+    return (await this.engine.availability(undefined, ownerReady)).available;
   }
   async classmates(authorization?: string) {
     const student = await this.student(authorization);

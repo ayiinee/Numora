@@ -59,6 +59,7 @@ import {
   decodePvpSingleChoice as decodeSingleChoice,
 } from './pvp-drill-bank';
 import { PvpAvailabilityCache } from './pvp-availability-cache';
+import { apiRole } from '../../runtime/api-role';
 
 type Database = ReturnType<typeof getDatabase>['db'];
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -89,7 +90,7 @@ export class PvpEngineService implements OnModuleDestroy {
   private get newRoomsEnabled() {
     return process.env.PVP_NEW_MATCHES_ENABLED !== 'false';
   }
-  async availability(studentId?: string) {
+  async availability(studentId?: string, ownerReady?: boolean) {
     let contentRevision: string;
     const checkReason = async (check: () => Promise<void>) => {
       try {
@@ -110,7 +111,7 @@ export class PvpEngineService implements OnModuleDestroy {
       ? 'PVP_POLICY_OPEN'
       : !this.newRoomsEnabled
         ? 'PVP_NEW_MATCHES_DISABLED'
-        : !this.transportReady
+        : !(apiRole() === 'http' ? ownerReady === true : this.transportReady)
           ? 'PVP_SCHEDULER_UNAVAILABLE'
           : null;
     const sharedReason =

@@ -7,11 +7,13 @@ import { startApiTopology } from './api-topology';
 
 class TestWorker extends EventEmitter {
   exited = false;
+  readonly replies: unknown[] = [];
   constructor(readonly environment: NodeJS.ProcessEnv) {
     super();
     queueMicrotask(() => this.emit('message', { ready: true }));
   }
-  postMessage(value: string) {
+  postMessage(value: unknown) {
+    this.replies.push(value);
     if (value === 'shutdown') void this.terminate();
   }
   async terminate() {
@@ -23,7 +25,7 @@ class TestWorker extends EventEmitter {
   }
 }
 afterEach(() => vi.unstubAllEnvs());
-it('stops the public runtime and remaining workers when one worker fails', async () => {
+it.each([0, 2])('stops the runtime and reports unavailable when worker %i fails', async (index) => {
   vi.stubEnv('DB_POOL_MAX', '16');
   vi.stubEnv('API_BIND_HOST', '127.0.0.1');
   const probe = createServer();
@@ -47,7 +49,19 @@ it('stops the public runtime and remaining workers when one worker fails', async
   expect(workers.reduce((total, worker) => total + Number(worker.environment.DB_POOL_MAX), 0)).toBe(
     16,
   );
-  workers[0]!.emit('error', new Error('TEST_ONLY worker unavailable'));
+  workers[0]!.emit('message', { type: 'pvp-readiness-query', requestId: 'TEST_ONLY-before' });
+  expect(workers[0]!.replies.at(-1)).toEqual({
+    type: 'pvp-readiness-result',
+    requestId: 'TEST_ONLY-before',
+    ready: true,
+  });
+  workers[index]!.emit('error', new Error('TEST_ONLY worker unavailable'));
+  workers[0]!.emit('message', { type: 'pvp-readiness-query', requestId: 'TEST_ONLY-after' });
+  expect(workers[0]!.replies.at(-1)).toEqual({
+    type: 'pvp-readiness-result',
+    requestId: 'TEST_ONLY-after',
+    ready: false,
+  });
   await failure;
   await runtime.close();
   expect(workers.every((worker) => worker.exited)).toBe(true);

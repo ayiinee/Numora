@@ -20,6 +20,8 @@ export async function startApiTopology(
   let closing = false;
   let closed: Promise<void> | undefined;
   const exited = new Set<Worker>();
+  let pvpOwner: Worker | undefined;
+  let pvpReady = false;
   const close = async () => {
     if (closed) return closed;
     closing = true;
@@ -65,7 +67,6 @@ export async function startApiTopology(
               NUMORA_API_ROLE: item.role,
               API_PORT: String(item.port),
               DB_POOL_MAX: String(item.poolMax),
-              NUMORA_PVP_INTERNAL_ORIGIN: `http://127.0.0.1:${pvpPort}`,
             });
             workers.push(worker);
             const timer = setTimeout(
@@ -80,7 +81,31 @@ export async function startApiTopology(
                 message.ready === true
               ) {
                 clearTimeout(timer);
+                if (item.role === 'pvp') {
+                  pvpOwner = worker;
+                  pvpReady = true;
+                }
                 ready();
+              }
+              if (
+                item.role === 'http' &&
+                message &&
+                typeof message === 'object' &&
+                'type' in message &&
+                message.type === 'pvp-readiness-query' &&
+                'requestId' in message &&
+                typeof message.requestId === 'string' &&
+                message.requestId.length <= 64
+              ) {
+                try {
+                  worker.postMessage({
+                    type: 'pvp-readiness-result',
+                    requestId: message.requestId,
+                    ready: !closing && pvpReady && !!pvpOwner && !exited.has(pvpOwner),
+                  });
+                } catch {
+                  /* Worker is closing. */
+                }
               }
             });
             worker.once('error', () => {
@@ -90,6 +115,7 @@ export async function startApiTopology(
             });
             worker.once('exit', () => {
               exited.add(worker);
+              if (worker === pvpOwner) pvpReady = false;
               clearTimeout(timer);
               reject(new Error('API worker exited.'));
               failed();

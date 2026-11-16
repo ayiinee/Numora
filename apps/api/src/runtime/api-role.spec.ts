@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiRole, pvpInternalOrigin, workerLayout } from './api-role';
+import { apiRole, workerLayout } from './api-role';
 
 afterEach(() => vi.unstubAllEnvs());
 describe('API worker configuration', () => {
@@ -19,21 +19,10 @@ describe('API worker configuration', () => {
     ])
       expect(() => workerLayout(args[0]!, args[1]!, args[2]!)).toThrow();
   });
-  it('rejects malformed roles and non-loopback availability forwarding', () => {
+  it('rejects malformed runtime roles', () => {
     vi.stubEnv('NUMORA_API_ROLE', 'all');
     expect(apiRole()).toBe('all');
     vi.stubEnv('NUMORA_API_ROLE', 'unrecognized');
     expect(() => apiRole()).toThrow();
-    for (const origin of [
-      'https://example.com',
-      'http://localhost:3525',
-      'http://x:y@127.0.0.1:3525',
-      'http://127.0.0.1:3525/api',
-    ]) {
-      vi.stubEnv('NUMORA_PVP_INTERNAL_ORIGIN', origin);
-      expect(() => pvpInternalOrigin()).toThrow();
-    }
-    vi.stubEnv('NUMORA_PVP_INTERNAL_ORIGIN', 'http://127.0.0.1:3525');
-    expect(pvpInternalOrigin()).toBe('http://127.0.0.1:3525');
   });
 });

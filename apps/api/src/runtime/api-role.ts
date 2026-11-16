@@ -5,22 +5,6 @@ export function apiRole() {
   return role;
 }
 
-export function pvpInternalOrigin() {
-  const url = new URL(process.env.NUMORA_PVP_INTERNAL_ORIGIN ?? '');
-  if (
-    url.protocol !== 'http:' ||
-    url.hostname !== '127.0.0.1' ||
-    !url.port ||
-    url.username ||
-    url.password ||
-    url.pathname !== '/' ||
-    url.search ||
-    url.hash
-  )
-    throw new Error('PvP internal origin must be a bare loopback HTTP origin.');
-  return url.origin;
-}
-
 export function workerLayout(port: number, count: number, pool: number) {
   if (
     !Number.isSafeInteger(count) ||

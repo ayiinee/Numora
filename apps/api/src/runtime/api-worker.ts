@@ -5,12 +5,10 @@ import { closeDatabaseConnection } from '@tka/database';
 import { AppModule } from '../app.module';
 import { configureApplication } from '../bootstrap';
 import { requireTeacherTokenPepper } from '../modules/schools/teacher-token';
-import { apiRole, pvpInternalOrigin } from './api-role';
 
 async function start() {
   if (!parentPort) throw new Error('API worker requires its supervisor.');
   requireTeacherTokenPepper();
-  if (apiRole() === 'http') pvpInternalOrigin();
   const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });
   configureApplication(app);
   await app.listen(Number(process.env.API_PORT), '127.0.0.1');

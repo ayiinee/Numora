@@ -9,7 +9,7 @@ Local mixed-load runs saturate one API CPU core and fail latency gates at 500 st
 
 ## Decision
 
-**ENGINEERING IMPLEMENTATION:** Keep the modular monolith and its current default single API runtime. An opt-in supervisor uses independent Node worker isolates for HTTP and exactly one PvP owner. A loopback proxy routes Socket.IO, PvP REST and API documentation to that owner; other HTTP requests use the HTTP workers. HTTP workers do not instantiate the PvP gateway or scheduler. Dashboard availability is read from the authenticated PvP owner.
+**ENGINEERING IMPLEMENTATION:** Keep the modular monolith and its current default single API runtime. An opt-in supervisor uses independent Node worker isolates for HTTP and exactly one PvP owner. A loopback proxy routes Socket.IO, PvP REST and API documentation to that owner; other HTTP requests use the HTTP workers. HTTP workers do not instantiate the PvP gateway or scheduler. Dashboard availability checks coordinator-owned transport readiness over IPC and evaluates current policy/content eligibility in the HTTP isolate. User authorization is never cached or sent through that IPC channel.
 
 Share PostgreSQL and the existing Redis namespace. Divide one explicit DB connection budget across workers. Worker listeners bind only to loopback. Do not distribute socket presence, match recovery or deadline ownership across nodes. All workers use the same build and unchanged domain authorization, transactions and scoring. Worker failure stops the runtime for supervisor restart. Deployment remains opt-in pending capacity and operational acceptance; this ADR does not authorize a Production change.
 
