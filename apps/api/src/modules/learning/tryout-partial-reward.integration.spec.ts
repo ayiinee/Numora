@@ -104,7 +104,7 @@ databaseSuite('Tryout partial reward HTTP submit regression (TEST ONLY)', () => 
           status: 'DRAFT',
           releaseAt: new Date(Date.now() - 1000),
           closeAt: new Date(Date.now() + 86400000),
-          durationSeconds: 600,
+          durationSeconds: 4500,
         })
         .returning();
       const itemPins: (typeof packageItems.$inferInsert)[] = [];

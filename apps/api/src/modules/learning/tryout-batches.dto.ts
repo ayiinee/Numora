@@ -140,6 +140,7 @@ export class StudentTryoutBatchDto {
   @ApiProperty() startsAt!: string;
   @ApiProperty() closesAt!: string;
   @ApiProperty() resultDueAt!: string;
+  @ApiProperty() durationSeconds!: number;
   @ApiProperty() state!: string;
   @ApiProperty({ type: [StudentTryoutSchoolDto] }) schools!: StudentTryoutSchoolDto[];
   @ApiProperty() mandiri!: boolean;

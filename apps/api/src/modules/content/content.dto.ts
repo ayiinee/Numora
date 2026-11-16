@@ -21,6 +21,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
+import { TRYOUT_DURATION_SECONDS } from '@tka/database';
 import { IsYouTubeVideoUrl } from './youtube-url';
 
 export const statuses = ['DRAFT', 'READY', 'ARCHIVED', 'REVISION'] as const;
@@ -335,5 +336,8 @@ export class PublishTryoutPackageDto {
   @IsOptional()
   @IsISO8601({ strict: true })
   releaseAt?: string;
-  @ApiPropertyOptional({ enum: [600] }) @IsOptional() @Equals(600) durationSeconds?: 600;
+  @ApiPropertyOptional({ enum: [TRYOUT_DURATION_SECONDS] })
+  @IsOptional()
+  @Equals(TRYOUT_DURATION_SECONDS)
+  durationSeconds?: typeof TRYOUT_DURATION_SECONDS;
 }

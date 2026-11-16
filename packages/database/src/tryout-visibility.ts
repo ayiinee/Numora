@@ -12,6 +12,8 @@ import {
   assessmentAttempts,
 } from './schema/index.js';
 import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
+
+export const TRYOUT_DURATION_SECONDS = 75 * 60;
 /** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
@@ -157,7 +159,7 @@ export async function currentTryoutPackage(db: AssessmentReader = getDatabase().
     !row ||
     !row.releaseAt ||
     (!row.isDemo &&
-      (row.durationSeconds !== 600 ||
+      (row.durationSeconds !== TRYOUT_DURATION_SECONDS ||
         row.closeAt?.getTime() !== tryoutBatchCloseAt(row.releaseAt).getTime())) ||
     (row.closeAt ?? tryoutBatchCloseAt(row.releaseAt)) <= now
   )

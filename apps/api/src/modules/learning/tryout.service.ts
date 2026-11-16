@@ -15,6 +15,7 @@ import {
   tryoutStudentAssignments,
   tryoutBatches,
   tryoutBatchCloseAt,
+  TRYOUT_DURATION_SECONDS,
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
@@ -607,7 +608,11 @@ export class TryoutService {
         : [];
       const current =
         selected && selectedPackage
-          ? { ...selectedPackage, closeAt: selected.batch.closesAt, durationSeconds: 600 }
+          ? {
+              ...selectedPackage,
+              closeAt: selected.batch.closesAt,
+              durationSeconds: TRYOUT_DURATION_SECONDS,
+            }
           : await currentTryoutPackage(tx);
       if (!current || current.id !== packageId)
         throw new ConflictException(

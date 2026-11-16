@@ -149,7 +149,7 @@ function StudentBatch({
         }
       >
         <TryoutSchedule opensAt={b.startsAt} closesAt={b.closesAt} />
-        <span>30 soal · 10 menit</span>
+        <span>30 soal · {Math.round(b.durationSeconds / 60)} menit</span>
       </TryoutCatalogCard>
       <Dialog
         className="tryout-student-rules-dialog"
@@ -177,7 +177,12 @@ function StudentBatch({
         }
       >
         <div className="tryout-student-batch__rules">
-          <TryoutStartRules questionCount={30} durationSeconds={600} closeAt={b.closesAt} batch />
+          <TryoutStartRules
+            questionCount={30}
+            durationSeconds={b.durationSeconds}
+            closeAt={b.closesAt}
+            batch
+          />
           <p>
             Pilihan sekolah dan paket dikunci setelah mulai. Hanya jawaban yang sudah tersimpan yang
             ikut dikumpulkan; perhatikan status penyimpanan sebelum berpindah atau keluar.

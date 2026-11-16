@@ -93,4 +93,11 @@ export class AdminTryoutBatchesController {
   ) {
     return this.batches.cancel(r.adminId, id, body.expectedRevision, body.reason);
   }
+  @Post(':id/stop') @ApiCreatedResponse({ type: ContentMutationDto }) stop(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: CancelTryoutBatchDto,
+  ) {
+    return this.batches.stop(r.adminId, id, body.expectedRevision, body.reason);
+  }
 }

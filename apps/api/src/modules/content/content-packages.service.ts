@@ -36,6 +36,7 @@ import {
   tryoutBatches,
   tryoutBatchPackages,
   tryoutBatchCloseAt,
+  TRYOUT_DURATION_SECONDS,
   type ImportQuestion,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
@@ -1057,7 +1058,7 @@ export class ContentPackagesService {
           releaseAt,
           closeAt,
           scoringPolicyVersionId: policy.id,
-          ...(p.assessmentType === 'TRYOUT' ? { durationSeconds: 600 } : {}),
+          ...(p.assessmentType === 'TRYOUT' ? { durationSeconds: TRYOUT_DURATION_SECONDS } : {}),
         })
         .where(eq(assessmentPackages.id, id));
       return { id };
@@ -1070,10 +1071,10 @@ export class ContentPackagesService {
       await lockTryoutBatchSchedule(tx);
       const p = await packageContext(tx, id, true);
       if (p.status === 'ARCHIVED') return { id };
-      if (p.contentRevision !== revision || !['PUBLISHED', 'CLOSED'].includes(p.status))
+      if (p.contentRevision !== revision || !['DRAFT', 'PUBLISHED', 'CLOSED'].includes(p.status))
         throw new ConflictException({
           code: 'PACKAGE_ARCHIVE_CONFLICT',
-          detail: 'Muat ulang paket terbit sebelum mengarsipkannya.',
+          detail: 'Muat ulang paket sebelum mengarsipkannya.',
         });
       if (p.assessmentType === 'TRYOUT') {
         const [batch] = await tx

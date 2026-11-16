@@ -2,7 +2,7 @@
 
 **ENGINEERING DECISION — persetujuan pemilik:** pelaksanaan Tryout dipisahkan dari bank paket. Batch memiliki jadwal bebas, beberapa paket, akses Mandiri opsional dan satu delegasi paket per sekolah. Delegasi adalah alokasi Admin, bukan randomisasi eksperimen. Banyak penerima dapat memakai paket yang sama tanpa membuat arm baru.
 
-Implementasi menyediakan `/admin/tryout-batches` beserta halaman tambah/detail dan modal konfigurasi. API Admin memakai capability Content. Paket harus lulus validasi distribusi dan policy existing. Pemeriksaan revisi, transaksi, advisory lock dan exclusion constraint mencegah publikasi jadwal bertabrakan. Interval jadwal setengah terbuka: batch berikutnya boleh mulai tepat saat batch sebelumnya tutup. Konfigurasi, roster dan delegasi terkunci setelah mulai; pembatalan hanya sebelum mulai.
+Implementasi menyediakan `/admin/tryout-batches` beserta halaman tambah/detail dan modal konfigurasi. API Admin memakai capability Content. Paket harus lulus validasi distribusi dan policy existing. Pemeriksaan revisi dan transaksi menjaga publikasi jadwal. Batch terbit dapat berjalan bersamaan tanpa batas overlap jadwal. Konfigurasi, roster dan delegasi terkunci setelah mulai; pembatalan sebelum mulai; stop dengan alasan saat berjalan.
 
 Siswa memakai API berbasis batch. Server memilih paket dari keanggotaan aktif dan delegasi, lalu menyimpan assignment dan attempt dalam transaksi yang sama. Siswa multisekolah memilih sekolah, bukan paket. Resume memakai assignment awal. Penerbitan batch Admin pertama mengaktifkan routing baru secara permanen, termasuk setelah batch itu dibatalkan; start berbasis paket lama kemudian ditolak, sementara resume dan riwayat lama dipertahankan. Jadwal paket lama tidak dimigrasikan otomatis.
 
@@ -34,12 +34,12 @@ Lingkungan memerlukan migrasi `0055_tryout_batch_delegations.sql`, lalu build/re
 
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
-**ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal tidak boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 10 menit dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.
+**ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal batch boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 75 menit (4.500 detik) dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.
 
 
 ### Verifikasi perubahan 11 November 2026
 
-Enam tes API terpilih (termasuk integrasi HTTP/PostgreSQL throwaway lokal) dan empat skenario browser fixture lolos setelah retest. Cakupan: fallback sekolah aktif, delegasi start baru dan pin attempt lama, otorisasi, rollback, konflik/replay, audit, paket frozen, perpanjangan tanpa overlap, tenggat hasil serta penolakan batch tutup/batal. Dua puluh lima kasus API lain tidak dijalankan oleh filter. Kontrak/tipe generated diperbarui; lint, typecheck dan build terkait diperiksa. Ini bukan acceptance IRT atau browser dengan seluruh layanan produksi. Penerapan memerlukan migrasi 0069, 0070 dan 0071 melalui workflow migrasi normal, lalu restart API. Database aplikasi/cloud tidak dimodifikasi oleh tes ini.
+Enam tes API terpilih (termasuk integrasi HTTP/PostgreSQL throwaway lokal) dan empat skenario browser fixture lolos setelah retest. Cakupan: fallback sekolah aktif, delegasi start baru dan pin attempt lama, otorisasi, rollback, konflik/replay, audit, paket frozen, perpanjangan pada batch yang boleh overlap, tenggat hasil serta penolakan batch tutup/batal. Dua puluh lima kasus API lain tidak dijalankan oleh filter. Kontrak/tipe generated diperbarui; lint, typecheck dan build terkait diperiksa. Ini bukan acceptance IRT atau browser dengan seluruh layanan produksi. Penerapan memerlukan migrasi 0069, 0070 dan 0071 melalui workflow migrasi normal, lalu restart API. Database aplikasi/cloud tidak dimodifikasi oleh tes ini.
 
 
 ## Integrasi main ? 11 November 2026
