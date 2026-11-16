@@ -12,11 +12,14 @@ const root = fileURLToPath(new URL('../../../', import.meta.url));
 const { environment, problems } = testEnvironment(root, { ...process.env, NODE_ENV: 'test' });
 if (problems.length) throw new Error(problems.join('\n'));
 const dbPoolMax = Number(environment.QA_CAPACITY_DB_POOL_MAX ?? 10);
+const workerDbPoolMax = Number(environment.QA_CAPACITY_WORKER_DB_POOL_MAX ?? 2);
 const httpWorkers = Number(environment.QA_CAPACITY_HTTP_WORKERS ?? 0);
 if (!Number.isSafeInteger(httpWorkers) || httpWorkers < 0 || httpWorkers > 8)
   throw new Error('QA_CAPACITY_HTTP_WORKERS must be between zero and eight');
 if (!Number.isSafeInteger(dbPoolMax) || dbPoolMax < 1)
   throw new Error('QA_CAPACITY_DB_POOL_MAX must be a positive integer');
+if (!Number.isSafeInteger(workerDbPoolMax) || workerDbPoolMax < 1)
+  throw new Error('QA_CAPACITY_WORKER_DB_POOL_MAX must be a positive integer');
 const isolate = (env) =>
   Object.fromEntries(
     Object.entries(env).filter(([key]) =>
@@ -136,7 +139,7 @@ try {
   writeFileSync(
     resolve(evidence, 'candidate.json'),
     JSON.stringify(
-      { baseCommit: sha, trackedChanges: isDirty, runId, dbPoolMax, httpWorkers },
+      { baseCommit: sha, trackedChanges: isDirty, runId, dbPoolMax, workerDbPoolMax, httpWorkers },
       null,
       2,
     ),
@@ -154,7 +157,10 @@ try {
       throw new Error('Local QA API exited during setup. See api.log.');
     }),
   ]);
-  launch(process.execPath, ['qa/runtime/consume.mjs'], 'outbox');
+  launch(process.execPath, ['qa/runtime/consume.mjs'], 'outbox', {
+    ...env,
+    DB_POOL_MAX: String(workerDbPoolMax),
+  });
   launch(
     process.execPath,
     ['node_modules/next/dist/bin/next', 'start', '-p', '3520', '-H', '127.0.0.1'],

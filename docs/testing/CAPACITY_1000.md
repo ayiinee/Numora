@@ -40,6 +40,8 @@ Jalankan `pnpm qa doctor --profile full`, lalu `node scripts/qa/capacity/rehears
 
 Pool koneksi rehearsal dapat dipilih dengan `QA_CAPACITY_DB_POOL_MAX`, berupa bilangan bulat positif. Default tetap 10. Nilai efektif dicatat sebagai `dbPoolMax` di `candidate.json`. Jalankan seluruh tahapan dengan nilai yang sama dan rekam perbedaan konfigurasi ketika membandingkan run.
 
+Consumer outbox rehearsal memiliki anggaran tersendiri, `QA_CAPACITY_WORKER_DB_POOL_MAX` (default 2), dicatat sebagai `workerDbPoolMax`. Hitung juga koneksi fixture, rekonsiliasi dan administrasi terhadap batas PostgreSQL. Mengubah anggaran rehearsal tidak mengubah konfigurasi Produksi.
+
 Untuk mengukur beberapa inti CPU pada satu host, `QA_CAPACITY_HTTP_WORKERS=2` memilih [runtime opsional](../operations/API_CAPACITY_RUNTIME.md) dengan dua worker HTTP dan satu pemilik PvP. Default tetap `0` (satu API). Pool dibagi sebagai anggaran total worker API; `httpWorkers` dicatat pada kandidat. Hasil dengan topologi berbeda dilaporkan terpisah.
 
 **ENGINEERING IMPLEMENTATION — pembacaan PvP.** Proyeksi kolom snapshot dan lock pertandingan disusun sekali dari schema. Nilai tetap berupa parameter SQL, hasil tetap memakai decoder kolom, dan query berjalan dalam transaksi dengan lock serta pemeriksaan peserta yang sama. Tidak ada cache jawaban, hak akses atau status pertandingan. Verifikasi juga timestamp, JSON historis, privasi lawan dan delivery idempoten pada akun runtime non-owner.
