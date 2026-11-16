@@ -69,11 +69,18 @@ it.skipIf(!base || !tls || !ca || !restic || process.platform === 'win32')(
         RESTIC_PASSWORD_FILE: password,
         GOMAXPROCS: '2',
       };
-      await promisify(execFile)(restic!, ['--json', 'init'], { env: storageEnv, timeout: 20000 });
-      const configOutput = await promisify(execFile)(restic!, ['--json', 'cat', 'config'], {
+      await promisify(execFile)(restic!, ['--no-cache', '--json', 'init'], {
         env: storageEnv,
         timeout: 20000,
       });
+      const configOutput = await promisify(execFile)(
+        restic!,
+        ['--no-cache', '--json', 'cat', 'config'],
+        {
+          env: storageEnv,
+          timeout: 20000,
+        },
+      );
       const config = offhostConfig({
         RESTIC_REPOSITORY: 's3:https://storage.example.test/backup-bucket/numora',
         NUMORA_OFFHOST_EXPECTED_ORIGIN: 'https://storage.example.test',
