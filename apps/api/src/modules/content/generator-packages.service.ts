@@ -364,12 +364,13 @@ export class GeneratorPackagesService {
       if (scope?.usage_type !== row.assessment_type)
         throw new ConflictException({ code: 'QUESTION_USAGE_MISMATCH' });
       const p = candidate.payload;
+      const externalId = 'GEN_' + candidate.id.replaceAll('-', '');
       items.push({
         requestId,
         candidateId: candidate.id,
         content: p,
         question: {
-          externalId: 'GEN_' + candidate.id.replaceAll('-', ''),
+          externalId,
           type: p.questionType,
           chapterCode: scope.chapter_code,
           subchapterCode: scope.subchapter_code,
@@ -384,7 +385,20 @@ export class GeneratorPackagesService {
             sourceSheet: 'Generator',
             sourceRowNumber: items.length + 1,
             sourceOrder: items.length + 1,
-            assetManifest: [],
+            assetManifest: p.media.map((asset, index) => ({
+              externalId,
+              assetId: asset.assetId,
+              textMarker: `[[asset:${asset.assetId}]]`,
+              placement: asset.placement,
+              itemId: null,
+              assetOrder: index + 1,
+              altText: asset.altText,
+              objectKey: null,
+              sha256: asset.sha256,
+              contentType: asset.contentType,
+              byteLength: asset.byteLength,
+              bucket: '',
+            })),
             ...(p.optionsOrStatements.categories.length
               ? { categories: p.optionsOrStatements.categories }
               : {}),
