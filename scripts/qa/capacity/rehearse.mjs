@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { requireFrom, testEnvironment } from '../process.mjs';
+import { localK6MemoryMiB } from './config.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const { environment, problems } = testEnvironment(root, { ...process.env, NODE_ENV: 'test' });
@@ -14,6 +15,7 @@ if (problems.length) throw new Error(problems.join('\n'));
 const dbPoolMax = Number(environment.QA_CAPACITY_DB_POOL_MAX ?? 10);
 const workerDbPoolMax = Number(environment.QA_CAPACITY_WORKER_DB_POOL_MAX ?? 2);
 const httpWorkers = Number(environment.QA_CAPACITY_HTTP_WORKERS ?? 0);
+const k6MemoryMiB = localK6MemoryMiB(environment.QA_CAPACITY_K6_MEMORY_MIB, 'dev');
 if (!Number.isSafeInteger(httpWorkers) || httpWorkers < 0 || httpWorkers > 8)
   throw new Error('QA_CAPACITY_HTTP_WORKERS must be between zero and eight');
 if (!Number.isSafeInteger(dbPoolMax) || dbPoolMax < 1)
@@ -139,7 +141,15 @@ try {
   writeFileSync(
     resolve(evidence, 'candidate.json'),
     JSON.stringify(
-      { baseCommit: sha, trackedChanges: isDirty, runId, dbPoolMax, workerDbPoolMax, httpWorkers },
+      {
+        baseCommit: sha,
+        trackedChanges: isDirty,
+        runId,
+        dbPoolMax,
+        workerDbPoolMax,
+        httpWorkers,
+        k6MemoryMiB,
+      },
       null,
       2,
     ),
@@ -187,10 +197,14 @@ try {
     }),
   );
   const runner = ['scripts/qa/capacity/run.mjs', 'dev', 'mixed-local', configPath, actorsPath];
+  const runnerEnv = {
+    ...env,
+    ...(k6MemoryMiB === null ? {} : { QA_CAPACITY_K6_MEMORY_MIB: String(k6MemoryMiB) }),
+  };
   if ((await launch(process.execPath, [runner[0], 'check', ...runner.slice(1)], 'preflight')) !== 0)
     throw new Error('Local QA actor preflight failed');
   process.exitCode =
-    (await launch(process.execPath, [runner[0], 'run', ...runner.slice(1)], null)) ?? 1;
+    (await launch(process.execPath, [runner[0], 'run', ...runner.slice(1)], null, runnerEnv)) ?? 1;
 } finally {
   for (const { child } of children)
     if (child.exitCode === null && child.signalCode === null) child.kill();

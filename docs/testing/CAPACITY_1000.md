@@ -42,6 +42,8 @@ Pool koneksi rehearsal dapat dipilih dengan `QA_CAPACITY_DB_POOL_MAX`, berupa bi
 
 Consumer outbox rehearsal memiliki anggaran tersendiri, `QA_CAPACITY_WORKER_DB_POOL_MAX` (default 2), dicatat sebagai `workerDbPoolMax`. Hitung juga koneksi fixture, rekonsiliasi dan administrasi terhadap batas PostgreSQL. Mengubah anggaran rehearsal tidak mengubah konfigurasi Produksi.
 
+Jika generator berbagi mesin dengan database, ukur memori host, API, dan k6 selama fase. `QA_CAPACITY_K6_MEMORY_MIB=1024` memberi Go runtime k6 target memori lunak 1 GiB. Runner menerima opsi ini hanya untuk dev lokal dan mencatatnya di kandidat serta laporan. Pantau CPU generator, jumlah peserta, dan dropped iterations karena target yang terlalu kecil dapat menaikkan biaya garbage collection. [Dokumentasi Go](https://go.dev/doc/gc-guide#Memory_limit).
+
 Untuk mengukur beberapa inti CPU pada satu host, `QA_CAPACITY_HTTP_WORKERS=2` memilih [runtime opsional](../operations/API_CAPACITY_RUNTIME.md) dengan dua worker HTTP dan satu pemilik PvP. Default tetap `0` (satu API). Pool dibagi sebagai anggaran total worker API; `httpWorkers` dicatat pada kandidat. Hasil dengan topologi berbeda dilaporkan terpisah.
 
 **ENGINEERING IMPLEMENTATION — pembacaan PvP.** Proyeksi kolom snapshot dan lock pertandingan disusun sekali dari schema. Nilai tetap berupa parameter SQL, hasil tetap memakai decoder kolom, dan query berjalan dalam transaksi dengan lock serta pemeriksaan peserta yang sama. Tidak ada cache jawaban, hak akses atau status pertandingan. Verifikasi juga timestamp, JSON historis, privasi lawan dan delivery idempoten pada akun runtime non-owner.

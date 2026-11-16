@@ -13,6 +13,7 @@ import {
   refreshPhaseActors,
   httpStartupSeconds,
   httpGraceSeconds,
+  localK6MemoryMiB,
   phaseBudgetSeconds,
 } from './config.mjs';
 import { capture, readReceipts, validateEvidenceUrl } from './reconcile.mjs';
@@ -169,7 +170,7 @@ export function httpRunClock(seconds, stop) {
   };
 }
 
-function runHttp(plan, phase, actors, folder, signal, stop, onReady) {
+function runHttp(plan, phase, actors, folder, signal, stop, onReady, memoryMiB) {
   const input = resolve(folder, 'input.local.json');
   const actorInput = resolve(folder, 'actors.local.json');
   const output = resolve(folder, 'k6-summary.json');
@@ -201,6 +202,7 @@ function runHttp(plan, phase, actors, folder, signal, stop, onReady) {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...allowedEnvironment,
+        ...(memoryMiB === null ? {} : { GOMEMLIMIT: `${memoryMiB}MiB` }),
         NUMORA_CAPACITY_INPUT: input,
         NUMORA_CAPACITY_ACTORS: actorInput,
         NUMORA_CAPACITY_SUMMARY: output,
@@ -289,6 +291,7 @@ export function validateCohorts(plan, fixtures) {
 }
 
 async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) {
+  const memoryMiB = localK6MemoryMiB(process.env.QA_CAPACITY_K6_MEMORY_MIB, plan.environment);
   const folder = resolve(
     ignored,
     'capacity',
@@ -303,6 +306,7 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
     startedAt: new Date().toISOString(),
     environment: plan.environment,
     suite: plan.suite,
+    k6MemoryMiB: memoryMiB,
     targets: { web: plan.web, api: plan.api },
     approvalReference: config.authorization?.reference ?? null,
     phases: [],
@@ -367,7 +371,7 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
           : Promise.resolve(true);
         if (Object.keys(httpActors).length)
           tasks.push(
-            runHttp(plan, phase, httpActors, phaseFolder, signal, stop, ready).then(
+            runHttp(plan, phase, httpActors, phaseFolder, signal, stop, ready, memoryMiB).then(
               (result) => {
                 http = result;
               },
