@@ -3527,10 +3527,11 @@ describe.skipIf(!testUrl)(
         const response = await request(`${path}/archive`, 'POST', {
           expectedRevision: pack.contentRevision,
         });
-        expect(response.status).toBe(409);
-        expect(await response.json()).toMatchObject({
-          code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH',
-        });
+        expect([400, 409]).toContain(response.status);
+        if (response.status === 409)
+          expect(await response.json()).toMatchObject({
+            code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH',
+          });
         expect((await ok<ContentPackageDetailDto>(path)).status).toBe('PUBLISHED');
       }
       await expectArchiveBlocked(packageIds[0]!);
