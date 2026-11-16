@@ -14436,10 +14436,17 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorPackageOptionDto"
             }
+          },
+          "sourcePackages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorSourcePackageDto"
+            }
           }
         },
         "required": [
-          "options"
+          "options",
+          "sourcePackages"
         ]
       },
       "GeneratorPackageDto": {
@@ -14489,12 +14496,17 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorRequestDto"
             }
+          },
+          "sourcePackageId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
           "id",
           "assessmentType",
           "title",
+          "sourcePackageId",
           "expectedCount",
           "completedCount",
           "failedCount",
@@ -14533,6 +14545,10 @@
             "type": "string"
           },
           "scopeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourcePackageId": {
             "type": "string",
             "format": "uuid"
           }
@@ -14597,6 +14613,10 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorPackageFileItemDto"
             }
+          },
+          "sourcePackageId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -14604,6 +14624,7 @@
           "generatorPackageId",
           "assessmentType",
           "title",
+          "sourcePackageId",
           "expectedCount",
           "items"
         ]
@@ -20187,6 +20208,49 @@
         },
         "required": [
           "updated"
+        ]
+      },
+      "GeneratorSourcePackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "itemCount": {
+            "type": "number"
+          },
+          "familyCount": {
+            "type": "number"
+          },
+          "eligibleCount": {
+            "type": "number"
+          },
+          "canGenerate": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "packageVersion",
+          "itemCount",
+          "familyCount",
+          "eligibleCount",
+          "canGenerate",
+          "blockers"
         ]
       }
     }
