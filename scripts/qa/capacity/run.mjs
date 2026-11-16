@@ -5,7 +5,16 @@ import { fileURLToPath } from 'node:url';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
-import { countsFor, data, prepare, phaseActors, refreshPhaseActors } from './config.mjs';
+import {
+  countsFor,
+  data,
+  prepare,
+  phaseActors,
+  refreshPhaseActors,
+  httpStartupSeconds,
+  httpGraceSeconds,
+  phaseBudgetSeconds,
+} from './config.mjs';
 import { capture, readReceipts, validateEvidenceUrl } from './reconcile.mjs';
 import { runPvp } from './pvp.mjs';
 import { sampleBrowser } from './browser.mjs';
@@ -141,7 +150,26 @@ async function watchHealth(plan, stopFile, signal, stop, info) {
   }
 }
 
-function runHttp(plan, phase, actors, folder, signal, stop) {
+export function httpRunClock(seconds, stop) {
+  let running = false;
+  let closed = false;
+  let timer = setTimeout(() => stop('http-startup-timeout'), httpStartupSeconds * 1000);
+  return {
+    ready() {
+      if (running || closed) return false;
+      running = true;
+      clearTimeout(timer);
+      timer = setTimeout(() => stop('runner-timeout'), (seconds + httpGraceSeconds) * 1000);
+      return true;
+    },
+    close() {
+      closed = true;
+      clearTimeout(timer);
+    },
+  };
+}
+
+function runHttp(plan, phase, actors, folder, signal, stop, onReady) {
   const input = resolve(folder, 'input.local.json');
   const actorInput = resolve(folder, 'actors.local.json');
   const output = resolve(folder, 'k6-summary.json');
@@ -180,6 +208,9 @@ function runHttp(plan, phase, actors, folder, signal, stop) {
     },
   );
   const failuresByOperation = {};
+  const clock = httpRunClock(phase.seconds, stop);
+  const startedAt = performance.now();
+  let startupMs = null;
   const receipts = createWriteStream(receiptPath, { flags: 'wx', mode: 0o600 });
   // Suppress raw runner output. The tool writes structured evidence without auth headers or bodies.
   processHandle.stderr.resume();
@@ -188,6 +219,10 @@ function runHttp(plan, phase, actors, folder, signal, stop) {
     if (!line.startsWith('{')) return;
     try {
       const record = JSON.parse(line);
+      if (record.event === 'http-ready' && record.phase === phase.name && clock.ready()) {
+        startupMs = performance.now() - startedAt;
+        onReady(true);
+      }
       if (record.event === 'http-failure' && plan.operations.includes(record.operation)) {
         const key = record.operation + ' | ' + record.status + ' | ' + record.code;
         failuresByOperation[key] = (failuresByOperation[key] ?? 0) + 1;
@@ -203,11 +238,11 @@ function runHttp(plan, phase, actors, folder, signal, stop) {
   const abort = () => processHandle.kill();
   signal.addEventListener('abort', abort, { once: true });
   if (signal.aborted) abort();
-  const deadline = setTimeout(() => stop('runner-timeout'), (phase.seconds + 35) * 1000);
   return new Promise((done) => {
     processHandle.once('error', () => stop('k6-could-not-start'));
     processHandle.once('close', (code) => {
-      clearTimeout(deadline);
+      clock.close();
+      onReady(false);
       signal.removeEventListener('abort', abort);
       receipts.end(() => {
         rmSync(input, { force: true });
@@ -215,8 +250,11 @@ function runHttp(plan, phase, actors, folder, signal, stop) {
         const result = existsSync(output) ? data(output) : null;
         const expected = Object.values(actors).flat().length;
         const wanted = plan.suite.startsWith('spike-') ? phase.students : 0;
+        const summary = summarize(result, code, plan, expected, wanted);
         done({
-          ...summarize(result, code, plan, expected, wanted),
+          ...summary,
+          pass: summary.pass && startupMs !== null,
+          startupMs,
           receiptPath,
           failuresByOperation,
         });
@@ -278,6 +316,13 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
     stopController.abort();
   };
   const interrupt = () => stop('interrupt');
+  const authorizationDeadline =
+    plan.environment === 'dev'
+      ? null
+      : setTimeout(
+          () => stop('authorization-window-ended'),
+          Math.max(0, Date.parse(config.authorization.endsAt) - Date.now()),
+        );
   process.on('SIGINT', interrupt);
   process.on('SIGTERM', interrupt);
   try {
@@ -316,9 +361,13 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
       );
       try {
         const tasks = [];
+        let ready;
+        const httpReady = Object.keys(httpActors).length
+          ? new Promise((done) => (ready = done))
+          : Promise.resolve(true);
         if (Object.keys(httpActors).length)
           tasks.push(
-            runHttp(plan, phase, httpActors, phaseFolder, signal, stop).then(
+            runHttp(plan, phase, httpActors, phaseFolder, signal, stop, ready).then(
               (result) => {
                 http = result;
               },
@@ -327,21 +376,28 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
           );
         if (pvp?.length)
           tasks.push(
-            runPvp(plan, phase, pvp, signal, stop).then(
-              (result) => {
-                socket = result;
-              },
-              () => stop('socket-runner-failure'),
-            ),
+            httpReady
+              .then((started) => started && runPvp(plan, phase, pvp, signal, stop))
+              .then(
+                (result) => {
+                  socket = result;
+                },
+                () => stop('socket-runner-failure'),
+              ),
           );
         if (samples.length && (index === 0 || index === plan.phases.length - 1)) {
           tasks.push(
-            sampleBrowser(plan, samples, index === 0 ? 1000 : 20000, signal, stop).then(
-              (result) => {
-                browser = result;
-              },
-              () => stop('browser-sample-failure'),
-            ),
+            httpReady
+              .then(
+                (started) =>
+                  started && sampleBrowser(plan, samples, index === 0 ? 1000 : 20000, signal, stop),
+              )
+              .then(
+                (result) => {
+                  browser = result;
+                },
+                () => stop('browser-sample-failure'),
+              ),
           );
         }
         await Promise.all(tasks);
@@ -393,6 +449,7 @@ async function execute(config, plan, cohorts, actorsPath, evidenceUrl, samples) 
       }
     }
   } finally {
+    if (authorizationDeadline !== null) clearTimeout(authorizationDeadline);
     process.off('SIGINT', interrupt);
     process.off('SIGTERM', interrupt);
     report.endedAt = new Date().toISOString();
@@ -494,7 +551,7 @@ async function main([action, environment, suite, file, actorsFile, ...rest]) {
     let stageStart = checkTime;
     const phases = plan.phases.map((phase, index) => {
       const fixtures = refreshPhaseActors(actors, phase, plan, cohorts[index], stageStart);
-      stageStart += (phase.seconds + 30) * 1000;
+      stageStart += phaseBudgetSeconds(phase) * 1000;
       return {
         ...phase,
         cohorts: Object.fromEntries(

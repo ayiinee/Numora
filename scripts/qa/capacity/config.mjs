@@ -19,6 +19,9 @@ const cohorts = ['browse', 'drill', 'tryout', 'pretest', 'pvp', 'teacher', 'admi
 const adminRoles = ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'];
 
 export const budgets = { read: 750, write: 1000, submit: 2000, pvp: 1000 };
+export const httpStartupSeconds = 120;
+export const httpGraceSeconds = 35;
+export const phaseBudgetSeconds = (phase) => phase.seconds + httpStartupSeconds + httpGraceSeconds;
 
 const assert = (provided, message) => {
   if (!provided) throw new Error(message);
@@ -141,7 +144,7 @@ export function authorizeRemote(config, environment, suite, phases, operations, 
   );
   const begins = Date.parse(authorization.startsAt);
   const ends = Date.parse(authorization.endsAt);
-  const seconds = phases.reduce((sum, phase) => sum + phase.seconds + 30, 0);
+  const seconds = phases.reduce((sum, phase) => sum + phaseBudgetSeconds(phase), 0);
   assert(
     begins <= now && now + (seconds + 120) * 1000 <= ends,
     'Execution does not fit the approved window',
@@ -422,7 +425,7 @@ export function refreshPhaseActors(fixtures, phase, plan, initial, now = Date.no
     'Only token rotation is permitted in the actor file between stages',
   );
   if (plan.environment === 'dev') return refreshed;
-  const minimum = now / 1000 + phase.seconds + 35;
+  const minimum = now / 1000 + phaseBudgetSeconds(phase);
   for (const actor of Object.values(refreshed).flat()) {
     let exp;
     try {

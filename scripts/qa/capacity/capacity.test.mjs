@@ -11,7 +11,34 @@ import {
   workload,
 } from './config.mjs';
 import { reconcile, validateEvidenceUrl } from './reconcile.mjs';
-import { summarize, validateCohorts } from './run.mjs';
+import { httpRunClock, summarize, validateCohorts } from './run.mjs';
+
+test('HTTP initialization has a bounded budget before the full workload clock starts', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const stops = [];
+  const clock = httpRunClock(10, (reason) => stops.push(reason));
+  t.mock.timers.tick(119_999);
+  assert.deepEqual(stops, []);
+  assert.equal(clock.ready(), true);
+  t.mock.timers.tick(44_999);
+  assert.equal(clock.ready(), false);
+  assert.deepEqual(stops, []);
+  t.mock.timers.tick(1);
+  assert.deepEqual(stops, ['runner-timeout']);
+  clock.close();
+});
+
+test('HTTP startup failure and closed runs cannot leave an unbounded timer', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const stops = [];
+  const clock = httpRunClock(600, (reason) => stops.push(reason));
+  t.mock.timers.tick(120_000);
+  assert.deepEqual(stops, ['http-startup-timeout']);
+  clock.close();
+  assert.equal(clock.ready(), false);
+  t.mock.timers.tick(1_000_000);
+  assert.deepEqual(stops, ['http-startup-timeout']);
+});
 
 const contracts = JSON.parse(
   readFileSync(new URL('../../../packages/contracts/openapi/openapi.json', import.meta.url)),

@@ -105,6 +105,10 @@ let assessment = null;
 let finished = false;
 let extrasDone = false;
 
+export function setup() {
+  console.log(JSON.stringify({ event: 'http-ready', phase: phase.name }));
+}
+
 function receipt(event, actor, detail) {
   console.log(JSON.stringify({ event, at: Date.now(), actor: actor.id, ...detail }));
 }

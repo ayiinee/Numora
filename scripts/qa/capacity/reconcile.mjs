@@ -118,28 +118,33 @@ export async function capture(rawUrl, ids, explicit, since, receipts) {
       sql.begin(
         'isolation level repeatable read read only',
         (tx) => tx`
-      WITH candidates AS (
+      WITH candidates AS MATERIALIZED (
         SELECT id, student_id, assessment_type::text, status::text, score_0_100 AS score
         FROM assessment_attempts
         WHERE student_id = ANY(${tx.array(ids)}::uuid[])
           AND (started_at >= ${since}::timestamptz OR id = ANY(${tx.array(explicit)}::uuid[]))
+      ), ledgers AS (
+        SELECT x.attempt_id, count(*) AS ledger_count, max(x.xp_amount) AS xp
+        FROM xp_ledger x JOIN candidates c ON c.id = x.attempt_id
+        GROUP BY x.attempt_id
+      ), outboxes AS (
+        SELECT c.id AS attempt_id, count(*) AS outbox_count
+        FROM candidates c JOIN analytics_outbox o
+          ON o.entity_id = c.id AND o.actor_user_id = c.student_id
+          AND o.event_name = lower(c.assessment_type) || '_completed'
+        GROUP BY c.id
+      ), answers AS (
+        SELECT item.attempt_id, jsonb_object_agg(item.id, answer.answer) AS answers
+        FROM candidates c JOIN attempt_items item ON item.attempt_id = c.id
+        JOIN attempt_answers answer ON answer.attempt_item_id = item.id
+        GROUP BY item.attempt_id
       )
-      SELECT c.*, x.ledger_count, x.xp, o.outbox_count, a.answers
+      SELECT c.*, coalesce(x.ledger_count, 0) AS ledger_count, x.xp,
+        coalesce(o.outbox_count, 0) AS outbox_count, a.answers
       FROM candidates c
-      LEFT JOIN LATERAL (
-        SELECT count(*) AS ledger_count, max(xp_amount) AS xp FROM xp_ledger
-        WHERE attempt_id = c.id
-      ) x ON true
-      LEFT JOIN LATERAL (
-        SELECT count(*) AS outbox_count FROM analytics_outbox
-        WHERE entity_id = c.id AND actor_user_id = c.student_id
-          AND event_name = lower(c.assessment_type) || '_completed'
-      ) o ON true
-      LEFT JOIN LATERAL (
-        SELECT jsonb_object_agg(item.id, answer.answer) AS answers
-        FROM attempt_items item JOIN attempt_answers answer ON answer.attempt_item_id = item.id
-        WHERE item.attempt_id = c.id
-      ) a ON true
+      LEFT JOIN ledgers x ON x.attempt_id = c.id
+      LEFT JOIN outboxes o ON o.attempt_id = c.id
+      LEFT JOIN answers a ON a.attempt_id = c.id
     `,
       );
     // The window captures committed requests whose client stopped before it could emit a receipt.

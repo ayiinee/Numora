@@ -40,6 +40,10 @@ Jalankan `pnpm qa doctor --profile full`, lalu `node scripts/qa/capacity/rehears
 
 Pool koneksi rehearsal dapat dipilih dengan `QA_CAPACITY_DB_POOL_MAX`, berupa bilangan bulat positif. Default tetap 10. Nilai efektif dicatat sebagai `dbPoolMax` di `candidate.json`. Jalankan seluruh tahapan dengan nilai yang sama dan rekam perbedaan konfigurasi ketika membandingkan run.
 
+Inisialisasi VU k6 memiliki batas 120 detik tersendiri. Waktu workload dimulai saat hook `setup` mengirim tanda siap; PvP dan sampel browser menunggu tanda yang sama. `http.startupMs` mencatat waktu inisialisasi. Durasi fase, ambang latensi dan kelengkapan tetap berlaku. Preflight sesi dan jendela remote mencadangkan 120 detik inisialisasi serta 35 detik penyelesaian per fase; eksekusi remote berhenti saat izin berakhir. Laporan tanpa tanda siap atau ringkasan k6 tidak dianggap lulus.
+
+**ENGINEERING IMPLEMENTATION — autosave.** Saat analytics domain nonaktif, API memvalidasi konten yang dipin lalu menyimpan jawaban dengan satu perintah atomik yang mengunci ulang attempt dan memeriksa pemilik, status, pin, timer/deadline serta waktu database. Perubahan kondisi saat menunggu lock menjalankan ulang jalur validasi terkunci. Saat analytics aktif, jawaban dan event tetap ditulis dalam transaksi yang sama. Tidak ada perubahan rumus nilai, XP atau durasi sesi.
+
 Profil `mixed-local` menjalankan 20 → 100 → 500 → 1.000 siswa dengan 150 detik per tahap. Siswa menjawab dengan jeda 1,2–2,8 detik. Navigasi dan pemantauan memakai jeda 8–20 detik, dan halaman awal asesmen hanya dibaca saat masuk atau memulai percobaan berikutnya. Ia menguji akun sekolah/mandiri, Pretest, Drill, Tryout pilihan ganda demo melalui endpoint paket, PvP, guru dan admin. Gate latensi, kelengkapan submit, dan rekonsiliasi tetap berlaku. Durasi, tipe Tryout, autentikasi sintetis, dan dependensi loopback membatasi perbandingan dengan uji staging yang memakai endpoint batch, OAuth, serta infrastruktur nyata.
 
 ## Pemeriksaan sebelum uji staging
