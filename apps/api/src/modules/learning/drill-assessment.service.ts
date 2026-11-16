@@ -27,11 +27,13 @@ import {
   scoringRubricVersions,
   xpLedger,
   subchapters,
+  type AssessmentReader,
 } from '@tka/database';
 import {
   databaseTime,
   recordDomainEvent,
   saveAssessmentAnswerWithEvent,
+  saveAssessmentAnswerAtomically,
   decodeAssessmentContent,
   normalizeAssessmentAnswer,
   presentAssessmentQuestion,
@@ -445,7 +447,17 @@ export class DrillAssessmentService {
   ) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
-    return db.transaction(async (tx) => {
+    const write = async (
+      tx: AssessmentReader,
+      lock: boolean,
+      persist: (
+        value: Parameters<typeof saveAssessmentAnswerWithEvent>[1] & { questionVersionId: string },
+        guard: Extract<
+          Parameters<typeof saveAssessmentAnswerAtomically>[1]['guard'],
+          { assessmentType: 'DRILL' }
+        >,
+      ) => Promise<boolean>,
+    ) => {
       const [item] = await tx.execute<
         Parameters<typeof decodeAssessmentContent>[0] & {
           id: string | null;
@@ -460,7 +472,7 @@ export class DrillAssessmentService {
       >(sql`
         with locked as materialized (
           select id, student_id, assessment_type, purpose, status, drill_timer
-          from public.assessment_attempts where id = ${attemptId} for update
+          from public.assessment_attempts where id = ${attemptId} ${lock ? sql`for update` : sql``}
         ), tick as materialized (
           select locked.*, clock_timestamp()::text as now from locked
         )
@@ -514,20 +526,43 @@ export class DrillAssessmentService {
           throw new BadRequestException(problem(error.code, error.message));
         throw error;
       }
-      await saveAssessmentAnswerWithEvent(tx, {
-        attemptId,
-        questionInstanceId: item.id,
-        questionVersionId: item.questionVersionId,
-        answer,
-        questionFormat: content.type,
-        now,
-      });
+      const accepted = await persist(
+        {
+          attemptId,
+          questionInstanceId: item.id,
+          questionVersionId: item.questionVersionId,
+          answer,
+          questionFormat: content.type,
+          now,
+        },
+        {
+          assessmentType: 'DRILL',
+          timer: item.drillTimer,
+          expiresAt: timer?.session ? new Date(timer.session.endsAtMs) : null,
+        },
+      );
+      if (!accepted) return null;
       return {
         questionInstanceId,
         answer,
         selectedOptionId: answer && 'optionId' in answer ? answer.optionId : null,
       };
-    });
+    };
+    const lockedWrite = () =>
+      db.transaction(async (tx) => {
+        const response = await write(tx, true, async (value) => {
+          await saveAssessmentAnswerWithEvent(tx, value);
+          return true;
+        });
+        if (!response) throw new Error('Locked Drill answer save was rejected.');
+        return response;
+      });
+    if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true') return lockedWrite();
+    return (
+      (await write(db, false, (value, guard) =>
+        saveAssessmentAnswerAtomically(db, { ...value, studentId, guard }),
+      )) ?? lockedWrite()
+    );
   }
 
   async submit(authorization: string | undefined, attemptId: string) {

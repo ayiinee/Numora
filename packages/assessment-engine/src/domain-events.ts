@@ -5,10 +5,89 @@ import {
   attemptAnswers,
   attemptItems,
   getDatabase,
+  type AssessmentReader,
 } from '@tka/database';
 import { databaseTime } from './database-time.js';
 import { AssessmentFinalizationError } from './errors.js';
 import { and, eq, sql } from 'drizzle-orm';
+
+/** The caller has decoded the immutable pinned item. Recheck all mutable guards at commit. */
+export async function saveAssessmentAnswerAtomically(
+  db: AssessmentReader,
+  input: Pick<
+    Parameters<typeof saveAssessmentAnswerWithEvent>[1],
+    'attemptId' | 'questionInstanceId' | 'answer' | 'questionFormat'
+  > & {
+    studentId: string;
+    questionVersionId: string;
+    guard:
+      | { assessmentType: 'DRILL'; timer: unknown; expiresAt: Date | null }
+      | { assessmentType: 'TRYOUT'; deadlineAt: Date | null };
+  },
+) {
+  // The event-enabled path keeps the existing event and answer transaction together.
+  if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true') return false;
+  const { guard } = input;
+  const expiresAt = guard.assessmentType === 'DRILL' ? guard.expiresAt : guard.deadlineAt;
+  const unchangedGuard =
+    guard.assessmentType === 'DRILL'
+      ? guard.timer === null
+        ? sql`(a.drill_timer is null or a.drill_timer = 'null'::jsonb)`
+        : sql`a.drill_timer = ${JSON.stringify(guard.timer)}::jsonb`
+      : sql`date_trunc('milliseconds', a.effective_deadline) is not distinct from ${guard.deadlineAt?.toISOString() ?? null}::timestamptz`;
+  const stored = storedAssessmentAnswer(input.answer, input.questionFormat);
+  const [result] = await db.execute<{ accepted: boolean }>(sql`
+    with locked as materialized (
+      select a.id, a.status, a.purpose, a.drill_timer,
+        case when a.tryout_batch_id is not null then a.deadline_at
+          else least(a.deadline_at, p.close_at) end as effective_deadline
+      from public.assessment_attempts a
+      join public.assessment_packages p on p.id = a.package_id
+      where a.id = ${input.attemptId} and a.student_id = ${input.studentId}
+        and a.assessment_type = ${guard.assessmentType}
+      for update of a
+    ), tick as materialized (
+      select locked.*, clock_timestamp() as now from locked
+    ), eligible as materialized (
+      select i.id, a.now from tick a
+      join public.attempt_items i on i.attempt_id = a.id
+      where a.status = 'IN_PROGRESS'
+        and (${guard.assessmentType} <> 'DRILL' or a.purpose = 'REGULAR')
+        and i.id = ${input.questionInstanceId} and i.question_version_id = ${input.questionVersionId}
+        and ${unchangedGuard}
+        and (${expiresAt?.toISOString() ?? null}::timestamptz is null
+          or a.now < ${expiresAt?.toISOString() ?? null}::timestamptz)
+    ), saved as (
+      insert into public.attempt_answers (attempt_item_id, answer, saved_at)
+      select id, ${JSON.stringify(stored)}::jsonb, now from eligible
+      on conflict (attempt_item_id) do update set
+        answer = excluded.answer, saved_at = excluded.saved_at,
+        awarded_points = null, graded_at = null, score_category = null,
+        fully_correct = null, response_state = null
+      where (case when jsonb_typeof(attempt_answers.answer) = 'string'
+        then (attempt_answers.answer #>> '{}')::jsonb else attempt_answers.answer end)
+          is distinct from excluded.answer
+      returning id
+    )
+    select exists(select 1 from eligible) as accepted
+  `);
+  // A changed guard writes nothing. The caller retries through its locked validation path.
+  return result?.accepted === true;
+}
+
+function storedAssessmentAnswer(
+  answer: import('./question-content.js').AssessmentAnswer,
+  format: import('./question-content.js').QuestionKind,
+) {
+  return (
+    answer ??
+    (format === 'CATEGORY'
+      ? { categoryByStatementId: {} }
+      : format === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
+        ? { optionIds: [] }
+        : { optionId: null })
+  );
+}
 
 type Transaction = Parameters<
   Parameters<ReturnType<typeof getDatabase>['db']['transaction']>[0]
@@ -163,13 +242,7 @@ export async function saveAssessmentAnswerWithEvent(
   if (input.deadlineAt && input.deadlineAt <= now)
     throw new AssessmentFinalizationError('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.');
   // Maintain historical PG null encoding in storage; the wire answer is null.
-  const stored =
-    input.answer ??
-    (input.questionFormat === 'CATEGORY'
-      ? { categoryByStatementId: {} }
-      : input.questionFormat === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
-        ? { optionIds: [] }
-        : { optionId: null });
+  const stored = storedAssessmentAnswer(input.answer, input.questionFormat);
   const [changed] = await tx.execute<{ existed: boolean }>(sql`
     with previous as materialized (
       select 1 from public.attempt_answers where attempt_item_id = ${input.questionInstanceId}

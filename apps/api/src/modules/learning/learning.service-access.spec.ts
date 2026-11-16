@@ -63,7 +63,7 @@ describe('Drill access and duplicate submit', () => {
       update: vi.fn(),
     };
     vi.mocked(getDatabase).mockReturnValue({
-      db: { transaction: (run: (value: typeof tx) => unknown) => run(tx) },
+      db: { ...tx, transaction: (run: (value: typeof tx) => unknown) => run(tx) },
     } as never);
     await expect(learning().saveAnswer('Bearer valid', attemptId, otherId, 'A')).rejects.toThrow(
       ConflictException,

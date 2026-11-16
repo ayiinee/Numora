@@ -42,6 +42,7 @@ import {
   databaseTime,
   finalizeTryout,
   saveAssessmentAnswerWithEvent,
+  saveAssessmentAnswerAtomically,
   decodeAssessmentContent,
   normalizeAssessmentAnswer,
   presentAssessmentQuestion,
@@ -797,7 +798,13 @@ export class TryoutService {
   ) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
-    return db.transaction(async (tx) => {
+    const write = async (
+      tx: AssessmentReader,
+      lock: boolean,
+      persist: (
+        value: Parameters<typeof saveAssessmentAnswerWithEvent>[1] & { questionVersionId: string },
+      ) => Promise<boolean>,
+    ) => {
       const [item] = await tx.execute<
         Parameters<typeof decodeAssessmentContent>[0] & {
           id: string | null;
@@ -815,7 +822,7 @@ export class TryoutService {
               else least(a.deadline_at, p.close_at) end as deadline_at
           from public.assessment_attempts a
           join public.assessment_packages p on p.id = a.package_id
-          where a.id = ${attemptId} for update of a
+          where a.id = ${attemptId} ${lock ? sql`for update of a` : sql``}
         )
         select a.student_id as "studentId", a.assessment_type as "assessmentType",
           a.status, a.deadline_at::text as "deadlineAt", clock_timestamp()::text as now,
@@ -858,7 +865,7 @@ export class TryoutService {
       if (deadlineAt && deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       try {
-        await saveAssessmentAnswerWithEvent(tx, {
+        const accepted = await persist({
           attemptId,
           questionInstanceId: item.id,
           questionVersionId: item.questionVersionId,
@@ -867,6 +874,7 @@ export class TryoutService {
           now,
           deadlineAt,
         });
+        if (!accepted) return null;
       } catch (error) {
         if (error instanceof AssessmentFinalizationError && error.code === 'TRYOUT_DEADLINE_PASSED')
           throw new ConflictException(problem(error.code, error.message));
@@ -877,7 +885,26 @@ export class TryoutService {
         answer,
         selectedOptionId: answer && 'optionId' in answer ? answer.optionId : null,
       };
-    });
+    };
+    const lockedWrite = () =>
+      db.transaction(async (tx) => {
+        const response = await write(tx, true, async (value) => {
+          await saveAssessmentAnswerWithEvent(tx, value);
+          return true;
+        });
+        if (!response) throw new Error('Locked Tryout answer save was rejected.');
+        return response;
+      });
+    if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true') return lockedWrite();
+    return (
+      (await write(db, false, (value) =>
+        saveAssessmentAnswerAtomically(db, {
+          ...value,
+          studentId,
+          guard: { assessmentType: 'TRYOUT', deadlineAt: value.deadlineAt ?? null },
+        }),
+      )) ?? lockedWrite()
+    );
   }
 
   private async finalizeForStudent(
