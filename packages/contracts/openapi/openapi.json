@@ -14428,6 +14428,49 @@
           "canGenerate"
         ]
       },
+      "GeneratorSourcePackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "itemCount": {
+            "type": "number"
+          },
+          "familyCount": {
+            "type": "number"
+          },
+          "eligibleCount": {
+            "type": "number"
+          },
+          "canGenerate": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "packageVersion",
+          "itemCount",
+          "familyCount",
+          "eligibleCount",
+          "canGenerate",
+          "blockers"
+        ]
+      },
       "GeneratorPackageCatalogDto": {
         "type": "object",
         "properties": {
@@ -14466,6 +14509,10 @@
           "title": {
             "type": "string"
           },
+          "sourcePackageId": {
+            "type": "string",
+            "nullable": true
+          },
           "expectedCount": {
             "type": "number"
           },
@@ -14496,10 +14543,6 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorRequestDto"
             }
-          },
-          "sourcePackageId": {
-            "type": "string",
-            "nullable": true
           }
         },
         "required": [
@@ -14550,7 +14593,8 @@
           },
           "sourcePackageId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Paket Tryout original yang menjadi sumber."
           }
         },
         "required": [
@@ -14605,6 +14649,10 @@
           "title": {
             "type": "string"
           },
+          "sourcePackageId": {
+            "type": "string",
+            "nullable": true
+          },
           "expectedCount": {
             "type": "number"
           },
@@ -14613,10 +14661,6 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorPackageFileItemDto"
             }
-          },
-          "sourcePackageId": {
-            "type": "string",
-            "nullable": true
           }
         },
         "required": [
@@ -20208,49 +20252,6 @@
         },
         "required": [
           "updated"
-        ]
-      },
-      "GeneratorSourcePackageDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "packageVersion": {
-            "type": "number"
-          },
-          "itemCount": {
-            "type": "number"
-          },
-          "familyCount": {
-            "type": "number"
-          },
-          "eligibleCount": {
-            "type": "number"
-          },
-          "canGenerate": {
-            "type": "boolean"
-          },
-          "blockers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "packageVersion",
-          "itemCount",
-          "familyCount",
-          "eligibleCount",
-          "canGenerate",
-          "blockers"
         ]
       }
     }
