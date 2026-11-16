@@ -69,7 +69,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
         const after =
           await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(after.slice(0, before.length)).toEqual([...before]);
-        expect(after).toHaveLength(before.length + 5);
+        expect(after).toHaveLength(before.length + 6);
         expect((await client`SELECT revision FROM public.pvp_content_revision`)[0]).toEqual(
           revision,
         );
@@ -93,7 +93,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       const after =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(after.slice(0, before.length)).toEqual([...before]);
-      expect(after).toHaveLength(before.length + 3);
+      expect(after).toHaveLength(before.length + 4);
       expect(await client`SELECT revision FROM public.pvp_content_revision`).toHaveLength(1);
       await migrateIntegratedDatabase(client, folder);
       expect(
@@ -122,7 +122,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       const after =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(after.slice(0, before.length)).toEqual([...before]);
-      expect(after).toHaveLength(before.length + 5);
+      expect(after).toHaveLength(before.length + 6);
       await migrateIntegratedDatabase(client, folder);
       expect(
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
