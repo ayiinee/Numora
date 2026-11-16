@@ -512,8 +512,13 @@ export class GeneratorPackagesService {
           );
         const [canonical] = await tx<
           { id: string }[]
-        >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,chapter_id,level_id,variant_index,status,content_revision)
-   VALUES(${'GENERATOR_' + id.replaceAll('-', '')},1,${row.title},${row.assessment_type},${row.chapter_id},${row.level_id},${row.assessment_type === 'DRILL' ? 1 : null},'DRAFT',1) RETURNING id`;
+        >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,purpose,chapter_id,level_id,variant_index,is_demo,import_source,status,content_revision)
+   VALUES(${'GENERATOR_' + id.replaceAll('-', '')},1,${row.title},${row.assessment_type},'REGULAR',${row.chapter_id},${row.level_id},${row.assessment_type === 'DRILL' ? 1 : null},false,
+     ${JSON.stringify({
+       sourceNamespace: 'GENERATOR_SERVICE_V2',
+       sourceName: row.title,
+       sourceReference: JSON.stringify({ generatorPackageId: id, sourcePackageId: row.source_package_id }),
+     })}::jsonb,'DRAFT',1) RETURNING id`;
         for (let i = 0; i < versionIds.length; i++)
           await tx`INSERT INTO package_items(package_id,question_version_id,display_order,max_points,rubric_version_id,maximum_score_category) SELECT ${canonical!.id},v.id,${i + 1},1,v.scoring_rubric_version_id,r.maximum_score_category FROM question_versions v JOIN scoring_rubric_versions r ON r.id=v.scoring_rubric_version_id WHERE v.id=${versionIds[i]!}`;
         await tx`UPDATE generator_packages SET canonical_package_id=${canonical!.id} WHERE id=${id}`;
