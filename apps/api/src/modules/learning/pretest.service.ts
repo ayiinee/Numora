@@ -15,6 +15,7 @@ import {
   scoringRubricVersions,
   assessmentPackages,
   currentPretestPackage,
+  currentPretestSelection,
   supportedPretestPolicy,
   type AssessmentReader,
   attemptAnswers,
@@ -86,13 +87,15 @@ export class PretestService {
     return !!policy && isPretestPartialPolicy(policy);
   }
   private async state(studentId: string, chapterId: string) {
-    return getDatabase().db.transaction((tx) => this.chapterState(tx, studentId, chapterId));
-  }
-  private async chapterState(db: AssessmentReader, studentId: string, chapterId: string) {
-    const chapter = await this.readyChapter(chapterId, db);
-    const [attempt] = await db
-      .select()
+    const { db } = getDatabase();
+    const latestAttempt = db
+      .select({
+        id: assessmentAttempts.id,
+        status: assessmentAttempts.status,
+        isDemo: assessmentPackages.isDemo,
+      })
       .from(assessmentAttempts)
+      .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .where(
         and(
           eq(assessmentAttempts.studentId, studentId),
@@ -102,23 +105,26 @@ export class PretestService {
         ),
       )
       .orderBy(desc(assessmentAttempts.startedAt))
-      .limit(1);
-    const [skipped] = await db
-      .select()
-      .from(pretestChapterStates)
-      .where(
-        and(
-          eq(pretestChapterStates.studentId, studentId),
-          eq(pretestChapterStates.chapterId, chapterId),
-        ),
-      );
-    const selected = await this.package(chapterId, db);
-    const [pinned] = attempt
-      ? await db
-          .select({ isDemo: assessmentPackages.isDemo })
-          .from(assessmentPackages)
-          .where(eq(assessmentPackages.id, attempt.packageId))
-      : [];
+      .limit(1)
+      .as('latest_pretest');
+    const [chapter] = await db
+      .select({
+        name: chapters.name,
+        attempt: {
+          id: latestAttempt.id,
+          status: latestAttempt.status,
+          isDemo: latestAttempt.isDemo,
+        },
+        skipped: sql<boolean>`exists (select 1 from ${pretestChapterStates}
+          where ${pretestChapterStates.studentId} = ${studentId}
+            and ${pretestChapterStates.chapterId} = ${chapterId})`,
+      })
+      .from(chapters)
+      .leftJoin(latestAttempt, sql`true`)
+      .where(and(eq(chapters.id, chapterId), eq(chapters.status, 'READY')));
+    if (!chapter) throw new NotFoundException(problem('CHAPTER_NOT_FOUND', 'Bab tidak ditemukan.'));
+    const { attempt, skipped } = chapter;
+    const selected = attempt ? null : await this.package(chapterId, db);
     const completed = attempt && attempt.status !== 'IN_PROGRESS';
     return {
       chapterId,
@@ -136,7 +142,7 @@ export class PretestService {
       canStart: !completed && (!!attempt || !!selected),
       canSkip: !completed,
       skipped: !!skipped,
-      isDemo: pinned?.isDemo ?? selected?.isDemo ?? false,
+      isDemo: attempt?.isDemo ?? selected?.isDemo ?? false,
     };
   }
   async chapter(auth: string | undefined, chapterId: string) {
@@ -278,14 +284,15 @@ export class PretestService {
           );
         return existing.id;
       }
-      const selected = await this.package(chapterId, tx);
-      if (!selected)
+      const selection = await currentPretestSelection(chapterId, tx, isPretestPartialPolicy);
+      if (!selection)
         throw new ServiceUnavailableException(
           problem(
             'PRETEST_CONTENT_PENDING',
             'Paket Pretest belum tersedia. Kamu tetap bisa Skip dan mulai Drill.',
           ),
         );
+      const { pack: selected, policy } = selection;
       const rows = await tx
         .select({
           item: packageItems,
@@ -303,7 +310,7 @@ export class PretestService {
         )
         .where(eq(packageItems.packageId, selected.id))
         .orderBy(asc(packageItems.displayOrder));
-      const partial = await this.partialPolicy(selected.scoringPolicyVersionId, tx);
+      const partial = !!policy && isPretestPartialPolicy(policy);
       if (
         rows.length !== 20 ||
         rows.some(

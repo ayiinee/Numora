@@ -700,16 +700,23 @@ export class TryoutService {
         policy?.policyCode === TRYOUT_PARTIAL_POLICY &&
         readApprovedPolicy(policy, 'TRYOUT').ownerTryoutPartial
       ) {
-        for (const item of items) {
-          if (item.questionType === 'SINGLE_CHOICE') continue;
+        const partialItems = items.filter((item) => item.questionType !== 'SINGLE_CHOICE');
+        const rubricIds = partialItems.flatMap((item) => {
+          const id = item.rubricVersionId ?? item.versionRubricVersionId;
+          return id ? [id] : [];
+        });
+        const rubrics = rubricIds.length
+          ? await tx
+              .select()
+              .from(scoringRubricVersions)
+              .where(inArray(scoringRubricVersions.id, [...new Set(rubricIds)]))
+              .orderBy(asc(scoringRubricVersions.id))
+              .for('share')
+          : [];
+        const byId = new Map(rubrics.map((rubric) => [rubric.id, rubric]));
+        for (const item of partialItems) {
           const rubricId = item.rubricVersionId ?? item.versionRubricVersionId;
-          const [rubric] = rubricId
-            ? await tx
-                .select()
-                .from(scoringRubricVersions)
-                .where(eq(scoringRubricVersions.id, rubricId))
-                .for('share')
-            : [];
+          const rubric = rubricId ? byId.get(rubricId) : undefined;
           try {
             validateTryoutPartialRubric(decodeRuntimeQuestion(item), rubric);
           } catch {

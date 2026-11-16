@@ -670,18 +670,25 @@ export class TryoutBatchesService {
   }
   async studentList(studentId: string, releases = new TryoutReleaseService()) {
     return getDatabase().db.transaction(async (tx) => {
-      const memberships = await this.studentSchools(tx, studentId);
-      const batches = await tx
-        .select()
+      const published = await tx
+        .select({
+          id: tryoutBatches.id,
+          adminTitle: tryoutBatches.adminTitle,
+          startsAt: tryoutBatches.startsAt,
+          closesAt: tryoutBatches.closesAt,
+          resultDueAt: tryoutBatches.resultDueAt,
+          adminPublishedAt: tryoutBatches.adminPublishedAt,
+          cancelledAt: tryoutBatches.cancelledAt,
+          mandiriPackageId: tryoutBatches.mandiriPackageId,
+        })
         .from(tryoutBatches)
-        .where(
-          and(
-            isNotNull(tryoutBatches.adminTitle),
-            isNotNull(tryoutBatches.adminPublishedAt),
-            isNull(tryoutBatches.cancelledAt),
-          ),
-        )
+        .where(and(isNotNull(tryoutBatches.adminTitle), isNotNull(tryoutBatches.adminPublishedAt)))
         .orderBy(desc(tryoutBatches.startsAt));
+      const routingActive = published.length > 0;
+      const batches = published.filter((batch) => batch.cancelledAt === null);
+      if (!batches.length) return { routingActive, items: [] };
+
+      const memberships = await this.studentSchools(tx, studentId);
       const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
       const now = new Date(clock!.now);
       const attempts = await tx
@@ -695,7 +702,15 @@ export class TryoutBatchesService {
         })
         .from(assessmentAttempts)
         .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
-        .where(and(eq(assessmentAttempts.studentId, studentId), isNotNull(assessmentAttempts.tryoutBatchId)));
+        .where(
+          and(
+            eq(assessmentAttempts.studentId, studentId),
+            inArray(
+              assessmentAttempts.tryoutBatchId,
+              batches.map((batch) => batch.id),
+            ),
+          ),
+        );
       const byBatch = new Map(attempts.map((attempt) => [attempt.batchId, attempt]));
       const { ready } = await releases.studentPublications(attempts, now, tx);
       const items = [];
@@ -721,12 +736,20 @@ export class TryoutBatchesService {
           mandiri,
           attemptId: attempt?.id ?? null,
           attemptStatus: attempt?.status ?? null,
-          resultState: tryoutResultState(attempt?.status, !!attempt && ready.has(attempt.id), b.resultDueAt, now),
-          canResume: attempt?.status === 'IN_PROGRESS' && now < b.closesAt &&
-            !!attempt.deadlineAt && now < attempt.deadlineAt,
+          resultState: tryoutResultState(
+            attempt?.status,
+            !!attempt && ready.has(attempt.id),
+            b.resultDueAt,
+            now,
+          ),
+          canResume:
+            attempt?.status === 'IN_PROGRESS' &&
+            now < b.closesAt &&
+            !!attempt.deadlineAt &&
+            now < attempt.deadlineAt,
         });
       }
-      return { routingActive: await this.routingActive(tx), items };
+      return { routingActive, items };
     });
   }
   async selectForStart(
