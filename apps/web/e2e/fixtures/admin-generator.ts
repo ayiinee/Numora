@@ -22,6 +22,7 @@ export function generatorPack(index = 0): GeneratorPackageDto {
     status:
       index === 0 ? 'GENERATING' : index === 1 ? 'FAILED' : index === 3 ? 'IMPORTED' : 'READY',
     packageId: index === 3 ? id(9000) : null,
+    sourcePackageId: index % 3 === 2 ? id(7000) : null,
     createdAt: '2026-10-30T01:00:00Z',
     requests: [],
   };
@@ -60,6 +61,18 @@ export async function setupGenerator(
           availableCount: 12,
           requiredCount: 20,
           canGenerate: false,
+        },
+      ],
+      sourcePackages: [
+        {
+          id: id(7000),
+          name: 'Tryout original Oktober',
+          packageVersion: 1,
+          itemCount: 30,
+          familyCount: 30,
+          eligibleCount: 30,
+          canGenerate: true,
+          blockers: [],
         },
       ],
     } as GeneratorPackageCatalogDto,
@@ -125,6 +138,7 @@ export async function setupGenerator(
         title: pack.title,
         assessmentType: pack.assessmentType,
         expectedCount: pack.expectedCount,
+        sourcePackageId: pack.sourcePackageId,
         items: [
           {
             requestId: id(8600),

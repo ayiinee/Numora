@@ -34,8 +34,10 @@ type Source = {
   id: string;
   family_id: string;
   usage_type: CreateGeneratorPackageDto['assessmentType'];
-  chapter_id: string;
-  level_id: string;
+  chapter_id: string | null;
+  level_id: string | null;
+  original_id: string;
+  context_id: string;
   chapter_name: string;
   subchapter_name: string;
   level_number: number;
@@ -51,6 +53,17 @@ type Row = {
   canonical_package_id: string | null;
   created_at: Date | string;
   operation_fingerprint: string;
+  source_package_id: string | null;
+};
+type SourcePackageItem = {
+  package_id: string;
+  name: string;
+  package_version: number;
+  display_order: number;
+  original_id: string;
+  family_id: string;
+  kind: string;
+  usage_type: CreateGeneratorPackageDto['assessmentType'];
 };
 @Injectable()
 export class GeneratorPackagesService {
@@ -72,12 +85,68 @@ export class GeneratorPackagesService {
     if (!ids.length) return [] as Source[];
     return getDatabase().client<
       Source[]
-    >`SELECT a.id,v.question_id AS family_id,q.usage_type,l.id AS level_id,ch.id AS chapter_id,ch.name AS chapter_name,s.name AS subchapter_name,l.level_number
+    >`SELECT a.id,v.question_id AS family_id,q.usage_type,l.id AS level_id,ch.id AS chapter_id,
+    ver.id AS original_id,ctx.id AS context_id,ch.name AS chapter_name,s.name AS subchapter_name,l.level_number
     FROM configuration_approvals a JOIN irt_compute.generator_configs g ON g.id=a.generator_config_id JOIN question_versions ver ON ver.id::text=g.parameters->>'parentQuestionVersionId'
     JOIN question_variants v ON v.id=ver.variant_id JOIN questions q ON q.id=v.question_id JOIN measurement_contexts ctx ON ctx.id=g.context_id
     LEFT JOIN levels l ON l.id=ver.level_id LEFT JOIN subchapters s ON s.id=l.subchapter_id LEFT JOIN chapters ch ON ch.id=coalesce(q.chapter_id,s.chapter_id)
     WHERE a.id=ANY(${ids}::uuid[]) AND q.usage_type IS NOT NULL
     AND (q.usage_type='TRYOUT' OR (ch.id IS NOT NULL AND ch.status<>'ARCHIVED' AND (q.usage_type='PRETEST' OR (l.id IS NOT NULL AND l.status<>'ARCHIVED' AND s.status<>'ARCHIVED')))) ORDER BY g.parameters->>'questionExternalId',v.question_id,a.id`;
+  }
+  private async tryoutSourcePackages(sources: Source[]) {
+    const rows = await getDatabase().client<
+      SourcePackageItem[]
+    >`SELECT p.id AS package_id,p.name,p.package_version,
+      i.display_order,ver.id AS original_id,v.question_id AS family_id,v.kind,q.usage_type
+      FROM assessment_packages p
+      JOIN package_items i ON i.package_id=p.id
+      JOIN question_versions ver ON ver.id=i.question_version_id
+      JOIN question_variants v ON v.id=ver.variant_id
+      JOIN questions q ON q.id=v.question_id
+      WHERE p.assessment_type='TRYOUT' AND p.purpose='REGULAR' AND p.status='PUBLISHED' AND p.is_demo=false
+      ORDER BY p.id,i.display_order`;
+    const mappings = new Map<string, Source[]>();
+    for (const source of sources) {
+      const key = `${source.original_id}:${source.family_id}`;
+      const values = mappings.get(key) ?? [];
+      values.push(source);
+      mappings.set(key, values);
+    }
+    const grouped = new Map<string, SourcePackageItem[]>();
+    for (const row of rows)
+      grouped.set(row.package_id, [...(grouped.get(row.package_id) ?? []), row]);
+    return [...grouped.values()].map((items) => {
+      const first = items[0]!;
+      const blockers: string[] = [];
+      if (items.length !== packageCounts.TRYOUT) blockers.push('SOURCE_PACKAGE_COUNT_INVALID');
+      if (items.some((item) => item.kind !== 'ORIGINAL'))
+        blockers.push('SOURCE_PACKAGE_NOT_ORIGINAL');
+      if (items.some((item) => item.usage_type !== 'TRYOUT'))
+        blockers.push('SOURCE_PACKAGE_USAGE_MISMATCH');
+      const familyCount = new Set(items.map((item) => item.family_id)).size;
+      if (familyCount !== items.length) blockers.push('SOURCE_PACKAGE_DUPLICATE_FAMILY');
+      const selected = items.map(
+        (item) => mappings.get(`${item.original_id}:${item.family_id}`) ?? [],
+      );
+      const eligible = selected
+        .filter((matches) => matches.length === 1)
+        .map((matches) => matches[0]!) as Source[];
+      if (eligible.length !== items.length) blockers.push('SOURCE_PACKAGE_MAPPING_INCOMPLETE');
+      if (selected.some((matches) => matches.length > 1))
+        blockers.push('SOURCE_PACKAGE_MAPPING_AMBIGUOUS');
+      const contexts = new Set(eligible.map((source) => source.context_id));
+      if (contexts.size !== 1) blockers.push('SOURCE_PACKAGE_CONTEXT_AMBIGUOUS');
+      return {
+        id: first.package_id,
+        name: first.name,
+        packageVersion: first.package_version,
+        itemCount: items.length,
+        familyCount,
+        eligibleCount: eligible.length,
+        canGenerate: !blockers.length,
+        blockers: [...new Set(blockers)],
+      };
+    });
   }
   catalog() {
     return this.execute(async () => {
@@ -114,7 +183,7 @@ export class GeneratorPackagesService {
           });
         }
       }
-      return { options };
+      return { options, sourcePackages: await this.tryoutSourcePackages(sources) };
     });
   }
   prepare(actor: string, key: string, body: CreateGeneratorPackageDto) {
@@ -134,17 +203,48 @@ export class GeneratorPackagesService {
       const sources = await this.sources();
       const count = packageCounts[body.assessmentType];
       if (
-        (body.assessmentType === 'TRYOUT' && body.scopeId) ||
+        (body.assessmentType === 'TRYOUT' && (body.scopeId || !body.sourcePackageId)) ||
         (body.assessmentType !== 'TRYOUT' && !body.scopeId)
       )
         throw new ConflictException({ code: 'GENERATOR_PACKAGE_SCOPE_REQUIRED' });
-      const eligible = sources.filter(
-        (r) =>
-          r.usage_type === body.assessmentType &&
-          (!body.scopeId ||
-            (body.assessmentType === 'DRILL' ? r.level_id : r.chapter_id) === body.scopeId),
-      );
-      const distinct = [...new Map(eligible.map((r) => [r.family_id, r])).values()].slice(0, count);
+      let distinct: Source[];
+      if (body.assessmentType === 'TRYOUT') {
+        const packageRows = await client<
+          SourcePackageItem[]
+        >`SELECT p.id AS package_id,p.name,p.package_version,
+          i.display_order,ver.id AS original_id,v.question_id AS family_id,v.kind,q.usage_type
+          FROM assessment_packages p JOIN package_items i ON i.package_id=p.id
+          JOIN question_versions ver ON ver.id=i.question_version_id JOIN question_variants v ON v.id=ver.variant_id
+          JOIN questions q ON q.id=v.question_id
+          WHERE p.id=${body.sourcePackageId!} AND p.assessment_type='TRYOUT' AND p.purpose='REGULAR'
+          AND p.status='PUBLISHED' AND p.is_demo=false ORDER BY i.display_order`;
+        const mappingByKey = new Map<string, Source[]>();
+        for (const source of sources) {
+          const key = `${source.original_id}:${source.family_id}`;
+          mappingByKey.set(key, [...(mappingByKey.get(key) ?? []), source]);
+        }
+        const selected = packageRows.map(
+          (item) => mappingByKey.get(`${item.original_id}:${item.family_id}`) ?? [],
+        );
+        if (
+          packageRows.length !== count ||
+          packageRows.some((item) => item.kind !== 'ORIGINAL' || item.usage_type !== 'TRYOUT') ||
+          new Set(packageRows.map((item) => item.family_id)).size !== count ||
+          selected.some((matches) => matches.length !== 1) ||
+          new Set(selected.flatMap((matches) => matches.map((source) => source.context_id)))
+            .size !== 1
+        )
+          throw new ConflictException({ code: 'GENERATOR_SOURCE_PACKAGE_INVALID' });
+        distinct = selected.map((matches) => matches[0]!);
+      } else {
+        const eligible = sources.filter(
+          (r) =>
+            r.usage_type === body.assessmentType &&
+            (!body.scopeId ||
+              (body.assessmentType === 'DRILL' ? r.level_id : r.chapter_id) === body.scopeId),
+        );
+        distinct = [...new Map(eligible.map((r) => [r.family_id, r])).values()].slice(0, count);
+      }
       if (distinct.length !== count)
         throw new ConflictException({
           code: 'GENERATOR_SOURCES_INSUFFICIENT',
@@ -166,8 +266,8 @@ export class GeneratorPackagesService {
           requests.push(
             await prepareGenerationWithin(tx, actor, `${groupId}-${i}`, distinct[i]!.id),
           );
-        await tx`INSERT INTO generator_packages(id,actor_user_id,operation_key,operation_fingerprint,assessment_type,title,expected_count,chapter_id,level_id,mapping_ids,request_ids)
-    VALUES(${groupId},${actor},${key},${fingerprint},${body.assessmentType},${body.title.trim()},${count},${body.assessmentType === 'TRYOUT' ? null : distinct[0]!.chapter_id},${body.assessmentType === 'DRILL' ? distinct[0]!.level_id : null},${JSON.stringify(distinct.map((r) => r.id))}::text::jsonb,${JSON.stringify(requests)}::text::jsonb)`;
+        await tx`INSERT INTO generator_packages(id,actor_user_id,operation_key,operation_fingerprint,assessment_type,title,expected_count,source_package_id,chapter_id,level_id,mapping_ids,request_ids)
+    VALUES(${groupId},${actor},${key},${fingerprint},${body.assessmentType},${body.title.trim()},${count},${body.sourcePackageId ?? null},${body.assessmentType === 'TRYOUT' ? null : distinct[0]!.chapter_id},${body.assessmentType === 'DRILL' ? distinct[0]!.level_id : null},${JSON.stringify(distinct.map((r) => r.id))}::text::jsonb,${JSON.stringify(requests)}::text::jsonb)`;
         await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id) VALUES(${actor},'GENERATOR_PACKAGE_PREPARED','generator_package',${groupId})`;
         return groupId;
       });
@@ -202,6 +302,7 @@ export class GeneratorPackagesService {
         id: row.id,
         assessmentType: row.assessment_type,
         title: row.title,
+        sourcePackageId: row.source_package_id,
         expectedCount: row.expected_count,
         completedCount,
         failedCount,
@@ -263,12 +364,13 @@ export class GeneratorPackagesService {
       if (scope?.usage_type !== row.assessment_type)
         throw new ConflictException({ code: 'QUESTION_USAGE_MISMATCH' });
       const p = candidate.payload;
+      const externalId = 'GEN_' + candidate.id.replaceAll('-', '');
       items.push({
         requestId,
         candidateId: candidate.id,
         content: p,
         question: {
-          externalId: 'GEN_' + candidate.id.replaceAll('-', ''),
+          externalId,
           type: p.questionType,
           chapterCode: scope.chapter_code,
           subchapterCode: scope.subchapter_code,
@@ -283,7 +385,20 @@ export class GeneratorPackagesService {
             sourceSheet: 'Generator',
             sourceRowNumber: items.length + 1,
             sourceOrder: items.length + 1,
-            assetManifest: [],
+            assetManifest: p.media.map((asset, index) => ({
+              externalId,
+              assetId: asset.assetId,
+              textMarker: `[[asset:${asset.assetId}]]`,
+              placement: asset.placement,
+              itemId: null,
+              assetOrder: index + 1,
+              altText: asset.altText,
+              objectKey: null,
+              sha256: asset.sha256,
+              contentType: asset.contentType,
+              byteLength: asset.byteLength,
+              bucket: '',
+            })),
             ...(p.optionsOrStatements.categories.length
               ? { categories: p.optionsOrStatements.categories }
               : {}),
@@ -296,6 +411,7 @@ export class GeneratorPackagesService {
       generatorPackageId: id,
       assessmentType: row.assessment_type,
       title: row.title,
+      sourcePackageId: row.source_package_id,
       expectedCount: row.expected_count,
       items,
     };

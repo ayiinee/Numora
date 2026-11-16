@@ -25,6 +25,9 @@ export const generatorPackages = pgTable(
     assessmentType: text('assessment_type').notNull(),
     title: text('title').notNull(),
     expectedCount: integer('expected_count').notNull(),
+    sourcePackageId: uuid('source_package_id').references(() => assessmentPackages.id, {
+      onDelete: 'restrict',
+    }),
     chapterId: uuid('chapter_id').references(() => chapters.id, { onDelete: 'restrict' }),
     levelId: uuid('level_id').references(() => levels.id, { onDelete: 'restrict' }),
     mappingIds: jsonb('mapping_ids').$type<string[]>().notNull(),
@@ -50,6 +53,10 @@ export const generatorPackages = pgTable(
     check(
       'generator_packages_scope_ck',
       sql`(${t.assessmentType}='TRYOUT' and ${t.chapterId} is null and ${t.levelId} is null) or (${t.assessmentType}='DRILL' and ${t.chapterId} is not null and ${t.levelId} is not null) or (${t.assessmentType}='PRETEST' and ${t.chapterId} is not null and ${t.levelId} is null)`,
+    ),
+    check(
+      'generator_packages_source_package_ck',
+      sql`(${t.assessmentType}='TRYOUT' and ${t.sourcePackageId} is not null) or (${t.assessmentType}<>'TRYOUT' and ${t.sourcePackageId} is null)`,
     ),
   ],
 ).enableRLS();

@@ -30,6 +30,7 @@ export function GeneratorCreateDialog({
   const [catalog, setCatalog] = useState<GeneratorPackageCatalogDto | null>(null);
   const [type, setType] = useState<CreateGeneratorPackageDto['assessmentType']>('TRYOUT');
   const [scope, setScope] = useState('');
+  const [sourcePackageId, setSourcePackageId] = useState('');
   const [title, setTitle] = useState('Paket Tryout');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -50,11 +51,13 @@ export function GeneratorCreateDialog({
     let active = true;
     setLoading(true);
     setCatalog(null);
+    setSourcePackageId('');
     setError('');
     void generatorPackageCatalog(token).then(
       (data) => {
         if (active) {
           setCatalog(data);
+          setSourcePackageId(data.sourcePackages.find((item) => item.canGenerate)?.id ?? '');
           setLoading(false);
         }
       },
@@ -77,12 +80,21 @@ export function GeneratorCreateDialog({
     }
   }, [open, error]);
   const choices = catalog?.options.filter((option) => option.assessmentType === type) ?? [];
+  const sourcePackages = catalog?.sourcePackages ?? [];
+  const sourcePackage = sourcePackages.find((item) => item.id === sourcePackageId);
   const choice =
     choices.find((option) => (option.scopeId ?? 'GLOBAL') === scope) ??
     (type === 'TRYOUT' ? choices[0] : undefined);
   async function generate(event: FormEvent) {
     event.preventDefault();
-    if (submitting.current || loading || !choice?.canGenerate || !title.trim()) return;
+    if (
+      submitting.current ||
+      loading ||
+      !choice?.canGenerate ||
+      !title.trim() ||
+      (type === 'TRYOUT' && (!sourcePackageId || !sourcePackage?.canGenerate))
+    )
+      return;
     submitting.current = true;
     setBusy(true);
     setError('');
@@ -92,6 +104,7 @@ export function GeneratorCreateDialog({
         assessmentType: type,
         title,
         ...(choice.scopeId ? { scopeId: choice.scopeId } : {}),
+        ...(type === 'TRYOUT' ? { sourcePackageId } : {}),
       });
       if (mounted.current) {
         key.current = null;
@@ -123,7 +136,13 @@ export function GeneratorCreateDialog({
           <Button
             type="submit"
             form="generator-create-form"
-            disabled={busy || loading || !choice?.canGenerate || !title.trim()}
+            disabled={
+              busy ||
+              loading ||
+              !choice?.canGenerate ||
+              !title.trim() ||
+              (type === 'TRYOUT' && (!sourcePackageId || !sourcePackage?.canGenerate))
+            }
             loading={busy}
           >
             Buat paket
@@ -155,6 +174,7 @@ export function GeneratorCreateDialog({
               const next = event.target.value as typeof type;
               setType(next);
               setScope('');
+              setSourcePackageId('');
               setTitle(`Paket ${generatorTypeLabels[next]}`);
               key.current = null;
             }}
@@ -203,6 +223,35 @@ export function GeneratorCreateDialog({
                   </option>
                 ))}
               </select>
+            </>
+          )}
+          {type === 'TRYOUT' && (
+            <>
+              <label htmlFor="generator-source-package">Paket Tryout original</label>
+              <select
+                id="generator-source-package"
+                value={sourcePackageId}
+                disabled={loading}
+                onChange={(event) => {
+                  setSourcePackageId(event.target.value);
+                  key.current = null;
+                }}
+              >
+                <option value="">
+                  {loading ? 'Memuat sumber...' : 'Pilih paket original yang sudah terbit'}
+                </option>
+                {sourcePackages.map((item) => (
+                  <option key={item.id} value={item.id} disabled={!item.canGenerate}>
+                    {item.name} · {item.itemCount}/30 soal
+                    {!item.canGenerate ? ` · ${item.blockers.join(', ')}` : ''}
+                  </option>
+                ))}
+              </select>
+              {sourcePackage && !sourcePackage.canGenerate && (
+                <p className="generator-source-note" role="alert">
+                  Paket ini belum bisa dipakai: {sourcePackage.blockers.join(', ')}.
+                </p>
+              )}
             </>
           )}
           {loading ? (

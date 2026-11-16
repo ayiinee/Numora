@@ -14428,6 +14428,49 @@
           "canGenerate"
         ]
       },
+      "GeneratorSourcePackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "itemCount": {
+            "type": "number"
+          },
+          "familyCount": {
+            "type": "number"
+          },
+          "eligibleCount": {
+            "type": "number"
+          },
+          "canGenerate": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "packageVersion",
+          "itemCount",
+          "familyCount",
+          "eligibleCount",
+          "canGenerate",
+          "blockers"
+        ]
+      },
       "GeneratorPackageCatalogDto": {
         "type": "object",
         "properties": {
@@ -14436,10 +14479,17 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorPackageOptionDto"
             }
+          },
+          "sourcePackages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorSourcePackageDto"
+            }
           }
         },
         "required": [
-          "options"
+          "options",
+          "sourcePackages"
         ]
       },
       "GeneratorPackageDto": {
@@ -14458,6 +14508,10 @@
           },
           "title": {
             "type": "string"
+          },
+          "sourcePackageId": {
+            "type": "string",
+            "nullable": true
           },
           "expectedCount": {
             "type": "number"
@@ -14495,6 +14549,7 @@
           "id",
           "assessmentType",
           "title",
+          "sourcePackageId",
           "expectedCount",
           "completedCount",
           "failedCount",
@@ -14535,6 +14590,11 @@
           "scopeId": {
             "type": "string",
             "format": "uuid"
+          },
+          "sourcePackageId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Paket Tryout original yang menjadi sumber."
           }
         },
         "required": [
@@ -14589,6 +14649,10 @@
           "title": {
             "type": "string"
           },
+          "sourcePackageId": {
+            "type": "string",
+            "nullable": true
+          },
           "expectedCount": {
             "type": "number"
           },
@@ -14604,6 +14668,7 @@
           "generatorPackageId",
           "assessmentType",
           "title",
+          "sourcePackageId",
           "expectedCount",
           "items"
         ]

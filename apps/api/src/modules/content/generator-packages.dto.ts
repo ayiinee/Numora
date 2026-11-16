@@ -17,6 +17,13 @@ export class CreateGeneratorPackageDto {
   assessmentType!: 'DRILL' | 'PRETEST' | 'TRYOUT';
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) title!: string;
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() scopeId?: string;
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Paket Tryout original yang menjadi sumber.',
+  })
+  @IsOptional()
+  @IsUUID()
+  sourcePackageId?: string;
 }
 export class GeneratorPackageOptionDto {
   @ApiProperty({ enum: ['DRILL', 'PRETEST', 'TRYOUT'] })
@@ -27,14 +34,26 @@ export class GeneratorPackageOptionDto {
   @ApiProperty() requiredCount!: number;
   @ApiProperty() canGenerate!: boolean;
 }
+export class GeneratorSourcePackageDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty() packageVersion!: number;
+  @ApiProperty() itemCount!: number;
+  @ApiProperty() familyCount!: number;
+  @ApiProperty() eligibleCount!: number;
+  @ApiProperty() canGenerate!: boolean;
+  @ApiProperty({ type: [String] }) blockers!: string[];
+}
 export class GeneratorPackageCatalogDto {
   @ApiProperty({ type: [GeneratorPackageOptionDto] }) options!: GeneratorPackageOptionDto[];
+  @ApiProperty({ type: [GeneratorSourcePackageDto] }) sourcePackages!: GeneratorSourcePackageDto[];
 }
 export class GeneratorPackageDto {
   @ApiProperty() id!: string;
   @ApiProperty({ enum: ['DRILL', 'PRETEST', 'TRYOUT'] })
   assessmentType!: CreateGeneratorPackageDto['assessmentType'];
   @ApiProperty() title!: string;
+  @ApiProperty({ type: String, nullable: true }) sourcePackageId!: string | null;
   @ApiProperty() expectedCount!: number;
   @ApiProperty() completedCount!: number;
   @ApiProperty() failedCount!: number;
@@ -64,6 +83,7 @@ export class GeneratorPackageFileDto {
   @ApiProperty({ enum: ['DRILL', 'PRETEST', 'TRYOUT'] })
   assessmentType!: CreateGeneratorPackageDto['assessmentType'];
   @ApiProperty() title!: string;
+  @ApiProperty({ type: String, nullable: true }) sourcePackageId!: string | null;
   @ApiProperty() expectedCount!: number;
   @ApiProperty({ type: [GeneratorPackageFileItemDto] }) items!: GeneratorPackageFileItemDto[];
 }
