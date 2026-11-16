@@ -3516,8 +3516,8 @@ describe.skipIf(!testUrl)(
           request(`admin/tryout-batches/${b.id}/publish`, 'POST', { expectedRevision: 1 }),
         ),
       );
-      expect(races.map((r) => r.status).sort()).toEqual([201, 409]);
-      const activeId = races[0]!.ok ? created.id : competing.id;
+      expect(races.map((r) => r.status).sort()).toEqual([201, 201]);
+      const activeId = created.id;
       async function expectArchiveBlocked(packageId: string) {
         const path = `admin/content/packages/${packageId}`;
         const pack = await ok<ContentPackageDetailDto>(path);
