@@ -12,7 +12,6 @@ import {
   analyticsOutbox,
   assessmentPackages,
   classMemberships,
-  contentDeliveryManifests,
   getDatabase,
   enqueueNotification,
   packageItems,
@@ -29,11 +28,11 @@ import {
 } from '@tka/database';
 import {
   and,
-  asc,
   desc,
   eq,
   exists,
   gt,
+  getTableColumns,
   inArray,
   isNull,
   lt,
@@ -60,11 +59,39 @@ import {
 } from './pvp-drill-bank';
 import { PvpAvailabilityCache } from './pvp-availability-cache';
 import { apiRole } from '../../runtime/api-role';
+import { pvpReadProjection } from './pvp-read-projection';
 
 type Database = ReturnType<typeof getDatabase>['db'];
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type Match = typeof pvpMatches.$inferSelect;
 const failure = (code: string, detail: string) => new ConflictException({ code, detail });
+const matchRead = pvpReadProjection(getTableColumns(pvpMatches), 'm', 'match_');
+const playerRead = pvpReadProjection(getTableColumns(pvpPlayers), 'p', 'player_');
+const questionRead = pvpReadProjection(
+  {
+    id: pvpMatchQuestions.id,
+    displayOrder: pvpMatchQuestions.displayOrder,
+    deadlineAt: pvpMatchQuestions.deadlineAt,
+  },
+  'q',
+  'question_',
+);
+const versionRead = pvpReadProjection(
+  {
+    questionType: questionVersions.questionType,
+    stem: questionVersions.stem,
+    optionsOrStatements: questionVersions.optionsOrStatements,
+    answerKey: questionVersions.answerKey,
+    explanation: questionVersions.explanation,
+  },
+  'v',
+  'version_',
+);
+const answerRead = pvpReadProjection(
+  { id: pvpAnswers.id, answer: pvpAnswers.answer },
+  'a',
+  'answer_',
+);
 
 @Injectable()
 export class PvpEngineService implements OnModuleDestroy {
@@ -238,17 +265,14 @@ export class PvpEngineService implements OnModuleDestroy {
   }
 
   private async locked(tx: Transaction, matchId: string): Promise<Match> {
-    const [match] = await tx
-      .select()
-      .from(pvpMatches)
-      .where(eq(pvpMatches.id, matchId))
-      .for('update');
-    if (!match)
+    const [row] = await tx.execute(sql`select ${matchRead.selection}
+      from public.pvp_matches m where m.id = ${matchId} for update`);
+    if (!row)
       throw new NotFoundException({
         code: 'MATCH_NOT_FOUND',
         detail: 'Pertandingan tidak ditemukan.',
       });
-    return match;
+    return matchRead.decode(row);
   }
   private async member(
     tx: Database | Transaction,
@@ -1136,23 +1160,20 @@ export class PvpEngineService implements OnModuleDestroy {
     const ids = [...new Set(studentIds)];
     // Readers share this lock and transitions still exclude them until commit.
     // Answer commands already hold the match lock and verified this recipient.
-    const [snapshot] = prepared
-      ? [prepared]
-      : await tx
-          .select({ match: pvpMatches, isDemo: assessmentPackages.isDemo })
-          .from(pvpMatches)
-          .innerJoin(assessmentPackages, eq(assessmentPackages.id, pvpMatches.packageId))
-          .where(
-            and(
-              eq(pvpMatches.id, matchId),
-              ids.length
-                ? sql`(select count(distinct ${pvpPlayers.studentId}) from ${pvpPlayers}
-                where ${and(eq(pvpPlayers.matchId, pvpMatches.id), inArray(pvpPlayers.studentId, ids))})
-                = ${ids.length}`
-                : undefined,
-            ),
-          )
-          .for('share', { of: pvpMatches });
+    const [row] = prepared
+      ? []
+      : await tx.execute<{ isDemo: boolean }>(sql`
+      select ${matchRead.selection}, pack.is_demo as "isDemo"
+      from public.pvp_matches m
+      join public.assessment_packages pack on pack.id = m.package_id
+      where m.id = ${matchId} and (${ids.length} = 0 or (
+        select count(distinct p.student_id) from public.pvp_players p
+        where p.match_id = m.id and p.student_id = any(${sql.param(ids)}::uuid[])
+      ) = ${ids.length})
+      for share of m
+    `);
+    const snapshot =
+      prepared ?? (row ? { match: matchRead.decode(row), isDemo: row.isDemo } : undefined);
     if (!snapshot) {
       if (ids.length)
         throw new ForbiddenException({
@@ -1165,49 +1186,29 @@ export class PvpEngineService implements OnModuleDestroy {
       });
     }
     const match = snapshot.match;
-    const members = await tx
-      .select({
-        player: pvpPlayers,
-        name: users.displayName,
-        question: {
-          id: pvpMatchQuestions.id,
-          displayOrder: pvpMatchQuestions.displayOrder,
-          deadlineAt: pvpMatchQuestions.deadlineAt,
-        },
-        version: {
-          questionType: questionVersions.questionType,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-        },
-        submitted: { id: pvpAnswers.id, answer: pvpAnswers.answer },
-        deliveryRecorded: sql<boolean>`exists (
-          select 1 from ${contentDeliveryManifests}
-          where ${contentDeliveryManifests.studentId} = ${pvpPlayers.studentId}
-            and ${contentDeliveryManifests.idempotencyKey} = 'pvp:' || ${pvpMatchQuestions.id}::text
-        )`,
-      })
-      .from(pvpPlayers)
-      .innerJoin(users, eq(users.id, pvpPlayers.studentId))
-      .leftJoin(
-        pvpMatchQuestions,
-        and(
-          eq(pvpMatchQuestions.matchId, pvpPlayers.matchId),
-          eq(pvpMatchQuestions.status, 'ACTIVE'),
-          match.status === 'RUNNING' ? undefined : sql`false`,
-        ),
-      )
-      .leftJoin(questionVersions, eq(questionVersions.id, pvpMatchQuestions.questionVersionId))
-      .leftJoin(
-        pvpAnswers,
-        and(
-          eq(pvpAnswers.playerId, pvpPlayers.id),
-          eq(pvpAnswers.matchQuestionId, pvpMatchQuestions.id),
-        ),
-      )
-      .where(eq(pvpPlayers.matchId, matchId))
-      .orderBy(asc(pvpPlayers.playerSlot));
+    const memberRows = await tx.execute<
+      Record<string, unknown> & { name: string; deliveryRecorded: boolean }
+    >(sql`
+      select ${playerRead.selection}, u.display_name as name,
+        ${questionRead.selection}, ${versionRead.selection}, ${answerRead.selection},
+        exists (select 1 from public.content_delivery_manifests d
+          where d.student_id = p.student_id and d.idempotency_key = 'pvp:' || q.id::text
+        ) as "deliveryRecorded"
+      from public.pvp_players p join public.users u on u.id = p.student_id
+      left join public.pvp_match_questions q on q.match_id = p.match_id
+        and q.status = 'ACTIVE' and ${match.status === 'RUNNING'}
+      left join public.question_versions v on v.id = q.question_version_id
+      left join public.pvp_answers a on a.player_id = p.id and a.match_question_id = q.id
+      where p.match_id = ${matchId} order by p.player_slot
+    `);
+    const members = memberRows.map((row) => ({
+      player: playerRead.decode(row),
+      name: row.name,
+      question: row.question_id == null ? null : questionRead.decode(row),
+      version: row.version_questionType == null ? null : versionRead.decode(row),
+      submitted: row.answer_id == null ? null : answerRead.decode(row),
+      deliveryRecorded: row.deliveryRecorded,
+    }));
     const requested = [
       ...new Set([...studentIds, ...(includeCreator ? [match.creatorStudentId] : [])]),
     ];
