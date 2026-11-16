@@ -23,6 +23,13 @@ export const httpStartupSeconds = 120;
 export const httpGraceSeconds = 35;
 export const phaseBudgetSeconds = (phase) => phase.seconds + httpStartupSeconds + httpGraceSeconds;
 
+export function localK6MemoryMiB(value, environment) {
+  if (value === undefined || value === '') return null;
+  if (environment !== 'dev' || !/^[1-9][0-9]{2,3}$/.test(value))
+    throw new Error('QA_CAPACITY_K6_MEMORY_MIB is a local-only integer in MiB');
+  return Number(value);
+}
+
 const assert = (provided, message) => {
   if (!provided) throw new Error(message);
 };

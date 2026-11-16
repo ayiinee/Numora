@@ -53,6 +53,7 @@ import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { TryoutReleaseService, tryoutResultState } from './tryout-release.service';
 import { tryoutAttemptDeadline } from './tryout.policy';
+import { deliveryRecorded } from './assessment-delivery';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 type PendingReason = 'CONTENT_PENDING' | 'SCORING_PENDING' | null;
@@ -468,6 +469,8 @@ export class TryoutService {
         id: assessmentAttempts.id,
         studentId: assessmentAttempts.studentId,
         assessmentType: assessmentAttempts.assessmentType,
+        itemDeliveryRecorded: deliveryRecorded(studentId, attemptId, 'ITEM'),
+        explanationDeliveryRecorded: deliveryRecorded(studentId, attemptId, 'EXPLANATION'),
         status: assessmentAttempts.status,
         packageId: assessmentAttempts.packageId,
         title: sql<string>`coalesce(${tryoutBatches.adminTitle}, ${assessmentPackages.name})`,
@@ -525,7 +528,7 @@ export class TryoutService {
         problem('ATTEMPT_NOT_ACTIVE', 'Sesi Tryout ini sudah dibatalkan.'),
       );
     const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId, db) : [];
-    if (rows.length)
+    if (rows.length && !attempt.itemDeliveryRecorded)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     const pendingReason = attempt.managedBatch
       ? null
@@ -697,16 +700,23 @@ export class TryoutService {
         policy?.policyCode === TRYOUT_PARTIAL_POLICY &&
         readApprovedPolicy(policy, 'TRYOUT').ownerTryoutPartial
       ) {
-        for (const item of items) {
-          if (item.questionType === 'SINGLE_CHOICE') continue;
+        const partialItems = items.filter((item) => item.questionType !== 'SINGLE_CHOICE');
+        const rubricIds = partialItems.flatMap((item) => {
+          const id = item.rubricVersionId ?? item.versionRubricVersionId;
+          return id ? [id] : [];
+        });
+        const rubrics = rubricIds.length
+          ? await tx
+              .select()
+              .from(scoringRubricVersions)
+              .where(inArray(scoringRubricVersions.id, [...new Set(rubricIds)]))
+              .orderBy(asc(scoringRubricVersions.id))
+              .for('share')
+          : [];
+        const byId = new Map(rubrics.map((rubric) => [rubric.id, rubric]));
+        for (const item of partialItems) {
           const rubricId = item.rubricVersionId ?? item.versionRubricVersionId;
-          const [rubric] = rubricId
-            ? await tx
-                .select()
-                .from(scoringRubricVersions)
-                .where(eq(scoringRubricVersions.id, rubricId))
-                .for('share')
-            : [];
+          const rubric = rubricId ? byId.get(rubricId) : undefined;
           try {
             validateTryoutPartialRubric(decodeRuntimeQuestion(item), rubric);
           } catch {
@@ -950,7 +960,7 @@ export class TryoutService {
       );
     const canonical = published.get(attemptId);
     const rows = await this.questionRows(attemptId);
-    if (rows.length)
+    if (rows.length && !attempt.explanationDeliveryRecorded)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const xp = attempt.xp === null ? null : Number(attempt.xp);
     return {

@@ -22,6 +22,14 @@ export async function supportedPretestPolicy(
     .select()
     .from(scoringPolicyVersions)
     .where(eq(scoringPolicyVersions.id, id));
+  return isSupportedPolicy(policy, synthetic, additionalPolicy);
+}
+
+function isSupportedPolicy(
+  policy: typeof scoringPolicyVersions.$inferSelect | null | undefined,
+  synthetic: boolean,
+  additionalPolicy: AdditionalPretestPolicy,
+) {
   const config = policy?.configuration as Record<string, unknown> | null;
   return (
     policy?.status === 'PUBLISHED' &&
@@ -43,9 +51,22 @@ export async function currentPretestPackage(
   db: AssessmentReader = getDatabase().db,
   additionalPolicy: AdditionalPretestPolicy = () => false,
 ) {
+  return (await currentPretestSelection(chapterId, db, additionalPolicy))?.pack ?? null;
+}
+
+/** Select the winning package before validating its policy. Do not fall back on an invalid policy. */
+export async function currentPretestSelection(
+  chapterId: string,
+  db: AssessmentReader,
+  additionalPolicy: AdditionalPretestPolicy,
+) {
   const [row] = await db
-    .select()
+    .select({ pack: assessmentPackages, policy: scoringPolicyVersions })
     .from(assessmentPackages)
+    .leftJoin(
+      scoringPolicyVersions,
+      eq(scoringPolicyVersions.id, assessmentPackages.scoringPolicyVersionId),
+    )
     .where(
       and(
         eq(assessmentPackages.chapterId, chapterId),
@@ -62,8 +83,5 @@ export async function currentPretestPackage(
       desc(assessmentPackages.id),
     )
     .limit(1);
-  return row &&
-    (await supportedPretestPolicy(row.scoringPolicyVersionId, row.isDemo, db, additionalPolicy))
-    ? row
-    : null;
+  return row && isSupportedPolicy(row.policy, row.pack.isDemo, additionalPolicy) ? row : null;
 }

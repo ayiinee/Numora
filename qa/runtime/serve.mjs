@@ -180,35 +180,54 @@ await new Promise((ready, reject) => {
   authServer.once('error', reject);
   authServer.listen(authPort, '127.0.0.1', ready);
 });
-const { NestFactory } = require('@nestjs/core');
-const { AppModule } = await import(
-  pathToFileURL(resolve(root, 'apps/api/dist/app.module.js')).href
-);
-const { configureApplication } = await import(
-  pathToFileURL(resolve(root, 'apps/api/dist/bootstrap.js')).href
-);
-const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });
-configureApplication(app);
-const observer = process.env.QA_HTTP_EVIDENCE_FILE
-  ? createHttpObserver(root, process.env.QA_HTTP_EVIDENCE_FILE)
-  : null;
-if (observer) {
-  app.use(observer.middleware);
-  const { ProblemDetailsFilter } = await import(
-    pathToFileURL(resolve(root, 'apps/api/dist/problem-details.filter.js')).href
+let closeApi;
+let observer = null;
+const httpWorkers = Number(process.env.NUMORA_API_HTTP_WORKERS ?? 0);
+if (!Number.isSafeInteger(httpWorkers) || httpWorkers < 0)
+  throw new Error('Invalid API worker count');
+if (httpWorkers > 0) {
+  if (process.env.QA_HTTP_EVIDENCE_FILE)
+    throw new Error(
+      'Split capacity requires per-worker evidence rather than the single-file observer',
+    );
+  process.env.API_BIND_HOST = '127.0.0.1';
+  const { startApiTopology } = await import(
+    pathToFileURL(resolve(root, 'apps/api/dist/runtime/api-topology.js')).href
   );
-  const filter = new ProblemDetailsFilter();
-  app.useGlobalFilters({
-    catch(error, host) {
-      observer.error(host.switchToHttp().getRequest(), error);
-      return filter.catch(error, host);
-    },
-  });
+  const topology = await startApiTopology(apiPort, httpWorkers, () => process.exit(1));
+  closeApi = () => topology.close();
+} else {
+  const { NestFactory } = require('@nestjs/core');
+  const { AppModule } = await import(
+    pathToFileURL(resolve(root, 'apps/api/dist/app.module.js')).href
+  );
+  const { configureApplication } = await import(
+    pathToFileURL(resolve(root, 'apps/api/dist/bootstrap.js')).href
+  );
+  const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });
+  configureApplication(app);
+  observer = process.env.QA_HTTP_EVIDENCE_FILE
+    ? createHttpObserver(root, process.env.QA_HTTP_EVIDENCE_FILE)
+    : null;
+  if (observer) {
+    app.use(observer.middleware);
+    const { ProblemDetailsFilter } = await import(
+      pathToFileURL(resolve(root, 'apps/api/dist/problem-details.filter.js')).href
+    );
+    const filter = new ProblemDetailsFilter();
+    app.useGlobalFilters({
+      catch(error, host) {
+        observer.error(host.switchToHttp().getRequest(), error);
+        return filter.catch(error, host);
+      },
+    });
+  }
+  await app.listen(apiPort, '127.0.0.1');
+  closeApi = () => app.close();
 }
-await app.listen(apiPort, '127.0.0.1');
 console.log('QA connected harness ready. Synthetic auth only; product API and database are real.');
 async function shutdown() {
-  await app.close();
+  await closeApi();
   authServer.closeAllConnections();
   authServer.close();
   await closeDatabaseConnection();

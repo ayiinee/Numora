@@ -11,7 +11,7 @@ import {
   tryoutAttemptResults,
   assessmentAttempts,
 } from './schema/index.js';
-import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 /** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
@@ -136,10 +136,13 @@ export async function releasedTryoutPackageIds(
 }
 
 export async function currentTryoutPackage(db: AssessmentReader = getDatabase().db) {
-  const [clock] = await db.execute<{ now: string }>(sql`select clock_timestamp() as now`);
-  const now = new Date(clock!.now);
-  const [row] = await db
-    .select()
+  // Use one database clock for selection and close checks, without a round trip
+  // for the clock or moving the later authoritative start-time check.
+  const [selection] = await db
+    .select({
+      ...getTableColumns(assessmentPackages),
+      now: sql<Date>`statement_timestamp()`.mapWith(assessmentPackages.releaseAt),
+    })
     .from(assessmentPackages)
     .where(
       and(
@@ -148,13 +151,14 @@ export async function currentTryoutPackage(db: AssessmentReader = getDatabase().
         tryoutDistributionEligibility(),
         packageRuntimeEligibility(),
         eq(assessmentPackages.status, 'PUBLISHED'),
-        lte(assessmentPackages.releaseAt, now),
+        lte(assessmentPackages.releaseAt, sql`statement_timestamp()`),
       ),
     )
     .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
     .limit(1);
+  if (!selection) return null;
+  const { now, ...row } = selection;
   if (
-    !row ||
     !row.releaseAt ||
     (!row.isDemo &&
       (row.durationSeconds !== 600 ||

@@ -160,6 +160,14 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
       http('pretest/attempts', 'POST', { chapterId: fixture.chapterId }),
     ]);
     expect(one.status).toBe(201);
+    const inProgress = await http(`pretest/chapters/${fixture.chapterId}`);
+    expect(inProgress.body).toMatchObject({
+      state: 'inProgress',
+      canStart: true,
+      skipped: true,
+      isDemo: true,
+      attemptId: one.body.id,
+    });
     expect(two.body.id).toBe(one.body.id);
     expect(one.body.questions).toHaveLength(20);
     expect(JSON.stringify(one.body)).not.toMatch(/answerKey|explanation|correctOptionId/);

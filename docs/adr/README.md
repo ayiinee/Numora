@@ -39,3 +39,4 @@ ADRs capture durable technical decisions. They do not override PRD product rules
 - ADR-008 Versioned question/history model
 - ADR-009 Immutable XP ledger + derived leaderboards
 - ADR-010 Production topology: VPS application + managed DB/Auth/Redis
+- [ADR-012 Optional API workers with one PvP owner](ADR-012-api-worker-capacity.md) — proposed deployment, opt-in QA implementation

@@ -69,7 +69,11 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
         const after =
           await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(after.slice(0, before.length)).toEqual([...before]);
-        expect(after).toHaveLength(before.length + 4);
+        expect(after.slice(before.length)).toEqual(
+          migrations
+            .slice(72)
+            .map((entry) => ({ hash: entry.hash, created_at: String(entry.folderMillis) })),
+        );
         expect((await client`SELECT revision FROM public.pvp_content_revision`)[0]).toEqual(
           revision,
         );
@@ -87,13 +91,18 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
 
   it('upgrades PR167 to the new cache migration and replays safely', async () => {
     await fixture(74, async (client, folder) => {
+      const migrations = readMigrationFiles({ migrationsFolder: folder });
       const before =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       await migrateIntegratedDatabase(client, folder);
       const after =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(after.slice(0, before.length)).toEqual([...before]);
-      expect(after).toHaveLength(before.length + 2);
+      expect(after.slice(before.length)).toEqual(
+        migrations
+          .slice(74)
+          .map((entry) => ({ hash: entry.hash, created_at: String(entry.folderMillis) })),
+      );
       expect(await client`SELECT revision FROM public.pvp_content_revision`).toHaveLength(1);
       await migrateIntegratedDatabase(client, folder);
       expect(
@@ -122,7 +131,11 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       const after =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(after.slice(0, before.length)).toEqual([...before]);
-      expect(after).toHaveLength(before.length + 4);
+      expect(after.slice(before.length)).toEqual(
+        migrations
+          .slice(72)
+          .map((entry) => ({ hash: entry.hash, created_at: String(entry.folderMillis) })),
+      );
       await migrateIntegratedDatabase(client, folder);
       expect(
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,

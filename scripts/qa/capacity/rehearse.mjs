@@ -7,13 +7,21 @@ import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { requireFrom, testEnvironment } from '../process.mjs';
+import { localK6MemoryMiB } from './config.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const { environment, problems } = testEnvironment(root, { ...process.env, NODE_ENV: 'test' });
 if (problems.length) throw new Error(problems.join('\n'));
 const dbPoolMax = Number(environment.QA_CAPACITY_DB_POOL_MAX ?? 10);
+const workerDbPoolMax = Number(environment.QA_CAPACITY_WORKER_DB_POOL_MAX ?? 2);
+const httpWorkers = Number(environment.QA_CAPACITY_HTTP_WORKERS ?? 0);
+const k6MemoryMiB = localK6MemoryMiB(environment.QA_CAPACITY_K6_MEMORY_MIB, 'dev');
+if (!Number.isSafeInteger(httpWorkers) || httpWorkers < 0 || httpWorkers > 8)
+  throw new Error('QA_CAPACITY_HTTP_WORKERS must be between zero and eight');
 if (!Number.isSafeInteger(dbPoolMax) || dbPoolMax < 1)
   throw new Error('QA_CAPACITY_DB_POOL_MAX must be a positive integer');
+if (!Number.isSafeInteger(workerDbPoolMax) || workerDbPoolMax < 1)
+  throw new Error('QA_CAPACITY_WORKER_DB_POOL_MAX must be a positive integer');
 const isolate = (env) =>
   Object.fromEntries(
     Object.entries(env).filter(([key]) =>
@@ -44,6 +52,7 @@ const env = {
   QA_K6_BIN: environment.QA_K6_BIN || 'k6',
   QA_LOCAL_CAPACITY: 'true',
   DB_POOL_MAX: String(dbPoolMax),
+  NUMORA_API_HTTP_WORKERS: String(httpWorkers),
 };
 const web = 'http://localhost:3520';
 const api = 'http://localhost:3521';
@@ -111,7 +120,12 @@ async function ready(url, timeoutMs = 60_000) {
   throw new Error('Local QA readiness timed out');
 }
 try {
-  for (const port of [3520, 3521, 3522]) {
+  for (const port of [
+    3520,
+    3521,
+    3522,
+    ...(httpWorkers ? Array.from({ length: httpWorkers + 1 }, (_, i) => 3523 + i) : []),
+  ]) {
     const server = createServer();
     server.listen(port, '127.0.0.1');
     await once(server, 'listening');
@@ -126,7 +140,19 @@ try {
   }).trim();
   writeFileSync(
     resolve(evidence, 'candidate.json'),
-    JSON.stringify({ baseCommit: sha, trackedChanges: isDirty, runId, dbPoolMax }, null, 2),
+    JSON.stringify(
+      {
+        baseCommit: sha,
+        trackedChanges: isDirty,
+        runId,
+        dbPoolMax,
+        workerDbPoolMax,
+        httpWorkers,
+        k6MemoryMiB,
+      },
+      null,
+      2,
+    ),
   );
   await administrator.unsafe('create database ' + database);
   owned = true;
@@ -141,7 +167,10 @@ try {
       throw new Error('Local QA API exited during setup. See api.log.');
     }),
   ]);
-  launch(process.execPath, ['qa/runtime/consume.mjs'], 'outbox');
+  launch(process.execPath, ['qa/runtime/consume.mjs'], 'outbox', {
+    ...env,
+    DB_POOL_MAX: String(workerDbPoolMax),
+  });
   launch(
     process.execPath,
     ['node_modules/next/dist/bin/next', 'start', '-p', '3520', '-H', '127.0.0.1'],
@@ -168,10 +197,14 @@ try {
     }),
   );
   const runner = ['scripts/qa/capacity/run.mjs', 'dev', 'mixed-local', configPath, actorsPath];
+  const runnerEnv = {
+    ...env,
+    ...(k6MemoryMiB === null ? {} : { QA_CAPACITY_K6_MEMORY_MIB: String(k6MemoryMiB) }),
+  };
   if ((await launch(process.execPath, [runner[0], 'check', ...runner.slice(1)], 'preflight')) !== 0)
     throw new Error('Local QA actor preflight failed');
   process.exitCode =
-    (await launch(process.execPath, [runner[0], 'run', ...runner.slice(1)], null)) ?? 1;
+    (await launch(process.execPath, [runner[0], 'run', ...runner.slice(1)], null, runnerEnv)) ?? 1;
 } finally {
   for (const { child } of children)
     if (child.exitCode === null && child.signalCode === null) child.kill();

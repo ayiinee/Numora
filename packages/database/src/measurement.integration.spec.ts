@@ -19,6 +19,7 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
   let main: ReturnType<typeof postgres>;
   let compute: ReturnType<typeof postgres>;
   let admin: ReturnType<typeof postgres>;
+  let mainUrl: string;
   const suffix = randomUUID().replaceAll('-', '');
   const databaseName = `numora_measurement_${suffix}`;
   const mainLogin = `test_main_${suffix}`;
@@ -45,6 +46,7 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
     await admin.unsafe(`GRANT numora_irt_runtime TO "${computeLogin}"`);
     url.username = mainLogin;
     url.password = mainPassword;
+    mainUrl = url.toString();
     main = postgres(url.toString(), { max: 1, onnotice: () => {} });
     url.username = computeLogin;
     url.password = computePassword;
@@ -197,12 +199,61 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
     const [reservation] =
       await owner`SELECT invalidated_at,invalidating_exposure_id FROM trial_family_reservations WHERE cohort_member_id=${member!.id}`;
     expect(reservation!.invalidated_at).not.toBeNull();
+    const [memberState] =
+      await owner`SELECT status,dropout_reason FROM trial_cohort_members WHERE id=${member!.id}`;
+    expect(memberState).toEqual({ status: 'INELIGIBLE', dropout_reason: 'PRIOR_FAMILY_EXPOSURE' });
+    await main`SELECT public.record_assessment_delivery(${f.attempt}::uuid,true)`;
+    expect(
+      await owner`SELECT invalidated_at,invalidating_exposure_id FROM trial_family_reservations WHERE cohort_member_id=${member!.id}`,
+    ).toEqual([reservation]);
+    const exposures = await owner`SELECT e.kind,e.module,e.occurred_at=m.issued_at AS pinned_time
+      FROM student_item_exposures e JOIN content_delivery_items i ON i.id=e.delivery_item_id
+      JOIN content_delivery_manifests m ON m.id=i.manifest_id WHERE e.student_id=${f.student} ORDER BY e.kind`;
+    expect(exposures).toEqual([
+      { kind: 'EXPLANATION_PAYLOAD_ISSUED', module: 'DRILL', pinned_time: true },
+      { kind: 'ITEM_PAYLOAD_ISSUED', module: 'DRILL', pinned_time: true },
+    ]);
     await expect(
       main`UPDATE trial_family_reservations SET invalidated_at=NULL,invalidating_exposure_id=NULL,reason=NULL WHERE cohort_member_id=${member!.id}`,
     ).rejects.toMatchObject({ code: '23514' });
     await expect(
       main`SELECT public.measurement_assert_trial_eligible(${f.student}::uuid,${f.package}::uuid)`,
     ).rejects.toMatchObject({ code: '23514' });
+  });
+
+  it('serializes duplicate delivery and rolls back forged family or student ownership', async () => {
+    const f = await fixture(),
+      stranger = await fixture();
+    const competitor = postgres(mainUrl, { max: 1, onnotice: () => {} });
+    try {
+      const [left, right] = await Promise.all([
+        main`SELECT public.record_assessment_delivery(${f.attempt}::uuid,false) AS id`,
+        competitor`SELECT public.record_assessment_delivery(${f.attempt}::uuid,false) AS id`,
+      ]);
+      expect(left).toEqual(right);
+      expect(
+        await owner`SELECT count(*)::int AS n FROM student_item_exposures WHERE student_id=${f.student}`,
+      ).toEqual([{ n: 1 }]);
+      const [manifest] =
+        await main`INSERT INTO content_delivery_manifests(student_id,module,kind,idempotency_key)
+        VALUES(${stranger.student},'DRILL','ITEM_PAYLOAD_ISSUED',${randomUUID()}) RETURNING id`;
+      await expect(main`INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id)
+        VALUES(${manifest!.id},${f.version},${stranger.family},${f.item})`).rejects.toMatchObject({
+        code: '23514',
+      });
+      await expect(main`INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id)
+        VALUES(${manifest!.id},${f.version},${f.family},${f.item})`).rejects.toMatchObject({
+        code: '23514',
+      });
+      expect(
+        await owner`SELECT count(*)::int AS n FROM content_delivery_items WHERE manifest_id=${manifest!.id}`,
+      ).toEqual([{ n: 0 }]);
+      expect(
+        await owner`SELECT count(*)::int AS n FROM student_item_exposures WHERE student_id=${stranger.student}`,
+      ).toEqual([{ n: 0 }]);
+    } finally {
+      await competitor.end();
+    }
   });
 
   it('freezes input, deduplicates requests, records scientific exclusion, and adopts only current execution', async () => {

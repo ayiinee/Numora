@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
   authorizeRemote,
   countsFor,
+  localK6MemoryMiB,
   phaseActors,
   prepare,
   refreshPhaseActors,
@@ -12,6 +13,14 @@ import {
 } from './config.mjs';
 import { reconcile, validateEvidenceUrl } from './reconcile.mjs';
 import { httpRunClock, summarize, validateCohorts } from './run.mjs';
+
+test('k6 memory tuning stays opt-in and limited to local runs', () => {
+  assert.equal(localK6MemoryMiB(undefined, 'prod'), null);
+  assert.equal(localK6MemoryMiB('1024', 'dev'), 1024);
+  assert.throws(() => localK6MemoryMiB('1024', 'staging'), /local-only/);
+  assert.throws(() => localK6MemoryMiB('1024', 'prod'), /local-only/);
+  assert.throws(() => localK6MemoryMiB('1GiB', 'dev'), /integer/);
+});
 
 test('HTTP initialization has a bounded budget before the full workload clock starts', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });

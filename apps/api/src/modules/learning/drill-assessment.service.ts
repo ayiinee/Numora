@@ -18,7 +18,6 @@ import {
   attemptItems,
   chapters,
   classMemberships,
-  contentDeliveryManifests,
   getDatabase,
   levelProgress,
   levels,
@@ -71,15 +70,9 @@ import {
   selectDrillPackage,
 } from './drill.policy';
 
-const problem = (code: string, detail: string) => ({ code, detail });
+import { deliveryRecorded } from './assessment-delivery';
 
-function deliveryRecorded(studentId: string, attemptId: string, kind: 'ITEM' | 'EXPLANATION') {
-  return sql<boolean>`exists (
-    select 1 from ${contentDeliveryManifests}
-    where ${contentDeliveryManifests.studentId} = ${studentId}
-      and ${contentDeliveryManifests.idempotencyKey} = ${attemptId}::uuid::text || ${':' + kind + '_PAYLOAD_ISSUED'}
-  )`;
-}
+const problem = (code: string, detail: string) => ({ code, detail });
 
 @Injectable()
 export class DrillAssessmentService {

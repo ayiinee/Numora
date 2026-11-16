@@ -7,16 +7,16 @@ import { PvpSchedulerService } from './pvp-scheduler.service';
 import { PvpService } from './pvp.service';
 import { PVP_POLICY } from './pvp.policy';
 import { resolvePvpPolicy } from './pvp-runtime.policy';
+import { apiRole } from '../../runtime/api-role';
 
 @Module({
   imports: [IdentityModule],
   exports: [PvpService],
-  controllers: [PvpController],
+  controllers: apiRole() === 'http' ? [] : [PvpController],
   providers: [
     PvpService,
     PvpEngineService,
-    PvpGateway,
-    PvpSchedulerService,
+    ...(apiRole() === 'http' ? [] : [PvpGateway, PvpSchedulerService]),
     { provide: PVP_POLICY, useFactory: resolvePvpPolicy },
   ],
 })
