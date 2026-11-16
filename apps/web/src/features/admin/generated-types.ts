@@ -343,12 +343,12 @@ export type GeneratorSourcePackageDto = { "id": string; "name": string; "package
 
 export type GeneratorPackageCatalogDto = { "options": (GeneratorPackageOptionDto)[]; "sourcePackages": (GeneratorSourcePackageDto)[]; };
 
-export type GeneratorPackageDto = { "id": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "expectedCount": number; "completedCount": number; "failedCount": number; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "packageId": string | null; "createdAt": string; "requests": (GeneratorRequestDto)[]; "sourcePackageId": string | null; };
+export type GeneratorPackageDto = { "id": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "completedCount": number; "failedCount": number; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "packageId": string | null; "createdAt": string; "requests": (GeneratorRequestDto)[]; };
 
 export type GeneratorPackagesDto = { "items": (GeneratorPackageDto)[]; };
 
 export type GeneratorPackageFileItemDto = { "requestId": string; "candidateId": string; "question": ExcelQuestionDto; "content": Record<string, unknown>; };
 
-export type GeneratorPackageFileDto = { "contractVersion": "numora-generator-package-v1"; "generatorPackageId": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "expectedCount": number; "items": (GeneratorPackageFileItemDto)[]; "sourcePackageId": string | null; };
+export type GeneratorPackageFileDto = { "contractVersion": "numora-generator-package-v1"; "generatorPackageId": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "items": (GeneratorPackageFileItemDto)[]; };
 
 export type GeneratorJsonPreviewDto = { "file": GeneratorPackageFileDto; "report": ImportReportDto; };
