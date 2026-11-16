@@ -374,7 +374,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
         scoringPolicyVersionId: policy!.id,
         curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
         releaseAt: release.toISOString(),
-        durationSeconds: 600,
+        durationSeconds: 4500,
       },
     );
     expect(publish.status, await publish.text()).toBe(201);
@@ -389,7 +389,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
         scoringPolicyVersionId: policy!.id,
         releaseAt: new Date(Date.now() - 8 * 86400000),
         closeAt: new Date(Date.now() - 1000),
-        durationSeconds: 600,
+        durationSeconds: 4500,
       })
       .returning();
     const items = await db

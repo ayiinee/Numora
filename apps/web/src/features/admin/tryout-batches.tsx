@@ -90,7 +90,7 @@ function BatchWorkspace({
   const [pending, setPending] = useState(false);
   const [editing, setEditing] = useState(false);
   const [extending, setExtending] = useState(false);
-  const [action, setAction] = useState<'publish' | 'cancel' | null>(null);
+  const [action, setAction] = useState<'publish' | 'cancel' | 'stop' | null>(null);
   const [reason, setReason] = useState('');
   const offset = adminOffset(url.params.get('offset'));
   const search = url.params.get('search') ?? '';
@@ -130,7 +130,7 @@ function BatchWorkspace({
       active = false;
     };
   }, [id, token, version, offset, search, accessError]);
-  async function mutate(kind: 'publish' | 'cancel') {
+  async function mutate(kind: 'publish' | 'cancel' | 'stop') {
     if (!detail) return;
     setPending(true);
     setError('');
@@ -139,7 +139,7 @@ function BatchWorkspace({
         method: 'POST',
         body: JSON.stringify({
           expectedRevision: detail.revision,
-          ...(kind === 'cancel' ? { reason } : {}),
+          ...(kind === 'cancel' || kind === 'stop' ? { reason } : {}),
         }),
       });
       setAction(null);
@@ -313,6 +313,15 @@ function BatchWorkspace({
                         Batalkan batch
                       </Button>
                     )}
+                    {detail.state === 'OPEN' && (
+                      <Button
+                        variant="danger-outline"
+                        disabled={pending}
+                        onClick={() => setAction('stop')}
+                      >
+                        Stop batch
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -477,7 +486,13 @@ function BatchWorkspace({
             <Dialog
               open={!!action}
               onClose={() => setAction(null)}
-              title={action === 'cancel' ? 'Batalkan batch' : 'Terbitkan batch'}
+              title={
+                action === 'cancel'
+                  ? 'Batalkan batch'
+                  : action === 'stop'
+                    ? 'Stop batch'
+                    : 'Terbitkan batch'
+              }
               pending={pending}
               className="admin-management-dialog tryout-batch-confirmation"
               actions={
@@ -486,21 +501,25 @@ function BatchWorkspace({
                     Kembali
                   </Button>
                   <Button
-                    disabled={pending || (action === 'cancel' && !reason.trim())}
+                    disabled={
+                      pending || ((action === 'cancel' || action === 'stop') && !reason.trim())
+                    }
                     onClick={() => action && void mutate(action)}
                   >
                     {pending
                       ? 'Menyimpan…'
                       : action === 'publish'
                         ? 'Ya, terbitkan batch'
-                        : 'Konfirmasi'}
+                        : action === 'stop'
+                          ? 'Ya, stop batch'
+                          : 'Konfirmasi'}
                   </Button>
                 </>
               }
             >
-              {action === 'cancel' ? (
+              {action === 'cancel' || action === 'stop' ? (
                 <label>
-                  Alasan pembatalan
+                  {action === 'stop' ? 'Alasan penghentian' : 'Alasan pembatalan'}
                   <textarea
                     value={reason}
                     maxLength={1000}
@@ -845,13 +864,13 @@ function BatchForm({
                                 ? {
                                     ...old,
                                     allocationMode: e.target.value as
-                                      | 'SINGLE_PACKAGE'
-                                      | 'BALANCED_50_50',
+                                      'SINGLE_PACKAGE' | 'BALANCED_50_50',
                                     variantPackageId:
                                       e.target.value === 'BALANCED_50_50'
-                                        ? old.variantPackageId ??
-                                          selectedPackages.find((p) => p.id !== old.packageId)?.id ??
-                                          null
+                                        ? (old.variantPackageId ??
+                                          selectedPackages.find((p) => p.id !== old.packageId)
+                                            ?.id ??
+                                          null)
                                         : null,
                                   }
                                 : old,
@@ -1087,7 +1106,7 @@ function BatchExtensionForm({
             onChange={(e) => setClosesAt(e.target.value)}
           />
         </label>
-        <p>Durasi pengerjaan tetap 10 menit. Deadline siswa yang sudah mulai tidak berubah.</p>
+        <p>Durasi pengerjaan tetap 75 menit. Deadline siswa yang sudah mulai tidak berubah.</p>
         <p>Batas penerbitan hasil mengikuti waktu tutup baru +72 jam.</p>
         {error && <p role="alert">{error}</p>}
         <div className="admin-content-actions">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   batchEditable,
+  batchStoppable,
   batchState,
   balancedOriginalCount,
   balancedPackageForIndex,
@@ -128,5 +129,19 @@ describe('Tryout batch boundaries', () => {
       [{ status: 'PUBLISHED' }, later, b.startsAt],
     ] as const)
       expect(() => validateBatchExtension({ ...b, ...changed }, end, now)).toThrow();
+  });
+  it('allows stopping only a currently open published batch', () => {
+    const b = {
+      adminPublishedAt: new Date('2026-11-09T00:00:00Z'),
+      cancelledAt: null,
+      startsAt: new Date(input.startsAt),
+      closesAt: new Date(input.closesAt),
+      status: 'PLANNED',
+    };
+    expect(batchStoppable(b, new Date('2026-11-10T01:30:00Z'))).toBe(true);
+    expect(batchStoppable(b, b.startsAt)).toBe(true);
+    expect(batchStoppable(b, b.closesAt)).toBe(false);
+    expect(batchStoppable({ ...b, cancelledAt: b.startsAt }, b.startsAt)).toBe(false);
+    expect(batchStoppable({ ...b, status: 'PUBLISHED' }, b.startsAt)).toBe(false);
   });
 });

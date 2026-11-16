@@ -1709,7 +1709,7 @@ describe.skipIf(!testUrl)(
           expect(bank.items.some((v) => v.id === imported.items[0]!.questionVersionId)).toBe(true);
           const [schedule] =
             await owner`SELECT duration_seconds,close_at FROM assessment_packages WHERE id=${pack.id}`;
-          expect(schedule!.duration_seconds).toBe(600);
+          expect(schedule!.duration_seconds).toBe(4500);
           expect(new Date(schedule!.close_at).toISOString()).toBe('2099-01-13T07:29:00.000Z');
         }
         expect(
@@ -1981,6 +1981,22 @@ describe.skipIf(!testUrl)(
       expect((await ok<ContentPackageDetailDto>(`admin/content/packages/${pgk.id}`)).status).toBe(
         'DRAFT',
       );
+      const draftTryout = await ok<{ id: string }>('admin/content/packages', 'POST', {
+        familyCode: `TEST-TRYOUT-DRAFT-${suffix}`,
+        packageVersion: 1,
+        name: 'TEST ONLY Tryout draft archive',
+        assessmentType: 'TRYOUT',
+        isDemo: true,
+        source: {
+          sourceNamespace: `TEST-TRYOUT-DRAFT-${suffix}`,
+          sourceName: 'TEST ONLY',
+          sourceReference: 'TEST ONLY draft archive',
+        },
+      });
+      await ok(`admin/content/packages/${draftTryout.id}/archive`, 'POST', { expectedRevision: 0 });
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${draftTryout.id}`)).status,
+      ).toBe('ARCHIVED');
       for (const token of ['operations', 'student'])
         expect(
           (
@@ -3585,8 +3601,11 @@ describe.skipIf(!testUrl)(
       expect(attempts[0].packageId).toBe(assignment!.package_id);
       expect(attempts[0].questions).toHaveLength(30);
       expect(JSON.stringify(attempts[0])).not.toContain('answerKey');
-      expect((await service.studentList(student!.id as string)).items.find((batch) => batch.id === activeId))
-        .toMatchObject({ attemptId: attempts[0].id, canResume: true, resultState: null });
+      expect(
+        (await service.studentList(student!.id as string)).items.find(
+          (batch) => batch.id === activeId,
+        ),
+      ).toMatchObject({ attemptId: attempts[0].id, canResume: true, resultState: null });
       for (const question of attempts[0].questions)
         await ok(
           `tryout/attempts/${attempts[0].id}/answers/${question.questionInstanceId}`,
@@ -3710,15 +3729,19 @@ describe.skipIf(!testUrl)(
       expect(submissions.map((value) => value.xp)).toEqual([300, 300]);
       const ledger = await owner`SELECT * FROM xp_ledger WHERE attempt_id=${attempts[0].id}`;
       expect(ledger).toHaveLength(1);
-      const submittedBatch = (await service.studentList(student!.id as string)).items.find((batch) => batch.id === activeId);
+      const submittedBatch = (await service.studentList(student!.id as string)).items.find(
+        (batch) => batch.id === activeId,
+      );
       expect(submittedBatch).toMatchObject({
-        attemptId: attempts[0].id, canResume: false, resultState: 'waiting',
+        attemptId: attempts[0].id,
+        canResume: false,
+        resultState: 'waiting',
       });
       await expect(tryout.result('Bearer student', attempts[0].id)).rejects.toThrow();
       const detail = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
       expect(detail.resultBlockers).toContain('IRT_DELIVERY_DISABLED');
       expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(4);
-      // Distinct recipients may share the same package; a following non-overlapping batch is valid.
+      // Distinct recipients may share the same package; published batches may overlap.
       const shared = {
         ...makeInput('shared'),
         mandiriPackageId: packageIds[0],
@@ -3727,8 +3750,8 @@ describe.skipIf(!testUrl)(
           { schoolId: schoolA, packageId: packageIds[0]! },
           { schoolId: schoolB, packageId: packageIds[0]! },
         ],
-        startsAt: detail.closesAt,
-        closesAt: new Date(Date.parse(detail.closesAt) + 3600000).toISOString(),
+        startsAt: new Date(Date.now() + 60000).toISOString(),
+        closesAt: detail.closesAt,
       };
       const next = await ok<{ id: string }>('admin/tryout-batches', 'POST', shared);
       await ok(`admin/tryout-batches/${next.id}/publish`, 'POST', { expectedRevision: 1 });

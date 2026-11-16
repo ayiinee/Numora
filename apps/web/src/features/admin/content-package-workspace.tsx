@@ -1569,7 +1569,7 @@ export function ContentPackageWorkspace({
                       )}
                     </div>
                   )}
-                  {['PUBLISHED', 'CLOSED'].includes(detail.status) && (
+                  {['DRAFT', 'PUBLISHED', 'CLOSED'].includes(detail.status) && (
                     <>
                       <label>
                         <input

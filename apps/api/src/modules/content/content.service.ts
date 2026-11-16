@@ -27,6 +27,7 @@ import {
   videoSubchapterMappings,
   tryoutBatches,
   tryoutBatchCloseAt,
+  TRYOUT_DURATION_SECONDS,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { isYouTubeVideoUrl } from './youtube-url';
@@ -966,7 +967,7 @@ export class ContentService {
       if (row.status === 'PUBLISHED') {
         if (
           (body.releaseAt && row.releaseAt?.getTime() !== requested.getTime() && requested > now) ||
-          row.durationSeconds !== 600 ||
+          row.durationSeconds !== TRYOUT_DURATION_SECONDS ||
           row.scoringPolicyVersionId !== body.scoringPolicyVersionId
         )
           throw new ConflictException({ code: 'TRYOUT_PUBLICATION_CONFLICT' });
@@ -1013,7 +1014,7 @@ export class ContentService {
           scoringPolicyVersionId: body.scoringPolicyVersionId,
           releaseAt,
           closeAt,
-          durationSeconds: 600,
+          durationSeconds: TRYOUT_DURATION_SECONDS,
           ...approval,
         })
         .where(eq(assessmentPackages.id, id));

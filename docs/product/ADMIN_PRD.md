@@ -1,5 +1,7 @@
 # PRD Admin Numora
 
+**ENGINEERING DECISION - owner instruction, 17 November 2026:** Tryout uses 75-minute new attempts, permits overlapping active batches, supports stopping an open batch, and keeps package archival protected while any active batch uses it. See `docs/development/TRYOUT_RUNTIME_CONTROLS_2026-11-17.md`.
+
 Versi 1.0 · 10 November 2026 · **Konsolidasi kebutuhan untuk acuan implementasi**.
 
 Dokumen ini merangkum keputusan pemilik selama 9–10 November 2026 menjadi kebutuhan Admin. Pasangannya adalah [Spesifikasi Teknis Admin](../architecture/ADMIN_TECHNICAL_SPEC.md). [Catatan discovery](ADMIN_REQUIREMENTS_DISCOVERY.md#21-keputusan-kebutuhan-dari-klarifikasi-pemilik) menyimpan jawaban dan keputusan ADM-DEC-001–076. Dokumen ini tidak menyatakan seluruh perilaku sudah tersedia atau sudah lulus penerimaan aplikasi.

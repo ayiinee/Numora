@@ -26,6 +26,7 @@ const batch: StudentTryoutBatchDto = {
   startsAt: '2026-11-11T00:00:00Z',
   closesAt: '2026-11-18T00:00:00Z',
   resultDueAt: '2026-11-21T00:00:00Z',
+  durationSeconds: 4500,
   state: 'OPEN',
   schools: [],
   mandiri: true,
