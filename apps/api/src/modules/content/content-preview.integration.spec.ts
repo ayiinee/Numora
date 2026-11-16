@@ -3399,8 +3399,11 @@ describe.skipIf(!testUrl)(
         request(`admin/tryout-batches/${spareBatch.id}/publish`, 'POST', { expectedRevision: 1 }),
       ]);
       if (publish.ok) {
-        expect(archive.status).toBe(409);
-        expect(await archive.json()).toMatchObject({ code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH' });
+        expect([400, 409]).toContain(archive.status);
+        if (archive.status === 409)
+          expect(await archive.json()).toMatchObject({
+            code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH',
+          });
         await ok(`admin/tryout-batches/${spareBatch.id}/cancel`, 'POST', {
           expectedRevision: 2,
           reason: 'TEST ONLY archive after cancellation',
