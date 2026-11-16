@@ -339,6 +339,8 @@ export type CreateGeneratorPackageDto = { "assessmentType": "DRILL" | "PRETEST" 
 
 export type GeneratorPackageOptionDto = { "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "scopeId": string | null; "scopeLabel": string; "availableCount": number; "requiredCount": number; "canGenerate": boolean; };
 
+export type GeneratorSourcePackageDto = { "id": string; "name": string; "packageVersion": number; "itemCount": number; "familyCount": number; "eligibleCount": number; "canGenerate": boolean; "blockers": (string)[]; };
+
 export type GeneratorPackageCatalogDto = { "options": (GeneratorPackageOptionDto)[]; "sourcePackages": (GeneratorSourcePackageDto)[]; };
 
 export type GeneratorPackageDto = { "id": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "expectedCount": number; "completedCount": number; "failedCount": number; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "packageId": string | null; "createdAt": string; "requests": (GeneratorRequestDto)[]; "sourcePackageId": string | null; };

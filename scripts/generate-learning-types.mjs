@@ -296,6 +296,7 @@ const groups = [
       'PrepareGeneratorDto',
       'CreateGeneratorPackageDto',
       'GeneratorPackageOptionDto',
+      'GeneratorSourcePackageDto',
       'GeneratorPackageCatalogDto',
       'GeneratorPackageDto',
       'GeneratorPackagesDto',
