@@ -53,6 +53,7 @@ import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { TryoutReleaseService, tryoutResultState } from './tryout-release.service';
 import { tryoutAttemptDeadline } from './tryout.policy';
+import { deliveryRecorded } from './assessment-delivery';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 type PendingReason = 'CONTENT_PENDING' | 'SCORING_PENDING' | null;
@@ -468,6 +469,8 @@ export class TryoutService {
         id: assessmentAttempts.id,
         studentId: assessmentAttempts.studentId,
         assessmentType: assessmentAttempts.assessmentType,
+        itemDeliveryRecorded: deliveryRecorded(studentId, attemptId, 'ITEM'),
+        explanationDeliveryRecorded: deliveryRecorded(studentId, attemptId, 'EXPLANATION'),
         status: assessmentAttempts.status,
         packageId: assessmentAttempts.packageId,
         title: sql<string>`coalesce(${tryoutBatches.adminTitle}, ${assessmentPackages.name})`,
@@ -525,7 +528,7 @@ export class TryoutService {
         problem('ATTEMPT_NOT_ACTIVE', 'Sesi Tryout ini sudah dibatalkan.'),
       );
     const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId, db) : [];
-    if (rows.length)
+    if (rows.length && !attempt.itemDeliveryRecorded)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     const pendingReason = attempt.managedBatch
       ? null
@@ -950,7 +953,7 @@ export class TryoutService {
       );
     const canonical = published.get(attemptId);
     const rows = await this.questionRows(attemptId);
-    if (rows.length)
+    if (rows.length && !attempt.explanationDeliveryRecorded)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const xp = attempt.xp === null ? null : Number(attempt.xp);
     return {

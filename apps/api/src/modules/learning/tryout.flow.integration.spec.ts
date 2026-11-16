@@ -299,6 +299,32 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       a.questions.map((q) => q.questionInstanceId),
     );
     expect(new Set(a.questions.map((q) => q.questionInstanceId)).size).toBe(30);
+    expect(a).not.toHaveProperty('itemDeliveryRecorded');
+    // An already-issued payload must remain readable while a concurrent writer
+    // owns the attempt lock. First delivery still uses its transactional guard.
+    await db.transaction(async (tx) => {
+      await tx
+        .select()
+        .from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, a.id))
+        .for('update');
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const read = await Promise.race([
+          tryout.attempt('student', a.id),
+          new Promise<never>((_resolve, reject) => {
+            timer = setTimeout(
+              () => reject(new Error('Issued payload waited for the writer lock')),
+              2000,
+            );
+          }),
+        ]);
+        expect(read.id).toBe(a.id);
+        expect(read.questions).toHaveLength(30);
+      } finally {
+        clearTimeout(timer);
+      }
+    });
     for (const attempt of [a, mandiri]) {
       expect(
         await db
