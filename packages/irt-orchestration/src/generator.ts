@@ -64,7 +64,7 @@ async function mappings(tx: Sql | TransactionSql, approvalId?: string) {
     AND (g.parameters->>'serviceContract'<>'generator-service-v2' OR
       (q.content_status='READY' AND q.validation_state='CONTENT_VALID'
        AND EXISTS(SELECT 1 FROM questions family WHERE family.id=v.question_id AND family.usage_type::text=c.ecosystem)
-       AND ((c.ecosystem='DRILL' AND c.level_id=q.level_id) OR (c.ecosystem='TRYOUT' AND c.tryout_batch_id IS NOT NULL))))
+       AND ((c.ecosystem='DRILL' AND c.level_id=q.level_id) OR (c.ecosystem='TRYOUT' AND (c.tryout_batch_id IS NOT NULL OR c.generation_package_id IS NOT NULL)))))
     ORDER BY label,g.id,a.id FOR SHARE OF a,q,rubric`;
   return rows.filter((m) => {
     try {
