@@ -226,11 +226,15 @@ try {
       ]);
       assert.equal(a.id, b.id);
       const [stored] =
-        await owner`SELECT p.status,p.assessment_type,count(i.id)::int AS total,count(distinct v.question_id)::int AS families,bool_and(v.kind='VARIANT' AND q.content_status='DRAFT' AND q.parent_original_question_version_id IS NOT NULL) AS valid FROM assessment_packages p JOIN package_items i ON i.package_id=p.id JOIN question_versions q ON q.id=i.question_version_id JOIN question_variants v ON v.id=q.variant_id WHERE p.id=${a.id} GROUP BY p.id`;
+        await owner`SELECT p.status,p.assessment_type,p.import_source,count(i.id)::int AS total,count(distinct v.question_id)::int AS families,bool_and(v.kind='VARIANT' AND q.content_status='DRAFT' AND q.parent_original_question_version_id IS NOT NULL) AS valid FROM assessment_packages p JOIN package_items i ON i.package_id=p.id JOIN question_versions q ON q.id=i.question_version_id JOIN question_variants v ON v.id=q.variant_id WHERE p.id=${a.id} GROUP BY p.id`;
       assert.equal(stored.status, 'DRAFT');
       assert.equal(stored.total, group.expectedCount);
       assert.equal(stored.families, group.expectedCount);
       assert.equal(stored.valid, true);
+      if (group.assessmentType === 'TRYOUT') {
+        assert.equal(stored.import_source.sourceNamespace, 'GENERATOR_SERVICE_V2');
+        assert.match(stored.import_source.sourceReference, /sourcePackageId/);
+      }
       assert.equal((await call(`packages/${group.id}`)).status, 'IMPORTED');
     }
   }
