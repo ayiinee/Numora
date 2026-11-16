@@ -236,12 +236,48 @@ export async function executeCheck(root, check, context) {
     };
   }
   if (['playwright', 'accessibility'].includes(check.adapter)) {
-    const result = await runProcess(
-      root,
-      'pnpm',
-      ['exec', 'playwright', 'test', '--config', 'qa/configs/playwright.config.ts', ...check.files],
-      options,
-    );
+    const browserFixture = check.evidence === 'component';
+    const webRoot = resolve(root, 'apps/web');
+    if (browserFixture && check.files.some((file) => !file.startsWith('apps/web/e2e/'))) {
+      throw new Error('Browser fixtures must refer to the canonical web suite');
+    }
+    const result = browserFixture
+      ? await runProcess(
+          root,
+          'pnpm',
+          [
+            'exec',
+            'playwright',
+            'test',
+            '--config',
+            'playwright.config.ts',
+            '--reporter',
+            'json',
+            ...check.files.map((file) => file.slice('apps/web/'.length)),
+          ],
+          {
+            ...options,
+            cwd: webRoot,
+            env: {
+              ...options.env,
+              NUMORA_E2E_PRODUCTION: 'false',
+              PLAYWRIGHT_JSON_OUTPUT_FILE: machine,
+            },
+          },
+        )
+      : await runProcess(
+          root,
+          'pnpm',
+          [
+            'exec',
+            'playwright',
+            'test',
+            '--config',
+            'qa/configs/playwright.config.ts',
+            ...check.files,
+          ],
+          options,
+        );
     const raw = existsSync(machine) ? readJson(machine) : null;
     const evidence = raw ? parsePlaywright(raw) : null;
     const failures = [];

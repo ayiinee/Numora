@@ -11,18 +11,19 @@ vi.mock('@tka/database', async (importOriginal) => {
 
 const teacherId = '11111111-1111-4111-8111-111111111111';
 const classId = '22222222-2222-4222-8222-222222222222';
-const schoolId = '33333333-3333-4333-8333-333333333333';
 const ownedClass = {
-  id: classId,
-  name: 'IX A',
-  schoolId,
+  classId,
+  className: 'IX A',
+  verifiedSchool: true,
+  activeSchool: true,
   teacherUserId: teacherId,
   archivedAt: null,
 };
 
 function database(...results: unknown[][]) {
+  const read = vi.fn(() => results.shift() ?? []);
   const select = vi.fn(() => {
-    const rows = results.shift() ?? [];
+    const rows = read();
     const query = {
       from: () => query,
       innerJoin: () => query,
@@ -32,8 +33,8 @@ function database(...results: unknown[][]) {
     };
     return query;
   });
-  vi.mocked(getDatabase).mockReturnValue({ db: { select } } as never);
-  return select;
+  vi.mocked(getDatabase).mockReturnValue({ db: { select }, client: async () => read() } as never);
+  return read;
 }
 
 function service(profile = { id: teacherId, role: 'TEACHER', teacherVerified: true }) {
@@ -84,17 +85,12 @@ describe('ClassesService Teacher reads', () => {
   it('rejects archived Classes and an ended school membership', async () => {
     database([{ ...ownedClass, archivedAt: new Date() }]);
     await expect(service().students('Bearer ok', classId)).rejects.toThrow(NotFoundException);
-    database([ownedClass], []);
+    database([{ ...ownedClass, verifiedSchool: false }]);
     await expect(service().students('Bearer ok', classId)).rejects.toThrow(ForbiddenException);
   });
 
   it('returns only the Class and Student identity fields after authorization', async () => {
-    database(
-      [ownedClass],
-      [{ id: 'membership-id' }],
-      [{ id: schoolId }],
-      [{ id: 'student-id', displayName: 'Nisa' }],
-    );
+    database([ownedClass], [{ id: 'student-id', displayName: 'Nisa' }]);
     await expect(service().students('Bearer ok', classId)).resolves.toEqual({
       class: { id: classId, name: 'IX A' },
       items: [{ id: 'student-id', displayName: 'Nisa' }],
@@ -107,21 +103,15 @@ describe('ClassesService Teacher reads', () => {
       ForbiddenException,
     );
     expect(select).toHaveBeenCalledTimes(1);
-    database([ownedClass], []);
+    database([{ ...ownedClass, verifiedSchool: false }]);
     await expect(service().bannedStudents('Bearer ok', classId)).rejects.toThrow(
       ForbiddenException,
     );
-    database([ownedClass], [{ id: 'membership' }], []);
+    database([{ ...ownedClass, activeSchool: false }]);
     await expect(service().bannedStudents('Bearer ok', classId)).rejects.toThrow(
       ForbiddenException,
     );
-    database(
-      [ownedClass],
-      [{ id: 'membership' }],
-      [{ id: schoolId }],
-      [],
-      [{ id: 'student', displayName: 'Nisa' }],
-    );
+    database([ownedClass], [], [{ id: 'student', displayName: 'Nisa' }]);
     await expect(service().bannedStudents('Bearer ok', classId)).resolves.toEqual({
       class: { id: classId, name: 'IX A' },
       items: [{ id: 'student', displayName: 'Nisa' }],

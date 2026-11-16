@@ -30,6 +30,7 @@ import {
   scoringPolicyVersions,
   scoringRubricVersions,
   xpLedger,
+  type AssessmentReader,
 } from '@tka/database';
 import {
   AssessmentFinalizationError,
@@ -41,6 +42,7 @@ import {
   databaseTime,
   finalizeTryout,
   saveAssessmentAnswerWithEvent,
+  saveAssessmentAnswerAtomically,
   decodeAssessmentContent,
   normalizeAssessmentAnswer,
   presentAssessmentQuestion,
@@ -78,21 +80,27 @@ export class TryoutService {
   ) {}
 
   private async student(authorization?: string) {
-    const user = await this.identity.me(authorization);
+    const user = await this.identity.me(authorization, 'access');
     if (user.role !== 'STUDENT')
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
     return user.id;
   }
 
-  private async pendingReason(packageId: string): Promise<PendingReason> {
-    const reason = (await this.pendingReasons([packageId])).get(packageId);
+  private async pendingReason(
+    packageId: string,
+    db: AssessmentReader = getDatabase().db,
+  ): Promise<PendingReason> {
+    const reason = (await this.pendingReasons([packageId], undefined, db)).get(packageId);
     return reason === undefined ? 'CONTENT_PENDING' : reason;
   }
 
-  private async itemStatistics(packageIds: string[]): Promise<Map<string, PackageItemStats>> {
+  private async itemStatistics(
+    packageIds: string[],
+    db: AssessmentReader = getDatabase().db,
+  ): Promise<Map<string, PackageItemStats>> {
     if (!packageIds.length) return new Map();
-    const rows = await getDatabase()
-      .db.select({
+    const rows = await db
+      .select({
         packageId: packageItems.packageId,
         total: count(packageItems.id),
         versions: count(questionVersions.id),
@@ -109,10 +117,10 @@ export class TryoutService {
   private async pendingReasons(
     packageIds: string[],
     statistics?: ReadonlyMap<string, PackageItemStats>,
+    db: AssessmentReader = getDatabase().db,
   ) {
     const reasons = new Map<string, PendingReason>(packageIds.map((id) => [id, 'CONTENT_PENDING']));
     if (!packageIds.length) return reasons;
-    const db = getDatabase().db;
     const packs = await db
       .select({
         id: assessmentPackages.id,
@@ -131,7 +139,12 @@ export class TryoutService {
         pack.frozenAt &&
         pack.curriculumApproval.manifestDigest === pack.manifestDigest,
     );
-    const stats = statistics ?? (await this.itemStatistics(eligible.map((pack) => pack.id)));
+    const stats =
+      statistics ??
+      (await this.itemStatistics(
+        eligible.map((pack) => pack.id),
+        db,
+      ));
     const ready = eligible.filter(
       (pack) => stats.get(pack.id)?.versions === 30 && stats.get(pack.id)?.ready === 30,
     );
@@ -423,8 +436,7 @@ export class TryoutService {
     return this.packageMetadata(studentId, pack);
   }
 
-  private async questionRows(attemptId: string) {
-    const { db } = getDatabase();
+  private async questionRows(attemptId: string, db: AssessmentReader = getDatabase().db) {
     return db
       .select({
         id: attemptItems.id,
@@ -446,8 +458,11 @@ export class TryoutService {
       .orderBy(asc(attemptItems.displayOrder));
   }
 
-  private async forStudent(studentId: string, attemptId: string) {
-    const { db } = getDatabase();
+  private async forStudent(
+    studentId: string,
+    attemptId: string,
+    db: AssessmentReader = getDatabase().db,
+  ) {
     const [attempt] = await db
       .select({
         id: assessmentAttempts.id,
@@ -465,10 +480,14 @@ export class TryoutService {
         isDemo: assessmentPackages.isDemo,
         deadlineAt: assessmentAttempts.deadlineAt,
         xpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
+        xp: xpLedger.xpAmount,
+        score: assessmentAttempts.score0To100,
+        now: sql<Date>`clock_timestamp()`.mapWith((value) => new Date(value)),
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .leftJoin(tryoutBatches, eq(tryoutBatches.id, assessmentAttempts.tryoutBatchId))
+      .leftJoin(xpLedger, eq(xpLedger.attemptId, assessmentAttempts.id))
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
@@ -477,33 +496,52 @@ export class TryoutService {
   }
 
   private async presentAttempt(studentId: string, attemptId: string) {
-    let attempt = await this.forStudent(studentId, attemptId);
-    if (attempt.status === 'IN_PROGRESS') {
-      await this.finalizeForStudent(studentId, attemptId, 'automatic');
-      attempt = await this.forStudent(studentId, attemptId);
-    }
+    const { db } = getDatabase();
+    const response = await db.transaction(async (tx) => {
+      const attempt = await this.forStudent(studentId, attemptId, tx);
+      if (
+        attempt.status === 'IN_PROGRESS' &&
+        attempt.deadlineAt &&
+        attempt.deadlineAt <= attempt.now
+      )
+        return null;
+      return this.attemptResponse(tx, attempt);
+    });
+    if (response) return response;
+    // The finalizer owns its transaction. Release the read connection before invoking it.
+    await this.finalizeForStudent(studentId, attemptId, 'automatic');
+    return db.transaction(async (tx) =>
+      this.attemptResponse(tx, await this.forStudent(studentId, attemptId, tx)),
+    );
+  }
+
+  private async attemptResponse(
+    db: AssessmentReader,
+    attempt: Awaited<ReturnType<TryoutService['forStudent']>>,
+  ) {
+    const attemptId = attempt.id;
     if (attempt.status === 'CANCELLED')
       throw new ConflictException(
         problem('ATTEMPT_NOT_ACTIVE', 'Sesi Tryout ini sudah dibatalkan.'),
       );
-    const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId) : [];
+    const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId, db) : [];
     if (rows.length)
-      await getDatabase().db.execute(
-        sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`,
-      );
+      await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     const pendingReason = attempt.managedBatch
       ? null
-      : (await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
+      : (await this.releases.releasedPackageIds([attempt.packageId], attempt.now, db)).has(
+            attempt.packageId,
+          )
         ? null
-        : await this.pendingReason(attempt.packageId);
-    const now = await databaseTime(getDatabase().db);
+        : await this.pendingReason(attempt.packageId, db);
+    const now = await databaseTime(db);
     const resultDueAt =
       attempt.batchResultDueAt ??
       (attempt.closeAt ? new Date(attempt.closeAt.getTime() + 72 * 3600_000) : null);
     const waitState = tryoutResultState(attempt.status, false, resultDueAt, now);
     const isPublished =
       waitState === 'overdue' &&
-      (await this.releases.studentPublications([attempt], now)).ready.has(attemptId);
+      (await this.releases.studentPublications([attempt], now, db)).ready.has(attemptId);
     return {
       id: attempt.id,
       packageId: attempt.packageId,
@@ -516,20 +554,20 @@ export class TryoutService {
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
       serverTime: now.toISOString(),
-      xp: await this.storedXp(attemptId),
+      xp: attempt.xp === null ? null : Number(attempt.xp),
       xpPolicyVersion: attempt.xpPolicyVersion,
-      questions: rows.map((row) => ({
-        ...activeRuntimeQuestion(
-          decodeRuntimeQuestion(row),
-          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
-        ),
-        ...presentAssessmentQuestion(
-          decodeAssessmentContent(row),
-          row.id,
-          row.answer,
-          row.questionVersionId,
-        ),
-      })),
+      questions: rows.map((row) => {
+        const question = decodeRuntimeQuestion(row);
+        return {
+          ...activeRuntimeQuestion(question, validateRuntimeAnswer(question, row.answer ?? null)),
+          ...presentAssessmentQuestion(
+            decodeAssessmentContent(row),
+            row.id,
+            row.answer,
+            row.questionVersionId,
+          ),
+        };
+      }),
     };
   }
 
@@ -570,29 +608,35 @@ export class TryoutService {
       const current =
         selected && selectedPackage
           ? { ...selectedPackage, closeAt: selected.batch.closesAt, durationSeconds: 600 }
-          : await this.currentPackage();
+          : await currentTryoutPackage(tx);
       if (!current || current.id !== packageId)
         throw new ConflictException(
           problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'),
         );
-      const [membership] = await tx
-        .select({ classId: classMemberships.classId })
-        .from(classMemberships)
-        .where(and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)))
-        .limit(1);
-      const [existing] = await tx
-        .select({ id: assessmentAttempts.id })
-        .from(assessmentAttempts)
-        .where(
-          and(
-            eq(assessmentAttempts.studentId, studentId),
-            eq(assessmentAttempts.packageId, packageId),
-            eq(assessmentAttempts.assessmentType, 'TRYOUT'),
-            isNull(assessmentAttempts.tryoutBatchId),
-          ),
-        )
-        .limit(1);
-      if (!selected && existing) return existing.id;
+      let classIdAtStart = selected?.classId ?? null;
+      if (!selected) {
+        const [existing] = await tx
+          .select({ id: assessmentAttempts.id })
+          .from(assessmentAttempts)
+          .where(
+            and(
+              eq(assessmentAttempts.studentId, studentId),
+              eq(assessmentAttempts.packageId, packageId),
+              eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+              isNull(assessmentAttempts.tryoutBatchId),
+            ),
+          )
+          .limit(1);
+        if (existing) return existing.id;
+        const [membership] = await tx
+          .select({ classId: classMemberships.classId })
+          .from(classMemberships)
+          .where(
+            and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)),
+          )
+          .limit(1);
+        classIdAtStart = membership?.classId ?? null;
+      }
       if (!current.scoringPolicyVersionId)
         throw new ServiceUnavailableException(
           problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'),
@@ -696,7 +740,7 @@ export class TryoutService {
             items.some((item) => item.questionType !== 'SINGLE_CHOICE')
               ? null
               : TRYOUT_XP_POLICY.version,
-          classIdAtStart: selected ? selected.classId : (membership?.classId ?? null),
+          classIdAtStart,
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
           deadlineAt,
@@ -754,44 +798,58 @@ export class TryoutService {
   ) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
-    return db.transaction(async (tx) => {
-      const [attempt] = await tx
-        .select()
-        .from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, attemptId))
-        .for('update')
-        .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
+    const write = async (
+      tx: AssessmentReader,
+      lock: boolean,
+      persist: (
+        value: Parameters<typeof saveAssessmentAnswerWithEvent>[1] & { questionVersionId: string },
+      ) => Promise<boolean>,
+    ) => {
+      const [item] = await tx.execute<
+        Parameters<typeof decodeAssessmentContent>[0] & {
+          id: string | null;
+          questionVersionId: string | null;
+          studentId: string;
+          assessmentType: string;
+          status: string;
+          deadlineAt: string | null;
+          now: string;
+        }
+      >(sql`
+        with locked as materialized (
+          select a.id, a.student_id, a.assessment_type, a.status,
+            case when a.tryout_batch_id is not null then a.deadline_at
+              else least(a.deadline_at, p.close_at) end as deadline_at
+          from public.assessment_attempts a
+          join public.assessment_packages p on p.id = a.package_id
+          where a.id = ${attemptId} ${lock ? sql`for update of a` : sql``}
+        )
+        select a.student_id as "studentId", a.assessment_type as "assessmentType",
+          a.status, a.deadline_at::text as "deadlineAt", clock_timestamp()::text as now,
+          i.id, q.id as "questionVersionId", q.question_type as "questionType", q.stem,
+          q.options_or_statements as "optionsOrStatements", q.answer_key as "answerKey", q.explanation
+        from locked a
+        left join public.attempt_items i on i.attempt_id = a.id and i.id = ${questionInstanceId}
+        left join public.question_versions q on q.id = i.question_version_id
+      `);
+      if (!item || item.studentId !== studentId || item.assessmentType !== 'TRYOUT')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
-      if (attempt.status !== 'IN_PROGRESS')
+      if (item.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Tryout sudah selesai.'));
-      const [pkg] = await tx
-        .select({ closeAt: assessmentPackages.closeAt })
-        .from(assessmentPackages)
-        .where(eq(assessmentPackages.id, attempt.packageId));
-      const deadlineAt = attempt.tryoutBatchId
-        ? attempt.deadlineAt
-        : earlierDeadline(attempt.deadlineAt, pkg?.closeAt ?? null);
-      if (deadlineAt && deadlineAt <= (await databaseTime(tx)))
-        throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
-      const [item] = await tx
-        .select({
-          id: attemptItems.id,
-          questionType: questionVersions.questionType,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-        })
-        .from(attemptItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-        .where(and(eq(attemptItems.id, questionInstanceId), eq(attemptItems.attemptId, attemptId)))
-        .limit(1);
-      if (!item)
+      const deadlineAt = item.deadlineAt ? new Date(item.deadlineAt) : null;
+      if (!item.id || !item.questionVersionId)
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'),
         );
-      const content = decodeAssessmentContent(item);
+      const content = decodeAssessmentContent({
+        questionType: item.questionType,
+        stem: questionVersions.stem.mapFromDriverValue(item.stem),
+        optionsOrStatements: questionVersions.optionsOrStatements.mapFromDriverValue(
+          item.optionsOrStatements,
+        ),
+        answerKey: questionVersions.answerKey.mapFromDriverValue(item.answerKey),
+        explanation: questionVersions.explanation.mapFromDriverValue(item.explanation),
+      });
       let answer;
       try {
         answer = normalizeAssessmentAnswer(
@@ -803,18 +861,20 @@ export class TryoutService {
           throw new BadRequestException(problem(error.code, error.message));
         throw error;
       }
-      const now = await databaseTime(tx);
+      const now = new Date(item.now);
       if (deadlineAt && deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       try {
-        await saveAssessmentAnswerWithEvent(tx, {
+        const accepted = await persist({
           attemptId,
           questionInstanceId: item.id,
+          questionVersionId: item.questionVersionId,
           answer,
           questionFormat: content.type,
           now,
           deadlineAt,
         });
+        if (!accepted) return null;
       } catch (error) {
         if (error instanceof AssessmentFinalizationError && error.code === 'TRYOUT_DEADLINE_PASSED')
           throw new ConflictException(problem(error.code, error.message));
@@ -825,7 +885,26 @@ export class TryoutService {
         answer,
         selectedOptionId: answer && 'optionId' in answer ? answer.optionId : null,
       };
-    });
+    };
+    const lockedWrite = () =>
+      db.transaction(async (tx) => {
+        const response = await write(tx, true, async (value) => {
+          await saveAssessmentAnswerWithEvent(tx, value);
+          return true;
+        });
+        if (!response) throw new Error('Locked Tryout answer save was rejected.');
+        return response;
+      });
+    if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true') return lockedWrite();
+    return (
+      (await write(db, false, (value) =>
+        saveAssessmentAnswerAtomically(db, {
+          ...value,
+          studentId,
+          guard: { assessmentType: 'TRYOUT', deadlineAt: value.deadlineAt ?? null },
+        }),
+      )) ?? lockedWrite()
+    );
   }
 
   private async finalizeForStudent(
@@ -852,18 +931,9 @@ export class TryoutService {
     const attempt = await this.forStudent(studentId, attemptId);
     return {
       state: 'waitingIrt' as const,
-      xp: await this.storedXp(attemptId),
+      xp: attempt.xp === null ? null : Number(attempt.xp),
       xpPolicyVersion: attempt.xpPolicyVersion,
     };
-  }
-
-  private async storedXp(attemptId: string) {
-    const [reward] = await getDatabase()
-      .db.select({ xp: xpLedger.xpAmount })
-      .from(xpLedger)
-      .where(eq(xpLedger.attemptId, attemptId))
-      .limit(1);
-    return reward ? Number(reward.xp) : null;
   }
 
   async result(authorization: string | undefined, attemptId: string) {
@@ -872,28 +942,23 @@ export class TryoutService {
     const { db } = getDatabase();
     const { ready, canonical: published } = await this.releases.studentPublications(
       [attempt],
-      await databaseTime(db),
+      attempt.now,
     );
     if (!ready.has(attemptId))
       throw new ConflictException(
         problem('TRYOUT_RESULT_PENDING', 'Hasil Tryout menunggu rilis IRT.'),
       );
-    const [score] = await db
-      .select({ rawPoints: assessmentAttempts.rawPoints, score: assessmentAttempts.score0To100 })
-      .from(assessmentAttempts)
-      .where(eq(assessmentAttempts.id, attemptId))
-      .limit(1);
     const canonical = published.get(attemptId);
     const rows = await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
-    const xp = await this.storedXp(attemptId);
+    const xp = attempt.xp === null ? null : Number(attempt.xp);
     return {
       attemptId,
       packageTitle: presentFixtureText(attempt.packageId, 'name', attempt.title),
       xp,
       xpPolicyVersion: attempt.xpPolicyVersion,
-      score: canonical ? canonical.score : Number(score?.score ?? 0),
+      score: canonical ? canonical.score : Number(attempt.score ?? 0),
       mode: canonical?.mode ?? 'DEMO',
       publicationVersion: canonical?.version ?? null,
       correctCount: rows.filter(

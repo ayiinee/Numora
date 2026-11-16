@@ -65,8 +65,10 @@ export async function finalizeTryout(request: Request) {
       .select()
       .from(assessmentPackages)
       .where(eq(assessmentPackages.id, attempt.packageId));
-    const [batch] = attempt.tryoutBatchId ? await tx.select().from(tryoutBatches).where(eq(tryoutBatches.id, attempt.tryoutBatchId)) : [];
-    const close = batch?.adminTitle ? batch.closesAt : packageRow?.closeAt ?? null;
+    const [batch] = attempt.tryoutBatchId
+      ? await tx.select().from(tryoutBatches).where(eq(tryoutBatches.id, attempt.tryoutBatchId))
+      : [];
+    const close = batch?.adminTitle ? batch.closesAt : (packageRow?.closeAt ?? null);
     const deadline =
       attempt.deadlineAt === null
         ? close
@@ -121,22 +123,27 @@ export async function finalizeTryout(request: Request) {
           'Rubrik penilaian PGK belum disahkan.',
         );
       // DEMO transport acceptance only: freeze raw answers without grading or XP.
-      let answeredCount = 0;
-      for (const row of rows) {
+      const answers = rows.map((row) => {
         const content = decodeAssessmentContent(row);
         const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
-        if (answer) answeredCount++;
         const empty =
           content.type === 'CATEGORY'
             ? { categoryByStatementId: {} }
             : content.type === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
               ? { optionIds: [] }
               : { optionId: null };
-        await tx
-          .insert(attemptAnswers)
-          .values({ attemptItemId: row.id, answer: answer ?? empty, savedAt: now })
-          .onConflictDoNothing();
-      }
+        return { id: row.id, answer, empty };
+      });
+      await tx
+        .insert(attemptAnswers)
+        .values(
+          answers.map(({ id, answer, empty }) => ({
+            attemptItemId: id,
+            answer: answer ?? empty,
+            savedAt: now,
+          })),
+        )
+        .onConflictDoNothing();
       await tx
         .update(assessmentAttempts)
         .set({ status: 'SUBMITTED', finishedAt: now })
@@ -148,7 +155,7 @@ export async function finalizeTryout(request: Request) {
           eventName: 'tryout_submitted',
           submissionType: expired ? 'deadline' : 'manual',
           questionCount: rows.length,
-          answeredCount,
+          answeredCount: answers.filter(({ answer }) => answer !== null).length,
         },
         now,
       );
@@ -239,10 +246,10 @@ export async function finalizeTryout(request: Request) {
     const maximum = grades.reduce((sum, grade) => sum + grade.maximum, 0);
     if (!Number.isFinite(maximum) || maximum <= 0)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Poin paket tidak valid.');
-    for (const grade of grades)
-      await tx
-        .insert(attemptAnswers)
-        .values({
+    await tx
+      .insert(attemptAnswers)
+      .values(
+        grades.map((grade) => ({
           attemptItemId: grade.id,
           answer: grade.answer === null ? sql`'null'::jsonb` : grade.answer,
           savedAt: now,
@@ -250,19 +257,20 @@ export async function finalizeTryout(request: Request) {
           gradedAt: now,
           fullyCorrect: grade.correct,
           scoreCategory: grade.scoreCategory,
-          responseState: grade.answer === null ? 'OMITTED' : 'RESPONDED',
-        })
-        .onConflictDoUpdate({
-          target: attemptAnswers.attemptItemId,
-          // Preserve the raw answer and its original save timestamp.
-          set: {
-            awardedPoints: String(grade.points),
-            gradedAt: now,
-            fullyCorrect: grade.correct,
-            scoreCategory: grade.scoreCategory,
-            responseState: grade.answer === null ? 'OMITTED' : 'RESPONDED',
-          },
-        });
+          responseState: grade.answer === null ? ('OMITTED' as const) : ('RESPONDED' as const),
+        })),
+      )
+      .onConflictDoUpdate({
+        target: attemptAnswers.attemptItemId,
+        // Preserve the raw answer and its original save timestamp.
+        set: {
+          awardedPoints: sql`excluded.awarded_points`,
+          gradedAt: now,
+          fullyCorrect: sql`excluded.fully_correct`,
+          scoreCategory: sql`excluded.score_category`,
+          responseState: sql`excluded.response_state`,
+        },
+      });
     await tx
       .update(assessmentAttempts)
       .set({

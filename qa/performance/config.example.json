@@ -1,0 +1,44 @@
+{
+  "web": "https://capacity-web.example.test",
+  "api": "https://capacity-api.example.test",
+  "deployment": {
+    "web": "0000000000000000000000000000000000000000",
+    "api": "0000000000000000000000000000000000000000",
+    "worker": "0000000000000000000000000000000000000000"
+  },
+  "assessmentWrites": ["drill", "pretest", "tryout"],
+  "pvp": true,
+  "evidenceDatabaseHost": "capacity-db.example.test",
+  "assets": [],
+  "extraJourneys": {
+    "admin": [{ "operation": "GET /api/v1/admin/analytics", "status": 200 }]
+  },
+  "browserSamples": [],
+  "authorization": {
+    "reference": "",
+    "operator": "",
+    "monitored": false,
+    "startsAt": "",
+    "endsAt": "",
+    "sha": "",
+    "suites": ["smoke", "load"],
+    "maxStudents": 0,
+    "isolated": false,
+    "backupEvidence": "",
+    "smokeEvidence": "",
+    "targetLoadEvidence": "",
+    "stagingPass": "",
+    "greenCi": "",
+    "stopOwner": "",
+    "operations": [],
+    "isolation": {
+      "evidence": "",
+      "operations": [],
+      "leaderboards": false,
+      "irt": false,
+      "analytics": false,
+      "notifications": false,
+      "publicContent": false
+    }
+  }
+}

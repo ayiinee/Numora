@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { requireFrom, testEnvironment } from '../../scripts/qa/process.mjs';
 import { createHttpObserver } from './http-observer.mjs';
+import { seedCapacityActors, seedCapacityPvp } from './capacity-fixtures.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const { environment, problems } = testEnvironment(root);
 if (
@@ -19,6 +20,10 @@ if (
     '/numora_test_qa_' + process.env.QA_RUN_ID.replaceAll('-', '')
 )
   throw new Error('QA_RUN_ID_DATABASE_MISMATCH');
+const capacity = environment.QA_LOCAL_CAPACITY === 'true';
+const webOrigin = 'http://localhost:' + (capacity ? 3520 : 3500);
+const apiPort = capacity ? 3521 : 3501;
+const authPort = capacity ? 3522 : 3502;
 const require = requireFrom(root, 'apps/api');
 require('reflect-metadata');
 Object.assign(process.env, environment, {
@@ -26,10 +31,13 @@ Object.assign(process.env, environment, {
   DATABASE_URL: environment.TEST_DATABASE_URL,
   REDIS_URL: environment.TEST_REDIS_URL,
   ALLOW_SYNTHETIC_CONTENT: 'true',
-  SUPABASE_URL: 'http://localhost:3502',
+  SUPABASE_URL: 'http://localhost:' + authPort,
   SUPABASE_PUBLISHABLE_KEY: 'qa-local-fixture-public-key',
   TEACHER_TOKEN_PEPPER: 'qa-local-fixture-only-pepper',
-  CORS_ORIGINS: 'http://localhost:3500',
+  CORS_ORIGINS: webOrigin,
+  ...(capacity
+    ? { PVP_MODE: 'demo', PVP_CONTENT_MODE: 'strict', PVP_NEW_MATCHES_ENABLED: 'true' }
+    : {}),
   IRT_ENABLED: 'false',
 });
 const { getDatabase, closeDatabaseConnection } = await import(
@@ -47,7 +55,8 @@ const ids = {
   levelTwo: '00000000-0000-4000-8000-000000000103',
 };
 const actors = {};
-async function actor(alias, role = 'STUDENT') {
+const usersByAuthorization = new Map();
+async function actor(alias, role = 'STUDENT', adminRole = 'SUPER_ADMIN') {
   const authId = randomUUID();
   const [profile] = await client.unsafe(
     'insert into users(auth_user_id,role,display_name,email,status,admin_role) values($1,$2,$3,$4,$5,$6) returning id',
@@ -57,7 +66,7 @@ async function actor(alias, role = 'STUDENT') {
       'TEST ONLY QA',
       authId + '@example.test',
       'ACTIVE',
-      role === 'ADMIN' ? 'SUPER_ADMIN' : null,
+      role === 'ADMIN' ? adminRole : null,
     ],
   );
   const user = {
@@ -80,6 +89,7 @@ async function actor(alias, role = 'STUDENT') {
     ).toString('base64url'),
     randomUUID(),
   ].join('.');
+  usersByAuthorization.set('Bearer ' + jwt, user);
   actors[alias] = {
     profileId: profile.id,
     session: {
@@ -105,8 +115,17 @@ await seedReadyDrillFixture(client, {
   levelIds: [ids.levelOne, ids.levelTwo],
   testDatabaseUrl: environment.TEST_DATABASE_URL,
 });
+let mixedActors;
+if (capacity) {
+  const { seedLifecycleDemo } = await import(
+    pathToFileURL(resolve(root, 'packages/database/dist/lifecycle-demo.js')).href
+  );
+  const lifecycle = await seedLifecycleDemo(process.env.QA_RUN_ID, { tryoutSingleChoice: true });
+  await seedCapacityPvp(client, ids.subchapter, actors.admin.profileId);
+  mixedActors = await seedCapacityActors(client, actor, ids, lifecycle, actors.admin.profileId);
+}
 const authServer = createServer(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3500');
+  res.setHeader('Access-Control-Allow-Origin', webOrigin);
   res.setHeader(
     'Access-Control-Allow-Headers',
     'authorization,apikey,content-type,x-client-info,x-supabase-api-version',
@@ -119,10 +138,8 @@ const authServer = createServer(async (req, res) => {
   try {
     if (req.method === 'OPTIONS') return send(200, {});
     if (req.url === '/auth/v1/user') {
-      const found = Object.values(actors).find(
-        (a) => 'Bearer ' + a.session.access_token === req.headers.authorization,
-      );
-      return send(found ? 200 : 401, found?.session.user || { message: 'Invalid fixture session' });
+      const user = usersByAuthorization.get(req.headers.authorization);
+      return send(user ? 200 : 401, user || { message: 'Invalid fixture session' });
     }
     if (req.url?.startsWith('/auth/v1/logout')) return send(200, {});
     if (req.url === '/fixtures')
@@ -133,6 +150,12 @@ const authServer = createServer(async (req, res) => {
         content: 'TEST_ONLY_PG',
         auth: 'EMAIL_FIXTURE_NOT_GOOGLE',
       });
+    if (capacity && req.url === '/capacity-actors') {
+      if (!mixedActors) return send(410, { message: 'Fixture bundle was already collected' });
+      const bundle = mixedActors;
+      mixedActors = null;
+      return send(200, bundle);
+    }
     if (req.url === '/actors' && req.method === 'POST')
       return send(201, await actor('actor-' + randomUUID()));
     if (req.url === '/persistence') {
@@ -155,7 +178,7 @@ const authServer = createServer(async (req, res) => {
 });
 await new Promise((ready, reject) => {
   authServer.once('error', reject);
-  authServer.listen(3502, '127.0.0.1', ready);
+  authServer.listen(authPort, '127.0.0.1', ready);
 });
 const { NestFactory } = require('@nestjs/core');
 const { AppModule } = await import(
@@ -182,7 +205,7 @@ if (observer) {
     },
   });
 }
-await app.listen(3501, '127.0.0.1');
+await app.listen(apiPort, '127.0.0.1');
 console.log('QA connected harness ready. Synthetic auth only; product API and database are real.');
 async function shutdown() {
   await app.close();

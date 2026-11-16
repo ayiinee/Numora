@@ -7,16 +7,8 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  getDatabase,
-  measureRuntime,
-  classMemberships,
-  schools,
-  teacherSchoolMemberships,
-  users,
-} from '@tka/database';
+import { getDatabase, measureRuntime, users } from '@tka/database';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
-import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 import { adminCapabilities } from './admin-capabilities';
 import { authenticateForRequest } from './authentication-request';
@@ -34,6 +26,20 @@ function usedPassword(verifiedToken: string): boolean {
   } catch {
     return false;
   }
+}
+
+type AccountAccess = Pick<IdentityProfileDto, 'id' | 'role' | 'status'>;
+
+function assertActiveAccount<T extends AccountAccess>(
+  profile: T | undefined,
+): asserts profile is T {
+  if (!profile)
+    throw new NotFoundException({
+      code: 'ACCOUNT_NOT_REGISTERED',
+      detail: 'Lengkapi profil untuk melanjutkan.',
+    });
+  if (profile.status !== 'ACTIVE')
+    throw new ForbiddenException({ code: 'ACCOUNT_DISABLED', detail: 'Akun ini tidak aktif.' });
 }
 
 @Injectable()
@@ -66,63 +72,38 @@ export class IdentityService {
 
   async getProfile(authorization?: string): Promise<IdentityProfileDto> {
     const authUser = await this.authenticate(authorization);
-    const { db } = getDatabase();
-    const [profile] = await db
-      .select()
-      .from(users)
-      .where(eq(users.authUserId, authUser.id))
-      .limit(1);
-    if (!profile)
-      throw new NotFoundException({
-        code: 'ACCOUNT_NOT_REGISTERED',
-        detail: 'Lengkapi profil untuk melanjutkan.',
-      });
-    if (profile.status !== 'ACTIVE')
-      throw new ForbiddenException({ code: 'ACCOUNT_DISABLED', detail: 'Akun ini tidak aktif.' });
-
-    let teacherVerified: boolean | null = null;
-    let studentAffiliation: 'MANDIRI' | 'SCHOOL' | null = null;
-    if (profile.role === 'TEACHER') {
-      const membership = await db
-        .select({ id: teacherSchoolMemberships.id })
-        .from(teacherSchoolMemberships)
-        .innerJoin(schools, eq(schools.id, teacherSchoolMemberships.schoolId))
-        .where(
-          and(
-            eq(teacherSchoolMemberships.teacherUserId, profile.id),
-            isNull(teacherSchoolMemberships.endedAt),
-            eq(schools.status, 'ACTIVE'),
-          ),
-        )
-        .limit(1);
-      teacherVerified = membership.length > 0;
-    }
-    if (profile.role === 'STUDENT') {
-      const membership = await db
-        .select({ id: classMemberships.id })
-        .from(classMemberships)
-        .where(and(eq(classMemberships.studentUserId, profile.id), isNull(classMemberships.leftAt)))
-        .limit(1);
-      studentAffiliation = membership.length > 0 ? 'SCHOOL' : 'MANDIRI';
-    }
-
+    const [profile] = await getDatabase().client<Omit<IdentityProfileDto, 'capabilities'>[]>`
+      select u.id, u.role, u.status, u.display_name as "displayName", u.email,
+        u.admin_role as "adminRole", u.profile_photo_object_key as "profilePhotoObjectKey",
+        case when u.role = 'TEACHER' then exists (
+          select 1 from public.teacher_school_memberships tm
+          join public.schools s on s.id = tm.school_id
+          where tm.teacher_user_id = u.id and tm.ended_at is null and s.status = 'ACTIVE'
+        ) else null end as "teacherVerified",
+        case when u.role = 'STUDENT' then case when exists (
+          select 1 from public.class_memberships cm
+          where cm.student_user_id = u.id and cm.left_at is null
+        ) then 'SCHOOL' else 'MANDIRI' end else null end as "studentAffiliation"
+      from public.users u where u.auth_user_id = ${authUser.id} limit 1
+    `;
+    assertActiveAccount(profile);
     return {
-      id: profile.id,
-      role: profile.role,
-      profilePhotoObjectKey: profile.profilePhotoObjectKey ?? null,
-      status: profile.status,
-      displayName: profile.displayName,
-      email: profile.email,
-      adminRole: profile.adminRole,
+      ...profile,
       capabilities: profile.role === 'ADMIN' ? adminCapabilities(profile.adminRole) : [],
-      teacherVerified,
-      studentAffiliation,
     };
   }
 
   // Compatibility alias for domain modules that use the shorter profile lookup name.
-  async me(authorization?: string): Promise<IdentityProfileDto> {
-    return this.getProfile(authorization);
+  me(authorization?: string): Promise<IdentityProfileDto>;
+  me(authorization: string | undefined, scope: 'access'): Promise<AccountAccess>;
+  async me(authorization?: string, scope?: 'access') {
+    if (!scope) return this.getProfile(authorization);
+    const authUser = await this.authenticate(authorization);
+    const [profile] = await getDatabase().client<AccountAccess[]>`
+      select id, role, status from public.users where auth_user_id = ${authUser.id} limit 1
+    `;
+    assertActiveAccount(profile);
+    return profile;
   }
 
   async registerProfile(

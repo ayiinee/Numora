@@ -30,6 +30,7 @@ import { DrillAssessmentService } from './drill-assessment.service';
 import { AssessmentHistoryService } from './assessment-history.service';
 import { LearningCatalogService } from './learning-catalog.service';
 import { TryoutReleaseService } from './tryout-release.service';
+import { saveAssessmentAnswerAtomically } from '@tka/assessment-engine';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 const integration = testUrl ? describe : describe.skip;
@@ -267,6 +268,80 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(
       await db.select().from(analyticsOutbox).where(eq(analyticsOutbox.entityId, untracked.id)),
     ).toHaveLength(0);
+    const [pin] = await db
+      .select({ versionId: attemptItems.questionVersionId })
+      .from(attemptItems)
+      .where(eq(attemptItems.id, untracked.questions[0]!.questionInstanceId));
+    const [clock] = await db
+      .select({ timer: assessmentAttempts.drillTimer })
+      .from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, untracked.id));
+    const atomicInput = {
+      attemptId: untracked.id,
+      questionInstanceId: untracked.questions[0]!.questionInstanceId,
+      questionVersionId: pin!.versionId,
+      studentId: stranger!.id,
+      answer: { optionId: 'A' },
+      questionFormat: 'SINGLE_CHOICE' as const,
+      guard: {
+        assessmentType: 'DRILL' as const,
+        timer: clock!.timer,
+        expiresAt: new Date(clock!.timer!.session!.endsAtMs),
+      },
+    };
+    const answerSnapshot = () =>
+      getDatabase().client`select answer::text, saved_at::text from public.attempt_answers
+        where attempt_item_id = ${atomicInput.questionInstanceId}`;
+    const beforeDuplicate = await answerSnapshot();
+    expect(await saveAssessmentAnswerAtomically(db, atomicInput)).toBe(true);
+    expect(await answerSnapshot()).toEqual(beforeDuplicate);
+    expect(
+      await saveAssessmentAnswerAtomically(db, { ...atomicInput, studentId: student!.id }),
+    ).toBe(false);
+    expect(
+      await saveAssessmentAnswerAtomically(db, { ...atomicInput, questionVersionId: randomUUID() }),
+    ).toBe(false);
+    // The save starts before a concurrent pause commits and waits for its row lock.
+    // It must use the timer after that lock is released, rather than its initial snapshot.
+    let release!: () => void;
+    let announce!: (pid: number) => void;
+    const released = new Promise<void>((done) => (release = done));
+    const acquired = new Promise<number>((done) => (announce = done));
+    const pause = db.transaction(async (tx) => {
+      await tx.execute(sql`select id from public.assessment_attempts
+        where id = ${untracked.id} for update`);
+      const [backend] = await tx.execute<{ pid: number }>(sql`select pg_backend_pid() as pid`);
+      announce(backend!.pid);
+      await released;
+      await tx
+        .update(assessmentAttempts)
+        .set({ drillTimer: { elapsedMs: 0, session: null } })
+        .where(eq(assessmentAttempts.id, untracked.id));
+    });
+    const locker = await acquired;
+    const racingSave = saveAssessmentAnswerAtomically(db, {
+      ...atomicInput,
+      answer: { optionId: 'B' },
+    });
+    try {
+      let waiting = false;
+      for (let i = 0; i < 100 && !waiting; i++) {
+        const [state] = await getDatabase().client`select exists (
+          select 1 from pg_stat_activity where ${locker} = any(pg_blocking_pids(pid))
+        ) as waiting`;
+        waiting = state!.waiting;
+        if (!waiting) await new Promise((done) => setTimeout(done, 10));
+      }
+      expect(waiting).toBe(true);
+    } finally {
+      release();
+      await pause;
+    }
+    expect(await racingSave).toBe(false);
+    expect(await answerSnapshot()).toEqual(beforeDuplicate);
+    await expect(
+      learning.saveAnswer('stranger', untracked.id, atomicInput.questionInstanceId, 'B'),
+    ).rejects.toMatchObject({ status: 409, response: { code: 'DRILL_PAUSED' } });
     vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'true');
     expect((await learning.start('stranger', firstLevel!.id)).id).toBe(untracked.id);
     expect(
@@ -302,15 +377,40 @@ integration('Drill lifecycle against PostgreSQL', () => {
     ]);
     expect(concurrentStarts.map((item) => item.id)).toEqual([attempt.id, attempt.id]);
     await expect(learning.attempt('stranger', attempt.id)).rejects.toMatchObject({ status: 404 });
+    await learning.saveAnswer(
+      'student',
+      attempt.id,
+      attempt.questions[0]!.questionInstanceId,
+      null,
+    );
+    expect(
+      await db
+        .select()
+        .from(analyticsOutbox)
+        .where(
+          and(
+            eq(analyticsOutbox.entityId, attempt.id),
+            eq(analyticsOutbox.eventName, 'question_answered'),
+          ),
+        ),
+    ).toHaveLength(0);
     await learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, 'B');
     expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBe(
       'B',
     );
+    // Older database clients could persist a JSON string inside the JSONB column.
+    await db.execute(sql`update public.attempt_answers set answer = to_jsonb(answer::text)
+      where attempt_item_id = ${attempt.questions[0]!.questionInstanceId}`);
     await Promise.all(
       [1, 2].map(() =>
         learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, 'B'),
       ),
     );
+    const [legacyEncoding] = await db.execute<{ encoding: string }>(sql`
+      select jsonb_typeof(answer) as encoding from public.attempt_answers
+      where attempt_item_id = ${attempt.questions[0]!.questionInstanceId}
+    `);
+    expect(legacyEncoding!.encoding).toBe('string');
     const beforeFailure = (
       await db
         .select()

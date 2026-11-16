@@ -36,7 +36,7 @@ vi.mock('@/features/core-learning/api', async (original) => ({
         },
       ],
     }),
-    media: mock.media,
+    itemMedia: mock.media,
   },
 }));
 afterEach(cleanup);
@@ -60,6 +60,6 @@ it('loads authorized image media when student opens a Pretest question', async (
   );
   await screen.findByText('Sesi Pretest Bab');
   expect(await screen.findByAltText('Diagram Pretest')).toBeTruthy();
-  expect(mock.media).toHaveBeenCalledWith('TEST ONLY', 'attempt', 'question', 'WORK', ['diagram']);
+  expect(mock.media).toHaveBeenCalledWith('TEST ONLY', 'question', 'WORK');
   client.clear();
 });

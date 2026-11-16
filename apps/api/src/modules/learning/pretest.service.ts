@@ -16,6 +16,7 @@ import {
   assessmentPackages,
   currentPretestPackage,
   supportedPretestPolicy,
+  type AssessmentReader,
   attemptAnswers,
   attemptItems,
   chapters,
@@ -45,6 +46,13 @@ type Transaction = Parameters<
   Parameters<ReturnType<typeof getDatabase>['db']['transaction']>[0]
 >[0];
 const problem = (code: string, detail: string) => ({ code, detail });
+const runtimeQuestionFields = {
+  questionType: questionVersions.questionType,
+  stem: questionVersions.stem,
+  optionsOrStatements: questionVersions.optionsOrStatements,
+  answerKey: questionVersions.answerKey,
+  explanation: questionVersions.explanation,
+};
 export function pretestInitialLevel(correct: number) {
   return correct >= 19 ? 3 : correct >= 8 ? 2 : 1;
 }
@@ -53,36 +61,35 @@ export function pretestInitialLevel(correct: number) {
 export class PretestService {
   constructor(private readonly identity: IdentityService) {}
   private async student(auth?: string) {
-    const user = await this.identity.me(auth);
+    const user = await this.identity.me(auth, 'access');
     if (user.role !== 'STUDENT' || (user.status && user.status !== 'ACTIVE'))
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student aktif diperlukan.'));
     return user.id;
   }
-  private async readyChapter(chapterId: string) {
-    const [chapter] = await getDatabase()
-      .db.select()
+  private async readyChapter(chapterId: string, db: AssessmentReader = getDatabase().db) {
+    const [chapter] = await db
+      .select()
       .from(chapters)
       .where(and(eq(chapters.id, chapterId), eq(chapters.status, 'READY')));
     if (!chapter) throw new NotFoundException(problem('CHAPTER_NOT_FOUND', 'Bab tidak ditemukan.'));
     return chapter;
   }
-  private async package(chapterId: string) {
-    return currentPretestPackage(chapterId, getDatabase().db, isPretestPartialPolicy);
+  private async package(chapterId: string, db: AssessmentReader = getDatabase().db) {
+    return currentPretestPackage(chapterId, db, isPretestPartialPolicy);
   }
-  private async supportedPolicy(id: string | null, synthetic: boolean) {
-    return supportedPretestPolicy(id, synthetic, getDatabase().db, isPretestPartialPolicy);
-  }
-  private async partialPolicy(id: string | null) {
+  private async partialPolicy(id: string | null, db: AssessmentReader) {
     if (!id) return false;
-    const [policy] = await getDatabase()
-      .db.select()
+    const [policy] = await db
+      .select()
       .from(scoringPolicyVersions)
       .where(eq(scoringPolicyVersions.id, id));
     return !!policy && isPretestPartialPolicy(policy);
   }
   private async state(studentId: string, chapterId: string) {
-    const chapter = await this.readyChapter(chapterId);
-    const db = getDatabase().db;
+    return getDatabase().db.transaction((tx) => this.chapterState(tx, studentId, chapterId));
+  }
+  private async chapterState(db: AssessmentReader, studentId: string, chapterId: string) {
+    const chapter = await this.readyChapter(chapterId, db);
     const [attempt] = await db
       .select()
       .from(assessmentAttempts)
@@ -105,7 +112,7 @@ export class PretestService {
           eq(pretestChapterStates.chapterId, chapterId),
         ),
       );
-    const selected = await this.package(chapterId);
+    const selected = await this.package(chapterId, db);
     const [pinned] = attempt
       ? await db
           .select({ isDemo: assessmentPackages.isDemo })
@@ -271,7 +278,7 @@ export class PretestService {
           );
         return existing.id;
       }
-      const selected = await this.package(chapterId);
+      const selected = await this.package(chapterId, tx);
       if (!selected)
         throw new ServiceUnavailableException(
           problem(
@@ -296,7 +303,7 @@ export class PretestService {
         )
         .where(eq(packageItems.packageId, selected.id))
         .orderBy(asc(packageItems.displayOrder));
-      const partial = await this.partialPolicy(selected.scoringPolicyVersionId);
+      const partial = await this.partialPolicy(selected.scoringPolicyVersionId, tx);
       if (
         rows.length !== 20 ||
         rows.some(
@@ -382,8 +389,8 @@ export class PretestService {
   private rows(attemptId: string) {
     return getDatabase()
       .db.select({
-        item: attemptItems,
-        version: questionVersions,
+        item: { id: attemptItems.id },
+        version: { id: questionVersions.id, ...runtimeQuestionFields },
         answer: attemptAnswers.answer,
         revision: attemptAnswers.revision,
       })
@@ -429,7 +436,7 @@ export class PretestService {
     const studentId = await this.student(auth);
     return getDatabase().db.transaction(async (tx) => {
       const [attempt] = await tx
-        .select()
+        .select({ status: assessmentAttempts.status })
         .from(assessmentAttempts)
         .where(
           and(
@@ -445,8 +452,7 @@ export class PretestService {
         throw new ConflictException(problem('PRETEST_COMPLETED', 'Pretest sudah selesai.'));
       const [row] = await tx
         .select({
-          item: attemptItems,
-          version: questionVersions,
+          version: runtimeQuestionFields,
           answer: attemptAnswers.answer,
           revision: attemptAnswers.revision,
         })
@@ -495,7 +501,7 @@ export class PretestService {
           set: {
             answer: answer === null ? sql`'null'::jsonb` : answer,
             revision,
-            savedAt: await databaseTime(tx),
+            savedAt: sql`clock_timestamp()`,
           },
         });
       return {
@@ -531,9 +537,14 @@ export class PretestService {
         .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
         .leftJoin(scoringRubricVersions, eq(scoringRubricVersions.id, attemptItems.rubricVersionId))
         .where(eq(attemptItems.attemptId, attemptId));
-      const partial = await this.partialPolicy(attempt!.scoringPolicyVersionId);
+      const partial = await this.partialPolicy(attempt!.scoringPolicyVersionId, tx);
       if (
-        !(await this.supportedPolicy(attempt!.scoringPolicyVersionId, owned.isDemo)) ||
+        !(await supportedPretestPolicy(
+          attempt!.scoringPolicyVersionId,
+          owned.isDemo,
+          tx,
+          isPretestPartialPolicy,
+        )) ||
         rows.length !== 20 ||
         (!partial && rows.some((row) => row.version.questionType !== 'SINGLE_CHOICE'))
       )
@@ -556,6 +567,7 @@ export class PretestService {
         : null;
       let correctCount = 0;
       const now = await databaseTime(tx);
+      const gradedAnswers: (typeof attemptAnswers.$inferInsert)[] = [];
       for (const [index, row] of rows.entries()) {
         const content = decodeAssessmentContent(row.version);
         const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
@@ -574,20 +586,33 @@ export class PretestService {
         };
         const awardedPoints = String(Number((fraction * Number(row.item.maxPoints)).toFixed(2)));
         if (fraction === 1) correctCount++;
-        await tx
-          .insert(attemptAnswers)
-          .values({
-            attemptItemId: row.item.id,
-            answer: answer === null ? sql`'null'::jsonb` : answer,
-            awardedPoints,
-            ...grading,
-            gradedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: attemptAnswers.attemptItemId,
-            set: { awardedPoints, ...grading, gradedAt: now },
-          });
+        gradedAnswers.push({
+          attemptItemId: row.item.id,
+          answer,
+          awardedPoints,
+          ...grading,
+          gradedAt: now,
+        });
       }
+      await tx
+        .insert(attemptAnswers)
+        .values(
+          gradedAnswers.map((row) => ({
+            ...row,
+            answer: row.answer === null ? sql`'null'::jsonb` : row.answer,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: attemptAnswers.attemptItemId,
+          // Grade pinned items together; preserve the original answer, revision and save time.
+          set: {
+            awardedPoints: sql`excluded.awarded_points`,
+            scoreCategory: sql`excluded.score_category`,
+            fullyCorrect: sql`excluded.fully_correct`,
+            responseState: sql`excluded.response_state`,
+            gradedAt: now,
+          },
+        });
       const initialLevel = partialResult?.initialLevel ?? pretestInitialLevel(correctCount);
       const unlocked = await this.unlock(
         tx,

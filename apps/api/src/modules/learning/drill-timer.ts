@@ -3,7 +3,7 @@ import type { assessmentAttempts } from '@tka/database';
 
 type DrillTimer = NonNullable<(typeof assessmentAttempts.$inferSelect)['drillTimer']>;
 
-const leaseMs = 30_000;
+export const DRILL_LEASE_MS = 30_000;
 
 export function elapsedDrillMs(timer: DrillTimer, now: number) {
   const session = timer.session;
@@ -25,7 +25,7 @@ export function drillClock(timer: DrillTimer, now: number) {
 export function startDrillClock(timer: DrillTimer, now: number): DrillTimer {
   return {
     elapsedMs: elapsedDrillMs(timer, now),
-    session: { id: randomUUID(), startedAtMs: now, endsAtMs: now + leaseMs },
+    session: { id: randomUUID(), startedAtMs: now, endsAtMs: now + DRILL_LEASE_MS },
   };
 }
 
@@ -40,5 +40,5 @@ export function changeDrillClock(
   if (action === 'pause' || session.endsAtMs <= now) {
     return { elapsedMs: elapsedDrillMs(timer, now), session: null };
   }
-  return { ...timer, session: { ...session, endsAtMs: now + leaseMs } };
+  return { ...timer, session: { ...session, endsAtMs: now + DRILL_LEASE_MS } };
 }

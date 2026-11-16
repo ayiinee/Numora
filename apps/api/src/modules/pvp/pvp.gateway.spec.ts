@@ -53,6 +53,9 @@ it('acknowledges committed room state before a stalled transient scheduler', asy
   };
   const scheduler = { schedule: vi.fn(() => new Promise<void>(() => {})) };
   const gateway = new PvpGateway(service as never, scheduler as never);
+  const broadcast = vi
+    .spyOn(gateway as unknown as { broadcast: () => Promise<void> }, 'broadcast')
+    .mockResolvedValue(undefined);
   const socket = {
     data: { authorization: 'Bearer TEST_ONLY', studentId: 'student' },
     emit: vi.fn(),
@@ -76,6 +79,7 @@ it('acknowledges committed room state before a stalled transient scheduler', asy
   expect(scheduler.schedule).not.toHaveBeenCalled();
   await new Promise<void>((resolve) => setImmediate(resolve));
   expect(scheduler.schedule).toHaveBeenCalledWith(state.matchId, 'student', state);
+  expect(broadcast).toHaveBeenCalledExactlyOnceWith(state.matchId);
 });
 
 it('routes match:start to the engine without starting the match locally', async () => {

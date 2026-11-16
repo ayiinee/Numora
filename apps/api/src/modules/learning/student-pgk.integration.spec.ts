@@ -26,7 +26,10 @@ integration('Student typed answer HTTP → PostgreSQL and published result reads
       !['127.0.0.1', 'localhost'].includes(new URL(testUrl).hostname)
     )
       throw new Error('Isolated local PostgreSQL required.');
-    process.env.DATABASE_URL = testUrl;
+    const appDatabaseUrl = new URL(testUrl);
+    if (!appDatabaseUrl.searchParams.has('sslmode'))
+      appDatabaseUrl.searchParams.set('sslmode', 'disable');
+    process.env.DATABASE_URL = appDatabaseUrl.toString();
     vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const connection = (db = postgres(testUrl, { max: 1, onnotice: () => {} }));
     const row = async (query: string, params: (string | number | null)[] = []) =>

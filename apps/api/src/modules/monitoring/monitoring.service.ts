@@ -7,7 +7,7 @@ import {
   levels,
   subchapters,
 } from '@tka/database';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { ClassesService } from '../classes/classes.service';
 
 @Injectable()
@@ -32,10 +32,22 @@ export class MonitoringService {
         subchapterOrder: subchapters.displayOrder,
         chapterLabel: chapters.name,
         chapterOrder: chapters.displayOrder,
+        unlockedAt: levelProgress.unlockedAt,
+        latestScore: levelProgress.latestScore,
+        bestScore: levelProgress.bestScore,
+        inProgress: sql<boolean>`exists(
+          select 1 from public.assessment_attempts a
+          where a.student_id = ${studentId} and a.level_id_at_start = ${levels.id}
+            and a.assessment_type = 'DRILL' and a.purpose = 'REGULAR' and a.status = 'IN_PROGRESS'
+        )`,
       })
       .from(levels)
       .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
       .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
+      .leftJoin(
+        levelProgress,
+        and(eq(levelProgress.levelId, levels.id), eq(levelProgress.studentId, studentId)),
+      )
       .where(
         and(
           eq(levels.status, 'READY'),
@@ -44,28 +56,6 @@ export class MonitoringService {
         ),
       )
       .orderBy(asc(chapters.displayOrder), asc(subchapters.displayOrder), asc(levels.levelNumber));
-    const states = await db
-      .select({
-        levelId: levelProgress.levelId,
-        unlockedAt: levelProgress.unlockedAt,
-        latestScore: levelProgress.latestScore,
-        bestScore: levelProgress.bestScore,
-      })
-      .from(levelProgress)
-      .where(eq(levelProgress.studentId, studentId));
-    const active = await db
-      .select({ levelId: assessmentAttempts.levelIdAtStart })
-      .from(assessmentAttempts)
-      .where(
-        and(
-          eq(assessmentAttempts.studentId, studentId),
-          eq(assessmentAttempts.assessmentType, 'DRILL'),
-          eq(assessmentAttempts.purpose, 'REGULAR'),
-          eq(assessmentAttempts.status, 'IN_PROGRESS'),
-        ),
-      );
-    const progressByLevel = new Map(states.map((row) => [row.levelId, row]));
-    const activeLevelIds = new Set(active.flatMap((row) => (row.levelId ? [row.levelId] : [])));
     const [latest] = await db
       .select({ score: assessmentAttempts.score0To100 })
       .from(assessmentAttempts)
@@ -85,16 +75,15 @@ export class MonitoringService {
       latestDrillScore:
         latest?.score === null || latest?.score === undefined ? null : Number(latest.score),
       levels: published.map((level) => {
-        const state = progressByLevel.get(level.levelId);
         return {
           levelId: level.levelId,
           chapterLabel: level.chapterLabel,
           subchapterLabel: level.subchapterLabel,
           levelLabel: level.levelLabel ?? `Level ${level.levelOrder}`,
-          accessStatus: state?.unlockedAt || level.levelOrder === 1 ? 'UNLOCKED' : 'LOCKED',
-          inProgress: activeLevelIds.has(level.levelId),
-          latestDrillScore: state?.latestScore ?? null,
-          bestDrillScore: state?.bestScore ?? null,
+          accessStatus: level.unlockedAt || level.levelOrder === 1 ? 'UNLOCKED' : 'LOCKED',
+          inProgress: level.inProgress,
+          latestDrillScore: level.latestScore ?? null,
+          bestDrillScore: level.bestScore ?? null,
         };
       }),
     };

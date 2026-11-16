@@ -12,6 +12,7 @@ import {
   analyticsOutbox,
   assessmentPackages,
   classMemberships,
+  contentDeliveryManifests,
   getDatabase,
   enqueueNotification,
   packageItems,
@@ -26,7 +27,21 @@ import {
   scoringPolicyVersions,
   users,
 } from '@tka/database';
-import { and, asc, desc, eq, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import {
   PVP_POLICY,
   TEMPORARY_PVP_CONTENT_NOTICE,
@@ -483,105 +498,156 @@ export class PvpEngineService implements OnModuleDestroy {
   ) {
     requirePvpPolicy(this.policy);
     const { db } = getDatabase();
-    await db.transaction(async (tx) => {
-      const match = await this.locked(tx, matchId);
-      const player = await this.member(tx, matchId, studentId);
-      const [replay] = await tx
-        .select()
-        .from(pvpAnswers)
-        .where(and(eq(pvpAnswers.playerId, player.id), eq(pvpAnswers.requestId, requestId)));
-      if (replay && replay.matchQuestionId !== questionId)
-        throw failure('REQUEST_ID_REUSED', 'Request ID sudah digunakan untuk soal lain.');
-      const [previous] = await tx
-        .select()
-        .from(pvpAnswers)
-        .where(and(eq(pvpAnswers.playerId, player.id), eq(pvpAnswers.matchQuestionId, questionId)));
-      if (previous) return; // The original answer remains immutable, including retries after timeout.
-      if (match.status !== 'RUNNING' || player.connectionStatus !== 'CONNECTED')
-        throw failure('MATCH_NOT_RUNNING', 'Pertandingan tidak sedang berjalan.');
-      const disconnected = await tx
-        .select()
-        .from(pvpPlayers)
-        .where(
-          and(
-            eq(pvpPlayers.matchId, matchId),
-            isNull(pvpPlayers.leftAt),
-            eq(pvpPlayers.connectionStatus, 'DISCONNECTED'),
-          ),
-        );
-      if (disconnected.some((p) => p.reconnectDeadlineAt && p.reconnectDeadlineAt < this.now()))
-        throw failure('RECONNECT_EXPIRED', 'Pertandingan menunggu finalisasi reconnect server.');
-      const [item] = await tx
-        .select({ question: pvpMatchQuestions, version: questionVersions })
-        .from(pvpMatchQuestions)
-        .innerJoin(questionVersions, eq(questionVersions.id, pvpMatchQuestions.questionVersionId))
-        .where(and(eq(pvpMatchQuestions.id, questionId), eq(pvpMatchQuestions.matchId, matchId)));
-      if (
-        !item ||
-        item.question.status !== 'ACTIVE' ||
-        !item.question.deadlineAt ||
-        item.question.deadlineAt <= this.now()
-      )
-        throw failure('ANSWER_TOO_LATE', 'Waktu jawaban sudah berakhir.');
-      const content = decodeSingleChoice(item.version);
-      if (optionId !== null && !content.options.some((o) => o.id === optionId))
-        throw failure('OPTION_INVALID', 'Pilihan jawaban tidak valid.');
-      const points = pvpPoints(
-        optionId === content.correctOptionId,
-        item.question.deadlineAt.getTime() - this.now().getTime(),
-        this.pinnedDuration(match) * 1000,
-      );
-      await tx.insert(pvpAnswers).values({
-        playerId: player.id,
+    return db.transaction(async (tx) => {
+      const prepared = await this.storeAnswer(
+        tx,
+        studentId,
         matchId,
-        matchQuestionId: questionId,
+        questionId,
+        optionId,
         requestId,
-        answer: { optionId },
-        receivedAt: this.now(),
-        basePoints: String(points.basePoints),
-        speedBonus: String(points.speedBonus),
-      });
-      const answers = await tx
-        .select()
-        .from(pvpAnswers)
-        .where(eq(pvpAnswers.matchQuestionId, questionId));
-      if (answers.length === 2) await this.resolveQuestion(tx, match, item.question);
+      );
+      const { views } = await this.readSnapshotViews(tx, matchId, [studentId], false, prepared);
+      return views.get(studentId)!;
     });
-    return this.snapshot(studentId, matchId);
+  }
+
+  private async storeAnswer(
+    tx: Transaction,
+    studentId: string,
+    matchId: string,
+    questionId: string,
+    optionId: string | null,
+    requestId: string,
+  ) {
+    const match = await this.locked(tx, matchId);
+    const [context] = await tx
+      .select({
+        player: { id: pvpPlayers.id, connectionStatus: pvpPlayers.connectionStatus },
+        isDemo: assessmentPackages.isDemo,
+        question: pvpMatchQuestions,
+        version: {
+          questionType: questionVersions.questionType,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
+        },
+        reusedRequest: sql<boolean>`exists(
+          select 1 from public.pvp_answers a
+          where a.player_id = ${pvpPlayers.id} and a.request_id = ${requestId}
+            and a.match_question_id <> ${questionId}
+        )`,
+        answered: sql<boolean>`exists(
+          select 1 from public.pvp_answers a
+          where a.player_id = ${pvpPlayers.id} and a.match_question_id = ${questionId}
+        )`,
+        reconnectDeadline: sql<string | null>`(
+          select min(p.reconnect_deadline_at)::text from public.pvp_players p
+          where p.match_id = ${matchId} and p.left_at is null and p.connection_status = 'DISCONNECTED'
+        )`,
+      })
+      .from(pvpPlayers)
+      .innerJoin(assessmentPackages, eq(assessmentPackages.id, match.packageId))
+      .leftJoin(
+        pvpMatchQuestions,
+        and(eq(pvpMatchQuestions.id, questionId), eq(pvpMatchQuestions.matchId, matchId)),
+      )
+      .leftJoin(questionVersions, eq(questionVersions.id, pvpMatchQuestions.questionVersionId))
+      .where(
+        and(
+          eq(pvpPlayers.matchId, matchId),
+          eq(pvpPlayers.studentId, studentId),
+          isNull(pvpPlayers.leftAt),
+        ),
+      )
+      .limit(1);
+    if (!context)
+      throw new ForbiddenException({
+        code: 'MATCH_ACCESS_DENIED',
+        detail: 'Pertandingan bukan milikmu.',
+      });
+    const { player, isDemo } = context;
+    if (context.reusedRequest)
+      throw failure('REQUEST_ID_REUSED', 'Request ID sudah digunakan untuk soal lain.');
+    if (context.answered) return { match, isDemo };
+    if (match.status !== 'RUNNING' || player.connectionStatus !== 'CONNECTED')
+      throw failure('MATCH_NOT_RUNNING', 'Pertandingan tidak sedang berjalan.');
+    if (context.reconnectDeadline && new Date(context.reconnectDeadline) < this.now())
+      throw failure('RECONNECT_EXPIRED', 'Pertandingan menunggu finalisasi reconnect server.');
+    const item =
+      context.question && context.version
+        ? { question: context.question, version: context.version }
+        : null;
+    if (
+      !item ||
+      item.question.status !== 'ACTIVE' ||
+      !item.question.deadlineAt ||
+      item.question.deadlineAt <= this.now()
+    )
+      throw failure('ANSWER_TOO_LATE', 'Waktu jawaban sudah berakhir.');
+    const content = decodeSingleChoice(item.version);
+    if (optionId !== null && !content.options.some((o) => o.id === optionId))
+      throw failure('OPTION_INVALID', 'Pilihan jawaban tidak valid.');
+    const points = pvpPoints(
+      optionId === content.correctOptionId,
+      item.question.deadlineAt.getTime() - this.now().getTime(),
+      this.pinnedDuration(match) * 1000,
+    );
+    await tx.insert(pvpAnswers).values({
+      playerId: player.id,
+      matchId,
+      matchQuestionId: questionId,
+      requestId,
+      answer: { optionId },
+      receivedAt: this.now(),
+      basePoints: String(points.basePoints),
+      speedBonus: String(points.speedBonus),
+    });
+    const answers = await tx
+      .select({ playerId: pvpAnswers.playerId })
+      .from(pvpAnswers)
+      .where(eq(pvpAnswers.matchQuestionId, questionId));
+    const current =
+      answers.length === 2 ? await this.resolveQuestion(tx, match, item.question, true) : match;
+    return { match: current, isDemo };
   }
 
   private async resolveQuestion(
     tx: Transaction,
     match: Match,
     question: typeof pvpMatchQuestions.$inferSelect,
+    bothAnswered = false,
   ) {
-    if (question.status !== 'ACTIVE') return;
-    const players = await tx
-      .select()
-      .from(pvpPlayers)
-      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
-    for (const player of players) {
-      await tx
-        .insert(pvpAnswers)
-        .values({
-          playerId: player.id,
-          matchId: match.id,
-          matchQuestionId: question.id,
-          answer: { optionId: null },
-          receivedAt: this.now(),
-        })
-        .onConflictDoNothing();
-      const [total] = await tx
-        .select({
-          points: sql<string>`coalesce(sum(${pvpAnswers.basePoints} + ${pvpAnswers.speedBonus}), 0)`,
-        })
-        .from(pvpAnswers)
-        .where(eq(pvpAnswers.playerId, player.id));
-      await tx
-        .update(pvpPlayers)
-        .set({ totalPoints: total!.points })
-        .where(eq(pvpPlayers.id, player.id));
+    if (question.status !== 'ACTIVE') return match;
+    if (!bothAnswered) {
+      const activePlayers = await tx
+        .select({ id: pvpPlayers.id })
+        .from(pvpPlayers)
+        .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
+      if (activePlayers.length)
+        await tx
+          .insert(pvpAnswers)
+          .values(
+            activePlayers.map((player) => ({
+              playerId: player.id,
+              matchId: match.id,
+              matchQuestionId: question.id,
+              answer: { optionId: null },
+              receivedAt: this.now(),
+            })),
+          )
+          .onConflictDoNothing();
     }
+    await tx
+      .update(pvpPlayers)
+      .set({
+        totalPoints: sql`(
+          select coalesce(sum(${pvpAnswers.basePoints} + ${pvpAnswers.speedBonus}), 0)
+          from ${pvpAnswers} where ${pvpAnswers.playerId} = ${pvpPlayers.id}
+        )`,
+      })
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
     await tx
       .update(pvpMatchQuestions)
       .set({ status: 'RESOLVED' })
@@ -599,7 +665,7 @@ export class PvpEngineService implements OnModuleDestroy {
           .update(pvpPlayers)
           .set({ result: draw ? 'DRAW' : Number(p.totalPoints) === top ? 'WIN' : 'LOSS' })
           .where(eq(pvpPlayers.id, p.id));
-      await tx
+      const [finished] = await tx
         .update(pvpMatches)
         .set({
           status: 'FINISHED',
@@ -607,10 +673,13 @@ export class PvpEngineService implements OnModuleDestroy {
           endedAt: this.now(),
           endReason: 'COMPLETED',
         })
-        .where(eq(pvpMatches.id, match.id));
+        .where(eq(pvpMatches.id, match.id))
+        .returning();
       await this.closeInvites(tx, match.id);
       await this.event(tx, match, 'pvp_match_completed');
+      return finished!;
     }
+    return match;
   }
   private async closeInvites(
     tx: Transaction,
@@ -726,6 +795,7 @@ export class PvpEngineService implements OnModuleDestroy {
     await this.event(tx, match, 'pvp_match_forfeited');
   }
   async disconnect(studentId: string, matchId: string) {
+    const disconnectedAt = this.now();
     const { db } = getDatabase();
     await db.transaction(async (tx) => {
       const match = await this.locked(tx, matchId);
@@ -741,8 +811,8 @@ export class PvpEngineService implements OnModuleDestroy {
         .set({
           connectionStatus: 'DISCONNECTED',
           ...(match.status !== 'RUNNING' ? { ready: false } : {}),
-          disconnectedAt: this.now(),
-          reconnectDeadlineAt: new Date(this.now().getTime() + 20_000),
+          disconnectedAt,
+          reconnectDeadlineAt: new Date(disconnectedAt.getTime() + 20_000),
         })
         .where(eq(pvpPlayers.id, player.id));
     });
@@ -823,6 +893,49 @@ export class PvpEngineService implements OnModuleDestroy {
       .where(and(eq(pvpMatchQuestions.matchId, match.id), eq(pvpMatchQuestions.status, 'ACTIVE')));
     if (active?.deadlineAt && active.deadlineAt <= this.now())
       await this.resolveQuestion(tx, match, active);
+  }
+  async sweepCandidates() {
+    const { db } = getDatabase();
+    const now = this.now();
+    const expiredRoom = and(
+      inArray(pvpMatches.status, ['WAITING', 'READY']),
+      lte(pvpMatches.expiresAt, now),
+    );
+    const expiredReconnect = exists(
+      db
+        .select({ id: pvpPlayers.id })
+        .from(pvpPlayers)
+        .where(
+          and(
+            eq(pvpPlayers.matchId, pvpMatches.id),
+            isNull(pvpPlayers.leftAt),
+            eq(pvpPlayers.connectionStatus, 'DISCONNECTED'),
+            lt(pvpPlayers.reconnectDeadlineAt, now),
+          ),
+        ),
+    );
+    const expiredQuestion = and(
+      eq(pvpMatches.status, 'RUNNING'),
+      exists(
+        db
+          .select({ id: pvpMatchQuestions.id })
+          .from(pvpMatchQuestions)
+          .where(
+            and(
+              eq(pvpMatchQuestions.matchId, pvpMatches.id),
+              eq(pvpMatchQuestions.status, 'ACTIVE'),
+              lte(pvpMatchQuestions.deadlineAt, now),
+            ),
+          ),
+      ),
+    );
+    return db
+      .select({
+        id: pvpMatches.id,
+        due: sql<boolean>`coalesce(${or(expiredRoom, expiredReconnect, expiredQuestion)}, false)`,
+      })
+      .from(pvpMatches)
+      .where(inArray(pvpMatches.status, ['WAITING', 'READY', 'RUNNING']));
   }
   async tick(matchId: string) {
     await getDatabase().db.transaction(async (tx) =>
@@ -1007,136 +1120,163 @@ export class PvpEngineService implements OnModuleDestroy {
   }
 
   async snapshotViews(matchId: string, studentIds: readonly string[], includeCreator = false) {
-    const { db } = getDatabase();
-    // Consistent snapshot prevents a transition from mixing two question states.
-    return db.transaction(async (tx) => {
-      const ids = [...new Set(studentIds)];
-      if (ids.length) {
-        const allowed = await tx
-          .selectDistinct({ studentId: pvpPlayers.studentId })
-          .from(pvpPlayers)
-          .where(and(eq(pvpPlayers.matchId, matchId), inArray(pvpPlayers.studentId, ids)));
-        if (allowed.length !== ids.length)
-          throw new ForbiddenException({
-            code: 'MATCH_ACCESS_DENIED',
-            detail: 'Pertandingan bukan milikmu.',
-          });
-      }
-      const match = await this.locked(tx, matchId);
-      const [pack] = await tx
-        .select({ isDemo: assessmentPackages.isDemo })
-        .from(assessmentPackages)
-        .where(eq(assessmentPackages.id, match.packageId));
-      const members = await tx
-        .select({ player: pvpPlayers, name: users.displayName })
-        .from(pvpPlayers)
-        .innerJoin(users, eq(users.id, pvpPlayers.studentId))
-        .where(eq(pvpPlayers.matchId, matchId))
-        .orderBy(asc(pvpPlayers.playerSlot));
-      const requested = [
-        ...new Set([...studentIds, ...(includeCreator ? [match.creatorStudentId] : [])]),
-      ];
-      if (requested.some((id) => !members.some((p) => p.player.studentId === id)))
+    return getDatabase().db.transaction((tx) =>
+      this.readSnapshotViews(tx, matchId, studentIds, includeCreator),
+    );
+  }
+
+  private async readSnapshotViews(
+    tx: Transaction,
+    matchId: string,
+    studentIds: readonly string[],
+    includeCreator: boolean,
+    prepared?: { match: Match; isDemo: boolean },
+  ) {
+    const ids = [...new Set(studentIds)];
+    // Readers share this lock and transitions still exclude them until commit.
+    // Answer commands already hold the match lock and verified this recipient.
+    const [snapshot] = prepared
+      ? [prepared]
+      : await tx
+          .select({ match: pvpMatches, isDemo: assessmentPackages.isDemo })
+          .from(pvpMatches)
+          .innerJoin(assessmentPackages, eq(assessmentPackages.id, pvpMatches.packageId))
+          .where(
+            and(
+              eq(pvpMatches.id, matchId),
+              ids.length
+                ? sql`(select count(distinct ${pvpPlayers.studentId}) from ${pvpPlayers}
+                where ${and(eq(pvpPlayers.matchId, pvpMatches.id), inArray(pvpPlayers.studentId, ids))})
+                = ${ids.length}`
+                : undefined,
+            ),
+          )
+          .for('share', { of: pvpMatches });
+    if (!snapshot) {
+      if (ids.length)
         throw new ForbiddenException({
           code: 'MATCH_ACCESS_DENIED',
           detail: 'Pertandingan bukan milikmu.',
         });
-      const players = members.filter((p) => !p.player.leftAt);
-      const recipients = players.filter((p) => requested.includes(p.player.studentId));
-      const [active] =
-        match.status === 'RUNNING' && recipients.length > 0
-          ? await tx
-              .select({
-                question: {
-                  id: pvpMatchQuestions.id,
-                  displayOrder: pvpMatchQuestions.displayOrder,
-                  deadlineAt: pvpMatchQuestions.deadlineAt,
-                },
-                version: {
-                  questionType: questionVersions.questionType,
-                  stem: questionVersions.stem,
-                  optionsOrStatements: questionVersions.optionsOrStatements,
-                  answerKey: questionVersions.answerKey,
-                  explanation: questionVersions.explanation,
-                },
-              })
-              .from(pvpMatchQuestions)
-              .innerJoin(
-                questionVersions,
-                eq(questionVersions.id, pvpMatchQuestions.questionVersionId),
-              )
-              .where(
-                and(eq(pvpMatchQuestions.matchId, matchId), eq(pvpMatchQuestions.status, 'ACTIVE')),
-              )
-          : [];
-      const answers =
-        active && recipients.length
-          ? await tx
-              .select({ playerId: pvpAnswers.playerId, answer: pvpAnswers.answer })
-              .from(pvpAnswers)
-              .where(
-                and(
-                  inArray(
-                    pvpAnswers.playerId,
-                    recipients.map((p) => p.player.id),
-                  ),
-                  eq(pvpAnswers.matchQuestionId, active.question.id),
-                ),
-              )
-          : [];
-      const content = active ? decodeSingleChoice(active.version) : null;
-      if (active && content && recipients.length) {
-        const ids = [...new Set(recipients.map((p) => p.player.studentId))].sort();
-        await tx.execute(sql`select public.record_pvp_delivery(recipient, ${active.question.id}::uuid)
-          from unnest(array[${sql.join(
-            ids.map((id) => sql`${id}::uuid`),
-            sql`,`,
-          )}]) as recipient`);
-      }
-      const views = new Map<string, PvpSnapshotDto>();
-      for (const studentId of requested) {
-        const self = players.find((p) => p.player.studentId === studentId);
-        const answer = self ? answers.find((row) => row.playerId === self.player.id) : undefined;
-        const value = answer?.answer as { optionId?: string | null } | undefined;
-        const state: PvpSnapshotDto = {
-          matchId,
-          roomCode: match.roomCode,
-          creatorStudentId: match.creatorStudentId,
-          difficulty: match.difficulty as Difficulty,
-          status: match.status,
-          serverTime: this.now().toISOString(),
-          isDemo: pack!.isDemo,
-          participantActive: !!self,
-          expiresAt: match.expiresAt?.toISOString() ?? null,
-          recordEligible: match.recordEligible,
-          endReason: match.endReason,
-          players: players.map(({ player: p, name }) => ({
-            studentId: p.studentId,
-            displayName: name,
-            slot: p.playerSlot,
-            ready: p.ready,
-            connectionStatus: p.connectionStatus,
-            reconnectDeadlineAt: p.reconnectDeadlineAt?.toISOString() ?? null,
-            points: Number(p.totalPoints ?? 0),
-            result: p.result,
-          })),
-          question:
-            active && content && self
-              ? {
-                  id: active.question.id,
-                  order: active.question.displayOrder,
-                  stem: content.stem,
-                  options: content.options,
-                  deadlineAt: active.question.deadlineAt!.toISOString(),
-                  durationSeconds: this.pinnedDuration(match),
-                  answered: !!answer,
-                  selectedOptionId: value?.optionId ?? null,
-                }
-              : null,
-        };
-        views.set(studentId, state);
-      }
-      return { views, creatorStudentId: match.creatorStudentId };
-    });
+      throw new NotFoundException({
+        code: 'MATCH_NOT_FOUND',
+        detail: 'Pertandingan tidak ditemukan.',
+      });
+    }
+    const match = snapshot.match;
+    const members = await tx
+      .select({
+        player: pvpPlayers,
+        name: users.displayName,
+        question: {
+          id: pvpMatchQuestions.id,
+          displayOrder: pvpMatchQuestions.displayOrder,
+          deadlineAt: pvpMatchQuestions.deadlineAt,
+        },
+        version: {
+          questionType: questionVersions.questionType,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
+        },
+        submitted: { id: pvpAnswers.id, answer: pvpAnswers.answer },
+        deliveryRecorded: sql<boolean>`exists (
+          select 1 from ${contentDeliveryManifests}
+          where ${contentDeliveryManifests.studentId} = ${pvpPlayers.studentId}
+            and ${contentDeliveryManifests.idempotencyKey} = 'pvp:' || ${pvpMatchQuestions.id}::text
+        )`,
+      })
+      .from(pvpPlayers)
+      .innerJoin(users, eq(users.id, pvpPlayers.studentId))
+      .leftJoin(
+        pvpMatchQuestions,
+        and(
+          eq(pvpMatchQuestions.matchId, pvpPlayers.matchId),
+          eq(pvpMatchQuestions.status, 'ACTIVE'),
+          match.status === 'RUNNING' ? undefined : sql`false`,
+        ),
+      )
+      .leftJoin(questionVersions, eq(questionVersions.id, pvpMatchQuestions.questionVersionId))
+      .leftJoin(
+        pvpAnswers,
+        and(
+          eq(pvpAnswers.playerId, pvpPlayers.id),
+          eq(pvpAnswers.matchQuestionId, pvpMatchQuestions.id),
+        ),
+      )
+      .where(eq(pvpPlayers.matchId, matchId))
+      .orderBy(asc(pvpPlayers.playerSlot));
+    const requested = [
+      ...new Set([...studentIds, ...(includeCreator ? [match.creatorStudentId] : [])]),
+    ];
+    if (requested.some((id) => !members.some((p) => p.player.studentId === id)))
+      throw new ForbiddenException({
+        code: 'MATCH_ACCESS_DENIED',
+        detail: 'Pertandingan bukan milikmu.',
+      });
+    const players = members.filter((p) => !p.player.leftAt);
+    const recipients = players.filter((p) => requested.includes(p.player.studentId));
+    const current = recipients[0];
+    const active =
+      current?.question && current.version
+        ? { question: current.question, version: current.version }
+        : null;
+    const content = active ? decodeSingleChoice(active.version) : null;
+    const undelivered = recipients.filter((p) => !p.deliveryRecorded);
+    if (active && content && undelivered.length) {
+      // Existing immutable manifests need no advisory lock or repeated delivery command.
+      // The function still serializes concurrent first deliveries for each recipient.
+      const ids = [...new Set(undelivered.map((p) => p.player.studentId))].sort();
+      await tx.execute(sql`select public.record_pvp_delivery(recipient, ${active.question.id}::uuid)
+        from unnest(array[${sql.join(
+          ids.map((id) => sql`${id}::uuid`),
+          sql`,`,
+        )}]) as recipient`);
+    }
+    const views = new Map<string, PvpSnapshotDto>();
+    for (const studentId of requested) {
+      const self = players.find((p) => p.player.studentId === studentId);
+      const answer = self?.submitted;
+      const value = answer?.answer as { optionId?: string | null } | undefined;
+      const state: PvpSnapshotDto = {
+        matchId,
+        roomCode: match.roomCode,
+        creatorStudentId: match.creatorStudentId,
+        difficulty: match.difficulty as Difficulty,
+        status: match.status,
+        serverTime: this.now().toISOString(),
+        isDemo: snapshot.isDemo,
+        participantActive: !!self,
+        expiresAt: match.expiresAt?.toISOString() ?? null,
+        recordEligible: match.recordEligible,
+        endReason: match.endReason,
+        players: players.map(({ player: p, name }) => ({
+          studentId: p.studentId,
+          displayName: name,
+          slot: p.playerSlot,
+          ready: p.ready,
+          connectionStatus: p.connectionStatus,
+          reconnectDeadlineAt: p.reconnectDeadlineAt?.toISOString() ?? null,
+          points: Number(p.totalPoints ?? 0),
+          result: p.result,
+        })),
+        question:
+          active && content && self
+            ? {
+                id: active.question.id,
+                order: active.question.displayOrder,
+                stem: content.stem,
+                options: content.options,
+                deadlineAt: active.question.deadlineAt!.toISOString(),
+                durationSeconds: this.pinnedDuration(match),
+                answered: !!answer,
+                selectedOptionId: value?.optionId ?? null,
+              }
+            : null,
+      };
+      views.set(studentId, state);
+    }
+    return { views, creatorStudentId: match.creatorStudentId };
   }
 }

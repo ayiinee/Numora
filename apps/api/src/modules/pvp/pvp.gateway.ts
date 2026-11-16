@@ -72,6 +72,7 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
       }
     }
     for (const socket of sockets) {
+      if (socket.data.matchId !== matchId) continue;
       const state = views.get(String(socket.data.studentId));
       if (!state) continue;
       socket.emit('room:state', this.envelope('room:state', state));
@@ -147,12 +148,12 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
         const committedMatchId = state.matchId;
         // Durable command state is acknowledged before transient queue/broadcast work.
         setImmediate(() => {
-          void this.scheduler
-            .schedule(committedMatchId, user.id, state)
-            .then(() => this.broadcast(committedMatchId))
-            .catch(() =>
-              this.logger.warn('PvP post-command notification delayed; durable state retained.'),
-            );
+          void Promise.all([
+            this.scheduler.schedule(committedMatchId, user.id, state),
+            this.broadcast(committedMatchId),
+          ]).catch(() =>
+            this.logger.warn('PvP post-command notification delayed; durable state retained.'),
+          );
         });
       }
       const ack = this.envelope(

@@ -68,7 +68,9 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       );
     vi.stubEnv('DATABASE_URL', testUrl);
     vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
-    const { db } = getDatabase();
+    const poolSize = process.env.DB_POOL_MAX;
+    vi.stubEnv('DB_POOL_MAX', '1');
+    let { db } = getDatabase();
     const suffix = randomUUID().slice(0, 8);
     const [student, independent, teacher, admin] = await db
       .insert(users)
@@ -265,6 +267,11 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       tryout.start('independent', selectedPackage!.id),
     ]);
     expect(mandiri.id).toBe(mandiriDuplicate.id);
+    // The two legacy start requests must finish with one database connection.
+    // Restore the normal pool before the explicit row-lock/deadline race later in this test.
+    await closeDatabaseConnection();
+    vi.stubEnv('DB_POOL_MAX', poolSize);
+    ({ db } = getDatabase());
     const [mandiriStored] = await db
       .select()
       .from(assessmentAttempts)

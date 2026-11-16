@@ -18,6 +18,7 @@ import {
   attemptItems,
   chapters,
   classMemberships,
+  contentDeliveryManifests,
   getDatabase,
   levelProgress,
   levels,
@@ -26,11 +27,13 @@ import {
   scoringRubricVersions,
   xpLedger,
   subchapters,
+  type AssessmentReader,
 } from '@tka/database';
 import {
   databaseTime,
   recordDomainEvent,
   saveAssessmentAnswerWithEvent,
+  saveAssessmentAnswerAtomically,
   decodeAssessmentContent,
   normalizeAssessmentAnswer,
   presentAssessmentQuestion,
@@ -51,7 +54,13 @@ import { configuredDrillSet, resolveDrillDelivery } from './drill-distribution';
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
-import { changeDrillClock, drillClock, elapsedDrillMs, startDrillClock } from './drill-timer';
+import {
+  changeDrillClock,
+  DRILL_LEASE_MS,
+  drillClock,
+  elapsedDrillMs,
+  startDrillClock,
+} from './drill-timer';
 import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
 import {
   DRILL_QUESTION_COUNT,
@@ -64,6 +73,14 @@ import {
 
 const problem = (code: string, detail: string) => ({ code, detail });
 
+function deliveryRecorded(studentId: string, attemptId: string, kind: 'ITEM' | 'EXPLANATION') {
+  return sql<boolean>`exists (
+    select 1 from ${contentDeliveryManifests}
+    where ${contentDeliveryManifests.studentId} = ${studentId}
+      and ${contentDeliveryManifests.idempotencyKey} = ${attemptId}::uuid::text || ${':' + kind + '_PAYLOAD_ISSUED'}
+  )`;
+}
+
 @Injectable()
 export class DrillAssessmentService {
   private readonly logger = new Logger(DrillAssessmentService.name);
@@ -71,7 +88,7 @@ export class DrillAssessmentService {
   constructor(private readonly identity: IdentityService) {}
 
   private async student(authorization?: string) {
-    const user = await this.identity.me(authorization);
+    const user = await this.identity.me(authorization, 'access');
     if (user.role !== 'STUDENT')
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
     return user.id;
@@ -177,20 +194,23 @@ export class DrillAssessmentService {
       }
       const items = delivery?.candidate.items ?? (await loadDrillPackageItems(tx, selected));
 
-      const [last] = await tx
-        .select({ id: assessmentAttempts.id, packageId: assessmentAttempts.packageId })
-        .from(assessmentAttempts)
-        .where(
-          and(
-            eq(assessmentAttempts.studentId, studentId),
-            eq(assessmentAttempts.levelIdAtStart, levelId),
-            eq(assessmentAttempts.assessmentType, 'DRILL'),
-            eq(assessmentAttempts.purpose, 'REGULAR'),
-            eq(assessmentAttempts.status, 'GRADED'),
-          ),
-        )
-        .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
-        .limit(1);
+      const [last] =
+        process.env.SUPPORT_ANALYTICS_ENABLED === 'true'
+          ? await tx
+              .select({ id: assessmentAttempts.id })
+              .from(assessmentAttempts)
+              .where(
+                and(
+                  eq(assessmentAttempts.studentId, studentId),
+                  eq(assessmentAttempts.levelIdAtStart, levelId),
+                  eq(assessmentAttempts.assessmentType, 'DRILL'),
+                  eq(assessmentAttempts.purpose, 'REGULAR'),
+                  eq(assessmentAttempts.status, 'GRADED'),
+                ),
+              )
+              .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
+              .limit(1)
+          : [];
       const [membership] = await tx
         .select({ classId: classMemberships.classId })
         .from(classMemberships)
@@ -235,12 +255,13 @@ export class DrillAssessmentService {
           fallbackReason: delivery.fallbackReason,
         });
       }
-      await recordDomainEvent(
-        tx,
-        attempt.id,
-        { eventName: 'drill_started', questionCount: items.length },
-        await databaseTime(tx),
-      );
+      if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true')
+        await recordDomainEvent(
+          tx,
+          attempt.id,
+          { eventName: 'drill_started', questionCount: items.length },
+          await databaseTime(tx),
+        );
       // PROPOSED Data mapping, gated off by default; retry creation and event are atomic.
       if (last)
         await recordSupportEvent(tx, {
@@ -264,33 +285,9 @@ export class DrillAssessmentService {
     return this.attemptForStudent(studentId, attemptId);
   }
 
-  private async questionRows(attemptId: string) {
-    const { db } = getDatabase();
-    return db
-      .select({
-        id: attemptItems.id,
-        displayOrder: attemptItems.displayOrder,
-        maxPoints: attemptItems.maxPoints,
-        questionType: questionVersions.questionType,
-        questionVersionId: questionVersions.id,
-        stem: questionVersions.stem,
-        optionsOrStatements: questionVersions.optionsOrStatements,
-        answerKey: questionVersions.answerKey,
-        explanation: questionVersions.explanation,
-        answer: attemptAnswers.answer,
-        awardedPoints: attemptAnswers.awardedPoints,
-        fullyCorrect: attemptAnswers.fullyCorrect,
-      })
-      .from(attemptItems)
-      .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-      .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
-      .where(eq(attemptItems.attemptId, attemptId))
-      .orderBy(asc(attemptItems.displayOrder));
-  }
-
   private async attemptForStudent(studentId: string, attemptId: string) {
     const { db } = getDatabase();
-    const [attempt] = await db
+    const rows = await db
       .select({
         id: assessmentAttempts.id,
         studentId: assessmentAttempts.studentId,
@@ -300,30 +297,67 @@ export class DrillAssessmentService {
         startedAt: assessmentAttempts.startedAt,
         drillTimer: assessmentAttempts.drillTimer,
         isDemo: assessmentPackages.isDemo,
+        serverTime: sql<string>`clock_timestamp()::text`,
+        questionId: attemptItems.id,
+        version: {
+          id: questionVersions.id,
+          questionType: questionVersions.questionType,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
+        },
+        answer: attemptAnswers.answer,
+        deliveryRecorded: deliveryRecorded(studentId, attemptId, 'ITEM'),
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .innerJoin(levels, eq(levels.id, assessmentAttempts.levelIdAtStart))
+      .leftJoin(
+        attemptItems,
+        and(
+          eq(attemptItems.attemptId, assessmentAttempts.id),
+          eq(assessmentAttempts.status, 'IN_PROGRESS'),
+        ),
+      )
+      .leftJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
+      .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
       .where(
         and(
           eq(assessmentAttempts.id, attemptId),
+          eq(assessmentAttempts.studentId, studentId),
           eq(assessmentAttempts.assessmentType, 'DRILL'),
           eq(assessmentAttempts.purpose, 'REGULAR'),
         ),
       )
-      .limit(1);
+      .orderBy(asc(attemptItems.displayOrder));
+    const [attempt] = rows;
     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
       throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
     if (attempt.status !== 'IN_PROGRESS' && attempt.status !== 'GRADED')
       throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
-    const now = await databaseTime(db);
+    const now = new Date(attempt.serverTime);
     const clock = attempt.drillTimer ? drillClock(attempt.drillTimer, now.getTime()) : undefined;
-    const rows =
+    const items =
       attempt.status === 'GRADED' || clock?.sessionId === null
         ? []
-        : await this.questionRows(attemptId);
-    if (rows.length)
+        : rows.flatMap(({ questionId, version, answer }) =>
+            questionId && version ? [{ questionId, version, answer }] : [],
+          );
+    if (items.length && !attempt.deliveryRecorded)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
+    const questions = items.map(({ questionId, version, answer }) => {
+      const question = decodeRuntimeQuestion(version);
+      return {
+        ...activeRuntimeQuestion(question, validateRuntimeAnswer(question, answer ?? null)),
+        ...presentAssessmentQuestion(
+          decodeAssessmentContent(version),
+          questionId,
+          answer,
+          version.id,
+        ),
+      };
+    });
     return {
       id: attempt.id,
       levelId: attempt.levelId,
@@ -333,18 +367,7 @@ export class DrillAssessmentService {
       serverTime: now.toISOString(),
       ...(clock ? { clock } : {}),
       isDemo: attempt.isDemo,
-      questions: rows.map((row) => ({
-        ...activeRuntimeQuestion(
-          decodeRuntimeQuestion(row),
-          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
-        ),
-        ...presentAssessmentQuestion(
-          decodeAssessmentContent(row),
-          row.id,
-          row.answer,
-          row.questionVersionId,
-        ),
-      })),
+      questions,
     };
   }
 
@@ -360,6 +383,32 @@ export class DrillAssessmentService {
   ) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
+    if (action === 'heartbeat') {
+      // Read the database clock after acquiring the row lock so expiry and renewal serialize with pauses and submits.
+      const [renewed] = await db.execute<{
+        timer: NonNullable<(typeof assessmentAttempts.$inferSelect)['drillTimer']>;
+        now_ms: number;
+      }>(sql`
+        WITH locked AS MATERIALIZED (
+          SELECT id, drill_timer FROM public.assessment_attempts
+          WHERE id = ${attemptId} AND student_id = ${studentId}
+            AND assessment_type = 'DRILL' AND purpose = 'REGULAR' AND status = 'IN_PROGRESS'
+            AND drill_timer #>> '{session,id}' = ${sessionId}
+          FOR UPDATE
+        ), tick AS MATERIALIZED (
+          SELECT id, drill_timer, floor(extract(epoch FROM clock_timestamp()) * 1000)::float8 AS now_ms
+          FROM locked
+        )
+        UPDATE public.assessment_attempts AS a
+        SET drill_timer = jsonb_set(
+          tick.drill_timer, '{session,endsAtMs}', to_jsonb(tick.now_ms + ${DRILL_LEASE_MS}::float8)
+        )
+        FROM tick
+        WHERE a.id = tick.id AND (tick.drill_timer #>> '{session,endsAtMs}')::float8 > tick.now_ms
+        RETURNING a.drill_timer AS timer, tick.now_ms
+      `);
+      if (renewed) return drillClock(renewed.timer, renewed.now_ms);
+    }
     return db.transaction(async (tx) => {
       const [attempt] = await tx
         .select({ timer: assessmentAttempts.drillTimer, status: assessmentAttempts.status })
@@ -398,49 +447,74 @@ export class DrillAssessmentService {
   ) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
-    return db.transaction(async (tx) => {
-      const [attempt] = await tx
-        .select({
-          studentId: assessmentAttempts.studentId,
-          assessmentType: assessmentAttempts.assessmentType,
-          purpose: assessmentAttempts.purpose,
-          status: assessmentAttempts.status,
-          drillTimer: assessmentAttempts.drillTimer,
-        })
-        .from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, attemptId))
-        .for('update')
-        .limit(1);
+    const write = async (
+      tx: AssessmentReader,
+      lock: boolean,
+      persist: (
+        value: Parameters<typeof saveAssessmentAnswerWithEvent>[1] & { questionVersionId: string },
+        guard: Extract<
+          Parameters<typeof saveAssessmentAnswerAtomically>[1]['guard'],
+          { assessmentType: 'DRILL' }
+        >,
+      ) => Promise<boolean>,
+    ) => {
+      const [item] = await tx.execute<
+        Parameters<typeof decodeAssessmentContent>[0] & {
+          id: string | null;
+          questionVersionId: string | null;
+          studentId: string;
+          assessmentType: string;
+          purpose: string;
+          status: string;
+          drillTimer: (typeof assessmentAttempts.$inferSelect)['drillTimer'];
+          now: string;
+        }
+      >(sql`
+        with locked as materialized (
+          select id, student_id, assessment_type, purpose, status, drill_timer
+          from public.assessment_attempts where id = ${attemptId} ${lock ? sql`for update` : sql``}
+        ), tick as materialized (
+          select locked.*, clock_timestamp()::text as now from locked
+        )
+        select a.student_id as "studentId", a.assessment_type as "assessmentType",
+          a.purpose, a.status, a.drill_timer as "drillTimer", a.now,
+          i.id, q.id as "questionVersionId", q.question_type as "questionType",
+          q.stem, q.options_or_statements as "optionsOrStatements", q.answer_key as "answerKey", q.explanation
+        from tick a
+        left join public.attempt_items i on i.attempt_id = a.id and i.id = ${questionInstanceId}
+        left join public.question_versions q on q.id = i.question_version_id
+      `);
       if (
-        !attempt ||
-        attempt.studentId !== studentId ||
-        attempt.assessmentType !== 'DRILL' ||
-        attempt.purpose !== 'REGULAR'
+        !item ||
+        item.studentId !== studentId ||
+        item.assessmentType !== 'DRILL' ||
+        item.purpose !== 'REGULAR'
       )
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
-      if (attempt.status !== 'IN_PROGRESS')
+      if (item.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Drill sudah selesai.'));
-      const now = await databaseTime(tx);
-      if (attempt.drillTimer && !drillClock(attempt.drillTimer, now.getTime()).sessionId)
+      const now = new Date(item.now);
+      const timer =
+        item.drillTimer === null
+          ? null
+          : (assessmentAttempts.drillTimer.mapFromDriverValue(
+              item.drillTimer,
+            ) as (typeof assessmentAttempts.$inferSelect)['drillTimer']);
+      if (timer && !drillClock(timer, now.getTime()).sessionId)
         throw new ConflictException(problem('DRILL_PAUSED', 'Lanjutkan latihan untuk menjawab.'));
-      const [item] = await tx
-        .select({
-          id: attemptItems.id,
-          questionType: questionVersions.questionType,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-        })
-        .from(attemptItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-        .where(and(eq(attemptItems.id, questionInstanceId), eq(attemptItems.attemptId, attemptId)))
-        .limit(1);
-      if (!item)
+      if (!item.id || !item.questionVersionId)
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Drill ini.'),
         );
-      const content = decodeAssessmentContent(item);
+      const content = decodeAssessmentContent({
+        questionType: item.questionType,
+        stem: questionVersions.stem.mapFromDriverValue(item.stem),
+        optionsOrStatements: questionVersions.optionsOrStatements.mapFromDriverValue(
+          item.optionsOrStatements,
+        ),
+        answerKey: questionVersions.answerKey.mapFromDriverValue(item.answerKey),
+        explanation: questionVersions.explanation.mapFromDriverValue(item.explanation),
+      });
       let answer;
       try {
         answer = normalizeAssessmentAnswer(
@@ -452,19 +526,43 @@ export class DrillAssessmentService {
           throw new BadRequestException(problem(error.code, error.message));
         throw error;
       }
-      await saveAssessmentAnswerWithEvent(tx, {
-        attemptId,
-        questionInstanceId: item.id,
-        answer,
-        questionFormat: content.type,
-        now,
-      });
+      const accepted = await persist(
+        {
+          attemptId,
+          questionInstanceId: item.id,
+          questionVersionId: item.questionVersionId,
+          answer,
+          questionFormat: content.type,
+          now,
+        },
+        {
+          assessmentType: 'DRILL',
+          timer: item.drillTimer,
+          expiresAt: timer?.session ? new Date(timer.session.endsAtMs) : null,
+        },
+      );
+      if (!accepted) return null;
       return {
         questionInstanceId,
         answer,
         selectedOptionId: answer && 'optionId' in answer ? answer.optionId : null,
       };
-    });
+    };
+    const lockedWrite = () =>
+      db.transaction(async (tx) => {
+        const response = await write(tx, true, async (value) => {
+          await saveAssessmentAnswerWithEvent(tx, value);
+          return true;
+        });
+        if (!response) throw new Error('Locked Drill answer save was rejected.');
+        return response;
+      });
+    if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true') return lockedWrite();
+    return (
+      (await write(db, false, (value, guard) =>
+        saveAssessmentAnswerAtomically(db, { ...value, studentId, guard }),
+      )) ?? lockedWrite()
+    );
   }
 
   async submit(authorization: string | undefined, attemptId: string) {
@@ -495,21 +593,28 @@ export class DrillAssessmentService {
       )
         throw new ConflictException(problem('DRILL_PAUSED', 'Lanjutkan latihan sebelum mengirim.'));
       if (!attempt.levelIdAtStart) throw new Error('Drill attempt level is missing.');
-      const [pinnedPolicy] = await tx
+      const [packagePolicy] = await tx
         .select({
           id: assessmentPackages.id,
-          policyCode: scoringPolicyVersions.policyCode,
-          policyVersion: scoringPolicyVersions.version,
-          policyConfiguration: scoringPolicyVersions.configuration,
+          isDemo: assessmentPackages.isDemo,
+          policy: scoringPolicyVersions,
         })
         .from(assessmentPackages)
-        .innerJoin(assessmentAttempts, eq(assessmentAttempts.packageId, assessmentPackages.id))
-        .innerJoin(
+        .leftJoin(
           scoringPolicyVersions,
-          eq(scoringPolicyVersions.id, assessmentAttempts.scoringPolicyVersionId),
+          attempt.scoringPolicyVersionId
+            ? eq(scoringPolicyVersions.id, attempt.scoringPolicyVersionId)
+            : sql`false`,
         )
-        .where(eq(assessmentAttempts.id, attemptId));
-      const ownerOverride = !!pinnedPolicy && allowsChapter3Override(pinnedPolicy);
+        .where(eq(assessmentPackages.id, attempt.packageId));
+      const ownerOverride =
+        !!packagePolicy?.policy &&
+        allowsChapter3Override({
+          id: packagePolicy.id,
+          policyCode: packagePolicy.policy.policyCode,
+          policyVersion: packagePolicy.policy.version,
+          policyConfiguration: packagePolicy.policy.configuration,
+        });
 
       const rows = await tx
         .select({
@@ -532,18 +637,10 @@ export class DrillAssessmentService {
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill tidak lengkap.'),
         );
-      const [packagePolicy] = await tx
-        .select({ isDemo: assessmentPackages.isDemo, policy: scoringPolicyVersions })
-        .from(assessmentPackages)
-        .innerJoin(
-          scoringPolicyVersions,
-          eq(scoringPolicyVersions.id, attempt.scoringPolicyVersionId!),
-        )
-        .where(eq(assessmentPackages.id, attempt.packageId));
       const policy: ApprovedPolicy | null =
         ownerOverride || packagePolicy?.isDemo || attempt.drillPolicyVersion === null
           ? null
-          : readApprovedPolicy(packagePolicy!.policy, 'DRILL', true);
+          : readApprovedPolicy(packagePolicy!.policy!, 'DRILL', true);
       const rubricIds = [
         ...new Set(rows.flatMap((row) => (row.rubricVersionId ? [row.rubricVersionId] : []))),
       ];
@@ -751,25 +848,22 @@ export class DrillAssessmentService {
             now,
           );
       }
-      const [packageRow] = await tx
-        .select({ isDemo: assessmentPackages.isDemo })
-        .from(assessmentPackages)
-        .where(eq(assessmentPackages.id, attempt.packageId))
-        .limit(1);
-      await recordDomainEvent(
-        tx,
-        attemptId,
-        {
-          eventName: 'drill_submitted',
-          submissionType: 'manual',
-          questionCount: rows.length,
-          answeredCount: rows.filter(
-            (row) =>
-              normalizeAssessmentAnswer(decodeAssessmentContent(row), row.answer ?? null) !== null,
-          ).length,
-        },
-        now,
-      );
+      if (process.env.DOMAIN_ANALYTICS_ENABLED === 'true')
+        await recordDomainEvent(
+          tx,
+          attemptId,
+          {
+            eventName: 'drill_submitted',
+            submissionType: 'manual',
+            questionCount: rows.length,
+            answeredCount: rows.filter(
+              (row) =>
+                normalizeAssessmentAnswer(decodeAssessmentContent(row), row.answer ?? null) !==
+                null,
+            ).length,
+          },
+          now,
+        );
       if (reward)
         await tx.insert(xpLedger).values({
           studentId,
@@ -794,7 +888,7 @@ export class DrillAssessmentService {
         payload: {
           score: scored.score,
           mastered: scored.mastered,
-          isDemo: packageRow?.isDemo ?? false,
+          isDemo: packagePolicy?.isDemo ?? false,
           reward,
         },
       });
@@ -821,6 +915,7 @@ export class DrillAssessmentService {
         drillPolicyVersion: assessmentAttempts.drillPolicyVersion,
         unlockedLevelId: assessmentAttempts.unlockedLevelId,
         isDemo: assessmentPackages.isDemo,
+        deliveryRecorded: deliveryRecorded(studentId, attemptId, 'EXPLANATION'),
         questionCount: sql<number>`(count(${attemptItems.id}) over ())::integer`,
         correctCount: sql<number>`(count(${attemptItems.id}) filter (where coalesce(${attemptAnswers.fullyCorrect}, ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints})) over ())::integer`,
         reward: {
@@ -893,7 +988,7 @@ export class DrillAssessmentService {
             : [],
         )
       : [];
-    if (rows.length)
+    if (rows.length && !attempt.deliveryRecorded)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const score = Number(attempt.score);
     const rawPoints = Number(attempt.rawPoints ?? counts?.correctCount ?? 0);
@@ -934,24 +1029,24 @@ export class DrillAssessmentService {
       isDemo: attempt.isDemo,
       explanationState: available ? ('available' as const) : ('expired' as const),
       recommendations,
-      questions: rows.map((row) => ({
-        ...activeRuntimeQuestion(
-          decodeRuntimeQuestion(row),
-          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
-        ),
-        richExplanation: decodeRuntimeQuestion(row).explanation,
-        fullyCorrect:
-          row.fullyCorrect ??
-          (row.awardedPoints !== null && Number(row.awardedPoints) === Number(row.maxPoints)),
-        ...presentAssessmentReview(
-          decodeAssessmentContent(row),
-          row.id,
-          row.answer,
-          row.awardedPoints,
-          row.maxPoints,
-          row.questionVersionId,
-        ),
-      })),
+      questions: rows.map((row) => {
+        const question = decodeRuntimeQuestion(row);
+        return {
+          ...activeRuntimeQuestion(question, validateRuntimeAnswer(question, row.answer ?? null)),
+          richExplanation: question.explanation,
+          fullyCorrect:
+            row.fullyCorrect ??
+            (row.awardedPoints !== null && Number(row.awardedPoints) === Number(row.maxPoints)),
+          ...presentAssessmentReview(
+            decodeAssessmentContent(row),
+            row.id,
+            row.answer,
+            row.awardedPoints,
+            row.maxPoints,
+            row.questionVersionId,
+          ),
+        };
+      }),
     };
   }
 
