@@ -20,6 +20,8 @@ Back up/restore strategy must cover:
 
 Redis is not the durable business backup source.
 
+Preparation tooling for the VPS migration is documented in [application inventory/backup](POSTGRES_BACKUP_INVENTORY.md), [mapped restore](POSTGRES_VPS_RESTORE.md), [API/worker checks](POSTGRES_VPS_RUNTIME_TESTING.md), and the proposed [encrypted off-host archive/retrieval profile](POSTGRES_VPS_OFFHOST_BACKUP.md). These implementation/test artifacts do not establish the planning RPO/RTO targets or activate a storage service/schedule.
+
 ## Restore test
 
 A backup policy is not complete until a restore has been rehearsed.

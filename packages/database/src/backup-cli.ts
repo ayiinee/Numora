@@ -7,11 +7,31 @@ import {
   verifyBackup,
 } from './backup-runtime.js';
 import { prepareVpsRestore, restoreVps, vpsRestoreTarget } from './restore-vps.js';
+import { offhostConfig } from './offhost-config.js';
+import { publishOffhost, recoverOffhost } from './offhost-runtime.js';
 
 async function run() {
   process.umask(0o077);
   const [command, ...args] = process.argv.slice(2);
-  if (command === 'plan-vps') {
+  if (command === 'publish-offhost') {
+    backupCheck(
+      args.length === 2,
+      'Usage: db:backup publish-offhost /private/archive /private/new-receipt.json',
+    );
+    await publishOffhost(offhostConfig(process.env), args[0]!, args[1]!);
+    console.log(
+      'Encrypted snapshot committed. Download verification and database recovery remain separate gates.',
+    );
+  } else if (command === 'recover-offhost') {
+    backupCheck(
+      args.length === 4,
+      'Usage: db:backup recover-offhost /private/receipt.json MANIFEST_SHA256 /private/new-folder /private/new-report.json',
+    );
+    await recoverOffhost(offhostConfig(process.env), args[0]!, args[1]!, args[2]!, args[3]!);
+    console.log(
+      'Decrypted archive verified against the recorded manifest. No database restore or runtime activation was performed.',
+    );
+  } else if (command === 'plan-vps') {
     backupCheck(
       args.length === 3,
       'Usage: db:backup plan-vps /private/archive /private/mapping.json /private/new-plan.json',
@@ -63,7 +83,7 @@ async function run() {
   } else
     backupCheck(
       false,
-      'Expected inventory, create, verify, rehearse, plan-vps or restore-vps; offline verify/plan require no database credentials',
+      'Expected inventory, create, verify, rehearse, plan-vps, restore-vps, publish-offhost or recover-offhost',
     );
 }
 void run().catch((error: unknown) => {

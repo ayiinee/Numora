@@ -22,6 +22,7 @@
         "TEST_DATABASE_URL",
         "TEST_DATABASE_TLS_URL",
         "TEST_DATABASE_TLS_CA_FILE",
+        "TEST_RESTIC_PATH",
         "TEST_PSQL_PATH",
         "NODE_EXTRA_CA_CERTS",
         "NUMORA_BACKUP_PG_BIN",
