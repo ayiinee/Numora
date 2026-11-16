@@ -9,10 +9,12 @@ import {
   assessmentAttempts,
   assessmentPackages,
   classes,
+  classStudentBans,
   classMemberships,
   getDatabase,
   schools,
   tryoutBatches,
+  tryoutBatchStudentAllocations,
   tryoutBatchPackages,
   tryoutSchoolDelegations,
   tryoutStudentAssignments,
@@ -63,12 +65,47 @@ export function validateBatchInput(body: SaveTryoutBatchDto, now?: Date) {
   if (new Set(body.schools.map((s) => s.schoolId)).size !== body.schools.length)
     throw new BadRequestException('Sekolah hanya boleh memiliki satu delegasi.');
   const selected = new Set(body.packageIds);
+  for (const school of body.schools) {
+    const mode = school.allocationMode ?? 'SINGLE_PACKAGE';
+    if (mode === 'BALANCED_50_50') {
+      if (!school.variantPackageId || school.variantPackageId === school.packageId)
+        throw new BadRequestException('Alokasi 50/50 wajib memiliki paket original dan varian berbeda.');
+    } else if (school.variantPackageId) {
+      throw new BadRequestException('Paket varian hanya boleh dipakai pada alokasi 50/50.');
+    }
+  }
   const delegated = [
     ...body.schools.map((s) => s.packageId),
+    ...body.schools
+      .filter((s) => (s.allocationMode ?? 'SINGLE_PACKAGE') === 'BALANCED_50_50')
+      .map((s) => s.variantPackageId!),
     ...(body.mandiriPackageId ? [body.mandiriPackageId] : []),
   ];
   if (delegated.some((id) => !selected.has(id)))
     throw new BadRequestException('Paket delegasi harus termasuk paket batch.');
+}
+
+export function balancedOriginalCount(rosterSize: number) {
+  return Math.ceil(rosterSize / 2);
+}
+
+export function balancedPackageForIndex(
+  index: number,
+  rosterSize: number,
+  originalPackageId: string,
+  variantPackageId: string,
+) {
+  if (
+    !Number.isInteger(index) ||
+    !Number.isInteger(rosterSize) ||
+    index < 0 ||
+    index >= rosterSize ||
+    !originalPackageId ||
+    !variantPackageId ||
+    originalPackageId === variantPackageId
+  )
+    throw new BadRequestException('Roster atau paket balanced tidak valid.');
+  return index < balancedOriginalCount(rosterSize) ? originalPackageId : variantPackageId;
 }
 
 export function batchEditable(
@@ -211,6 +248,8 @@ export class TryoutBatchesService {
           schoolId: schools.id,
           schoolName: schools.name,
           packageId: tryoutSchoolDelegations.packageId,
+          allocationMode: tryoutSchoolDelegations.allocationMode,
+          variantPackageId: tryoutSchoolDelegations.variantPackageId,
         })
         .from(tryoutSchoolDelegations)
         .innerJoin(schools, eq(schools.id, tryoutSchoolDelegations.schoolId))
@@ -433,6 +472,12 @@ export class TryoutBatchesService {
           throw new ConflictException('Penerima hanya dapat diubah sebelum batch berakhir.');
         if (body.expectedRevision !== b.configRevision)
           throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
+        const [snapshot] = await tx
+          .select({ count: count() })
+          .from(tryoutBatchStudentAllocations)
+          .where(eq(tryoutBatchStudentAllocations.batchId, id));
+        if (Number(snapshot?.count ?? 0) > 0)
+          throw new ConflictException('Snapshot pembagian siswa sudah dikunci saat batch diterbitkan.');
         const packages = await tx
           .select()
           .from(tryoutBatchPackages)
@@ -480,6 +525,53 @@ export class TryoutBatchesService {
     if (valid.length !== delegated.length)
       throw new BadRequestException('Sekolah delegasi tidak aktif atau tidak ditemukan.');
   }
+
+  private async snapshotBalancedAllocations(
+    tx: AdminTransaction,
+    batchId: string,
+    delegated: SaveTryoutBatchDto['schools'],
+  ) {
+    for (const school of delegated) {
+      if ((school.allocationMode ?? 'SINGLE_PACKAGE') !== 'BALANCED_50_50') continue;
+      const students = await tx
+        .select({ studentId: classMemberships.studentUserId })
+        .from(classMemberships)
+        .innerJoin(classes, eq(classes.id, classMemberships.classId))
+        .leftJoin(
+          classStudentBans,
+          and(
+            eq(classStudentBans.classId, classMemberships.classId),
+            eq(classStudentBans.studentUserId, classMemberships.studentUserId),
+            isNull(classStudentBans.unbannedAt),
+          ),
+        )
+        .where(
+          and(
+            eq(classes.schoolId, school.schoolId),
+            isNull(classMemberships.leftAt),
+            isNull(classes.archivedAt),
+            isNull(classStudentBans.id),
+          ),
+        )
+        .groupBy(classMemberships.studentUserId)
+        .orderBy(sql`md5(${batchId}::text || ${classMemberships.studentUserId}::text)`);
+      if (!students.length) continue;
+      await tx.insert(tryoutBatchStudentAllocations).values(
+        students.map((student, index) => ({
+          batchId,
+          studentId: student.studentId,
+          schoolId: school.schoolId,
+          packageId: balancedPackageForIndex(
+            index,
+            students.length,
+            school.packageId,
+            school.variantPackageId!,
+          ),
+          allocationMode: 'BALANCED_50_50' as const,
+        })),
+      );
+    }
+  }
   private async mutable(
     tx: AdminTransaction,
     b: typeof tryoutBatches.$inferSelect,
@@ -505,14 +597,19 @@ export class TryoutBatchesService {
         .select()
         .from(tryoutSchoolDelegations)
         .where(eq(tryoutSchoolDelegations.batchId, id));
+      const delegationInput = delegated.map((school) => ({
+        ...school,
+        allocationMode: school.allocationMode as 'SINGLE_PACKAGE' | 'BALANCED_50_50',
+      }));
       await this.validatePublished(tx, id, {
         title: b.adminTitle!,
         startsAt: b.startsAt.toISOString(),
         closesAt: b.closesAt.toISOString(),
         packageIds: packages.map((p) => p.packageId),
         mandiriPackageId: b.mandiriPackageId,
-        schools: delegated,
+        schools: delegationInput,
       });
+      await this.snapshotBalancedAllocations(tx, id, delegationInput);
       await tx
         .update(tryoutBatches)
         .set({ adminPublishedAt: sql`clock_timestamp()`, configRevision: b.configRevision + 1 })
@@ -553,11 +650,20 @@ export class TryoutBatchesService {
       .from(classMemberships)
       .innerJoin(classes, eq(classes.id, classMemberships.classId))
       .innerJoin(schools, eq(schools.id, classes.schoolId))
+      .leftJoin(
+        classStudentBans,
+        and(
+          eq(classStudentBans.classId, classMemberships.classId),
+          eq(classStudentBans.studentUserId, classMemberships.studentUserId),
+          isNull(classStudentBans.unbannedAt),
+        ),
+      )
       .where(
         and(
           eq(classMemberships.studentUserId, studentId),
           isNull(classMemberships.leftAt),
           isNull(classes.archivedAt),
+          isNull(classStudentBans.id),
         ),
       )
       .orderBy(asc(classes.id));
@@ -681,7 +787,23 @@ export class TryoutBatchesService {
             eq(tryoutSchoolDelegations.schoolId, selected.schoolId),
           ),
         );
-      packageId = delegation?.packageId ?? b.packageId;
+      if (delegation?.allocationMode === 'BALANCED_50_50') {
+        const [allocation] = await tx
+          .select({ packageId: tryoutBatchStudentAllocations.packageId })
+          .from(tryoutBatchStudentAllocations)
+          .where(
+            and(
+              eq(tryoutBatchStudentAllocations.batchId, batchId),
+              eq(tryoutBatchStudentAllocations.studentId, studentId),
+              eq(tryoutBatchStudentAllocations.schoolId, selected.schoolId),
+            ),
+          );
+        if (!allocation)
+          throw new BadRequestException('Siswa tidak termasuk roster batch saat batch diposting.');
+        packageId = allocation.packageId;
+      } else {
+        packageId = delegation?.packageId ?? b.packageId;
+      }
       contextSchool = selected.schoolId;
     }
     if (!packageId) throw new BadRequestException('Batch tidak tersedia untuk kelompok siswa ini.');

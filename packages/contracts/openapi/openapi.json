@@ -12796,12 +12796,25 @@
           },
           "packageId": {
             "type": "string"
+          },
+          "allocationMode": {
+            "type": "string",
+            "enum": [
+              "SINGLE_PACKAGE",
+              "BALANCED_50_50"
+            ]
+          },
+          "variantPackageId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
           "schoolId",
           "schoolName",
-          "packageId"
+          "packageId",
+          "allocationMode",
+          "variantPackageId"
         ]
       },
       "TryoutBatchParticipantDto": {
@@ -12967,6 +12980,18 @@
           },
           "packageId": {
             "type": "string"
+          },
+          "allocationMode": {
+            "type": "string",
+            "enum": [
+              "SINGLE_PACKAGE",
+              "BALANCED_50_50"
+            ],
+            "default": "SINGLE_PACKAGE"
+          },
+          "variantPackageId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [

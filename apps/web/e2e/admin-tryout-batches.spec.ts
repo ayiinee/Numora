@@ -77,6 +77,13 @@ test('batch creation, school delegation and compact detail work across viewports
       const b = req.postDataJSON() as SaveTryoutBatchDto;
       expect(b.startsAt).toBe('2099-01-01T08:00:00+07:00');
       expect(b.closesAt).toBe('2099-01-07T20:00:00+07:00');
+      if (b.schools.some((school) => school.allocationMode === 'BALANCED_50_50')) {
+        expect(b.schools.find((school) => school.schoolId === id(9501))).toMatchObject({
+          packageId: packages[0]!.id,
+          allocationMode: 'BALANCED_50_50',
+          variantPackageId: packages[1]!.id,
+        });
+      }
       batch = {
         id: id(9400),
         title: b.title,
@@ -92,13 +99,15 @@ test('batch creation, school delegation and compact detail work across viewports
         packages: packages.filter((p) => b.packageIds.includes(p.id)),
         schools: b.schools.map((s) => ({
           ...s,
+          allocationMode: s.allocationMode ?? 'SINGLE_PACKAGE',
+          variantPackageId: s.variantPackageId ?? null,
           schoolName: schools.find((k) => k.schoolId === s.schoolId)!.schoolName,
         })),
         participants: [],
         resultsState: 'BLOCKED',
         resultBlockers: ['IRT_DELIVERY_DISABLED'],
       };
-      return route.fulfill({ json: { id: batch.id } });
+      return route.fulfill({ json: { id: batch!.id } });
     }
     return route.fulfill({
       json: url.pathname.endsWith(id(9400))
@@ -167,7 +176,7 @@ test('batch creation, school delegation and compact detail work across viewports
     .boundingBox();
   expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
   await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
-  await expect(page.getByText(/Sekolah aktif tanpa delegasi memakai paket utama/)).toBeVisible();
+  await expect(page.getByText(/Pilih satu paket per sekolah, atau aktifkan pembagian seimbang 50\/50/)).toBeVisible();
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
   await page.getByLabel('Mulai (WIB)', { exact: true }).fill('2099-01-01T08:00');
   await expect(page.getByLabel('Tutup (WIB)', { exact: true })).toHaveValue('2099-01-08T08:00');
@@ -181,6 +190,14 @@ test('batch creation, school delegation and compact detail work across viewports
       .selectOption(s.schoolId);
   await page
     .getByRole('combobox', { name: 'Paket TEST School B', exact: true })
+    .selectOption(packages[1]!.id);
+  await page
+    .getByRole('combobox', { name: 'Mode alokasi', exact: true })
+    .first()
+    .selectOption('BALANCED_50_50');
+  await page
+    .getByRole('combobox', { name: 'Paket varian', exact: true })
+    .first()
     .selectOption(packages[1]!.id);
   await page.getByRole('button', { name: 'Simpan draft', exact: true }).click();
   await expect(
@@ -265,7 +282,14 @@ test('open batch can change recipients without editing frozen settings, and reta
       expect(body).toEqual({
         expectedRevision: 3,
         mandiriPackageId: null,
-        schools: [{ schoolId: id(9501), packageId: packages[1]!.id }],
+        schools: [
+          {
+            schoolId: id(9501),
+            packageId: packages[1]!.id,
+            allocationMode: 'SINGLE_PACKAGE',
+            variantPackageId: null,
+          },
+        ],
       });
       if (fail)
         return route.fulfill({ status: 409, json: { detail: 'TEST conflict. Coba lagi.' } });

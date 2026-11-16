@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   batchEditable,
   batchState,
+  balancedOriginalCount,
+  balancedPackageForIndex,
   validateBatchInput,
   validateBatchExtension,
 } from './tryout-batches.service';
@@ -16,6 +18,23 @@ describe('Tryout batch boundaries', () => {
     mandiriPackageId: 'packageA',
     schools: [{ schoolId: 'schoolA', packageId: 'packageB' }],
   };
+  it('keeps balanced roster split within one student for odd sizes', () => {
+    expect(balancedOriginalCount(0)).toBe(0);
+    expect(balancedOriginalCount(4)).toBe(2);
+    expect(balancedOriginalCount(5)).toBe(3);
+    for (let rosterSize = 1; rosterSize <= 200; rosterSize++) {
+      const assigned = Array.from({ length: rosterSize }, (_, index) =>
+        balancedPackageForIndex(index, rosterSize, 'original', 'variant'),
+      );
+      const original = assigned.filter((packageId) => packageId === 'original').length;
+      const variant = assigned.filter((packageId) => packageId === 'variant').length;
+      expect(original).toBe(Math.ceil(rosterSize / 2));
+      expect(Math.abs(original - variant)).toBeLessThanOrEqual(1);
+    }
+    expect(() => balancedPackageForIndex(-1, 2, 'original', 'variant')).toThrow();
+    expect(() => balancedPackageForIndex(2, 2, 'original', 'variant')).toThrow();
+    expect(() => balancedPackageForIndex(0, 1, 'same', 'same')).toThrow();
+  });
   it('opens exactly at start and closes exactly at the end', () => {
     const batch = {
       startsAt: new Date(input.startsAt),
@@ -52,6 +71,32 @@ describe('Tryout batch boundaries', () => {
         ],
       }),
     ).not.toThrow();
+  });
+  it('requires two distinct selected packages for balanced school allocation', () => {
+    expect(() =>
+      validateBatchInput({
+        ...input,
+        schools: [
+          {
+            schoolId: 'schoolA',
+            packageId: 'packageA',
+            allocationMode: 'BALANCED_50_50',
+            variantPackageId: 'packageB',
+          },
+        ],
+      }),
+    ).not.toThrow();
+    for (const school of [
+      { schoolId: 'schoolA', packageId: 'packageA', allocationMode: 'BALANCED_50_50' as const },
+      {
+        schoolId: 'schoolA',
+        packageId: 'packageA',
+        allocationMode: 'BALANCED_50_50' as const,
+        variantPackageId: 'packageA',
+      },
+      { schoolId: 'schoolA', packageId: 'packageA', variantPackageId: 'packageB' },
+    ])
+      expect(() => validateBatchInput({ ...input, schools: [school] })).toThrow();
   });
   it('allows expired drafts to be rescheduled but freezes published and cancelled batches', () => {
     const now = new Date(input.closesAt);
