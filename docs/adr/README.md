@@ -41,3 +41,4 @@ ADRs capture durable technical decisions. They do not override PRD product rules
 - ADR-010 Production topology: VPS application + managed DB/Auth/Redis
 - ADR-011 Shared PostgreSQL with separate IRT compute namespace
 - ADR-012 Supabase Development and PostgreSQL VPS Production
+- ADR-013 Encrypted off-host application archives (Proposed operator profile)

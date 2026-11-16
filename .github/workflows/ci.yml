@@ -107,10 +107,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends postgresql-client-16
           /usr/lib/postgresql/16/bin/pg_dump --version
           /usr/lib/postgresql/16/bin/pg_restore --version
+      - name: Install checksum-pinned restic for isolated encrypted recovery tests
+        run: bash scripts/prepare-test-restic.sh
       - name: Unit and integration tests (no cached test results)
         env:
           NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
           NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
+          TEST_RESTIC_PATH: ${{ env.TEST_RESTIC_PATH }}
         run: pnpm exec turbo run test --force --concurrency=1
       - name: Restored API and worker with restricted TLS logins and an isolated queue
         env:

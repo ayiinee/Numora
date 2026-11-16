@@ -88,6 +88,8 @@ This verifies original-owner logical recovery. The [PR 4 mapped restore procedur
 
 ## Boundaries and test evidence
 
+Preparation PR 6 adds a [reviewable encrypted off-host publication and exact-snapshot retrieval profile](POSTGRES_VPS_OFFHOST_BACKUP.md). It consumes this same immutable archive, repeats its verification after retrieval, and leaves DB/runtime/cutover acceptance separate. No storage account, schedule, retention policy or actual cloud transfer is configured by the tooling implementation.
+
 Supabase Auth account/password/session data, managed Storage, R2 object bytes, Redis/queues, external generator/IRT files/secrets, certificates/CA keys, PostgreSQL configuration/WAL/PITR and cluster role passwords are **outside** this application archive. Inventory records extension versions and cluster role metadata but does not make these resources recoverable. The retention store, private encryption keys and critical external assets need their own approved backup/recovery procedures.
 
 Tests cover target/TLS and writer validation, sanitized errors, real canonical-schema backup/restore with original owners/ACLs, UUID/Auth mapping and opaque historical payloads, all-table fingerprints/sequences/migration history, private permissions, checksum corruption, incomplete directories, refusal to overwrite/reuse and external dependency detection. Full artifact/restore tests run on disposable Linux PostgreSQL/TLS in CI; Windows unit tests remain distinct. No product behavior, scoring/XP history or source schema is changed.
