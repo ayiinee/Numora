@@ -554,6 +554,13 @@
       "when": 1795100000000,
       "tag": "0078_generator_package_context",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1795101000000,
+      "tag": "0079_generator_context_view",
+      "breakpoints": true
     }
   ]
 }
