@@ -123,7 +123,7 @@ export function GeneratorCreateDialog({
   return (
     <Dialog
       open={open}
-      title="Buat paket generator"
+      title={type === 'TRYOUT' ? 'Generate Variant Tryout' : 'Buat paket generator'}
       onClose={onClose}
       pending={busy}
       description="Pilih tujuan dan sumber soal. Hasil dibuat sebagai kandidat untuk diperiksa melalui Impor soal."
@@ -145,7 +145,7 @@ export function GeneratorCreateDialog({
             }
             loading={busy}
           >
-            Buat paket
+            {type === 'TRYOUT' ? 'Generate Variant' : 'Buat paket'}
           </Button>
         </>
       }
