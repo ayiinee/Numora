@@ -441,18 +441,19 @@ export class GeneratorPackagesService {
       levelNumber: scope?.level_number,
     } as ContentPackageDto;
     const items = canonical.items.map((item) => {
-      // Artifact media was validated against the accepted compute output above.
-      // Structural text checks run on its text projection; actual storage receipts
-      // are mandatory before any canonical DRAFT is inserted.
-      const checked = validateGeneratorCandidate(item.content).media.length
-        ? {
-            ...item.question,
-            stem: { text: item.question.stem.text.replace(/\[\[asset:[^\]]+\]\]\s*/g, '') },
-            explanation: {
-              text: item.question.explanation.text.replace(/\[\[asset:[^\]]+\]\]\s*/g, ''),
-            },
-          }
-        : item.question;
+      // Accepted artifacts use logical asset IDs before storage receipts exist.
+      // Match those references for validation; materialize() still verifies/uploads
+      // the pinned bytes and stores real object keys before inserting any DRAFT.
+      const checked = {
+        ...item.question,
+        metadata: {
+          ...item.question.metadata,
+          assetManifest: item.question.metadata.assetManifest?.map((asset) => ({
+            ...asset,
+            objectKey: asset.assetId,
+          })),
+        },
+      };
       const blockers = [
         ...structuralErrors(checked, false, row.assessment_type === 'TRYOUT'),
         ...placementErrors(item.question as ImportQuestion, target),
@@ -517,7 +518,10 @@ export class GeneratorPackagesService {
      ${JSON.stringify({
        sourceNamespace: 'GENERATOR_SERVICE_V2',
        sourceName: row.title,
-       sourceReference: JSON.stringify({ generatorPackageId: id, sourcePackageId: row.source_package_id }),
+       sourceReference: JSON.stringify({
+         generatorPackageId: id,
+         sourcePackageId: row.source_package_id,
+       }),
      })}::jsonb,'DRAFT',1) RETURNING id`;
         for (let i = 0; i < versionIds.length; i++)
           await tx`INSERT INTO package_items(package_id,question_version_id,display_order,max_points,rubric_version_id,maximum_score_category) SELECT ${canonical!.id},v.id,${i + 1},1,v.scoring_rubric_version_id,r.maximum_score_category FROM question_versions v JOIN scoring_rubric_versions r ON r.id=v.scoring_rubric_version_id WHERE v.id=${versionIds[i]!}`;
