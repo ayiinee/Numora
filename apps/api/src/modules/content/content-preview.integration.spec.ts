@@ -3519,9 +3519,6 @@ describe.skipIf(!testUrl)(
           request(`admin/tryout-batches/${b.id}/publish`, 'POST', { expectedRevision: 1 }),
         ),
       );
-      const raceBodies = await Promise.all(races.map((r) => r.clone().text()));
-      if (!races.every((r) => r.status === 201))
-        throw Error(`TRYOUT_PUBLISH_RACE ${JSON.stringify(raceBodies)}`);
       expect(races.map((r) => r.status).sort()).toEqual([201, 201]);
       const activeId = created.id;
       async function expectArchiveBlocked(packageId: string) {
@@ -3756,7 +3753,10 @@ describe.skipIf(!testUrl)(
       };
       const next = await ok<{ id: string }>('admin/tryout-batches', 'POST', shared);
       await ok(`admin/tryout-batches/${next.id}/publish`, 'POST', { expectedRevision: 1 });
-      const extension = { expectedRevision: 4, closesAt: shared.closesAt };
+      const extension = {
+        expectedRevision: 4,
+        closesAt: new Date(Date.parse(shared.closesAt) + 3600000).toISOString(),
+      };
       const beforeExtension =
         await owner`SELECT id,package_id,deadline_at,status FROM assessment_attempts WHERE tryout_batch_id=${activeId} ORDER BY id`;
       expect(
@@ -3764,8 +3764,13 @@ describe.skipIf(!testUrl)(
           .status,
       ).toBe(403);
       expect(
-        (await request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension)).status,
-      ).toBe(400);
+        (
+          await request(`admin/tryout-batches/${activeId}/extend`, 'POST', {
+            ...extension,
+            expectedRevision: 99,
+          })
+        ).status,
+      ).toBe(409);
       expect((await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`)).revision).toBe(4);
 
       await ok(`admin/tryout-batches/${next.id}/cancel`, 'POST', {
