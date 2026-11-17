@@ -53,6 +53,7 @@ export const measurementContexts = pgTable(
     dimension: text('dimension').notNull(),
     levelId: ref('level_id', () => levels.id),
     tryoutBatchId: ref('tryout_batch_id', (): AnyPgColumn => tryoutBatches.id),
+    generationPackageId: ref('generation_package_id', (): AnyPgColumn => assessmentPackages.id),
     scaleCode: text('scale_code').notNull(),
     revision: integer('revision').notNull().default(1),
     replacesContextId: ref('replaces_context_id', (): AnyPgColumn => measurementContexts.id),
@@ -63,7 +64,7 @@ export const measurementContexts = pgTable(
     uniqueIndex('measurement_contexts_id_ecosystem_uq').on(t.id, t.ecosystem),
     check(
       'measurement_contexts_scope_ck',
-      sql`(${t.ecosystem} = 'DRILL' and ${t.levelId} is not null and ${t.tryoutBatchId} is null) or (${t.ecosystem} = 'TRYOUT' and ${t.tryoutBatchId} is not null and ${t.levelId} is null)`,
+      sql`(${t.ecosystem} = 'DRILL' and ${t.levelId} is not null and ${t.tryoutBatchId} is null and ${t.generationPackageId} is null) or (${t.ecosystem} = 'TRYOUT' and ${t.levelId} is null and ((${t.tryoutBatchId} is not null and ${t.generationPackageId} is null) or (${t.tryoutBatchId} is null and ${t.generationPackageId} is not null)))`,
     ),
     check('measurement_contexts_revision_ck', sql`${t.revision} > 0`),
   ],
