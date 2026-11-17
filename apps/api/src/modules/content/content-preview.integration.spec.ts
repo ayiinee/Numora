@@ -3505,14 +3505,14 @@ describe.skipIf(!testUrl)(
         ],
       });
       expect(duplicate.status).toBe(400);
-      expect([400, 409]).toContain(
+      expect(
         (
           await request(`admin/tryout-batches/${created.id}`, 'PATCH', {
             ...makeInput('conflict'),
             expectedRevision: 99,
           })
         ).status,
-      );
+      ).toBe(409);
       const competing = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('two'));
       const races = await Promise.all(
         [created, competing].map((b) =>
@@ -3762,7 +3762,7 @@ describe.skipIf(!testUrl)(
       ).toBe(403);
       expect(
         (await request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension)).status,
-      ).toBe(409);
+      ).toBe(400);
       expect((await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`)).revision).toBe(4);
 
       await ok(`admin/tryout-batches/${next.id}/cancel`, 'POST', {
