@@ -3519,6 +3519,10 @@ describe.skipIf(!testUrl)(
           request(`admin/tryout-batches/${b.id}/publish`, 'POST', { expectedRevision: 1 }),
         ),
       );
+      console.log(
+        'TRYOUT_PUBLISH_RACE',
+        await Promise.all(races.map(async (r) => [r.status, await r.clone().text()])),
+      );
       expect(races.map((r) => r.status).sort()).toEqual([201, 201]);
       const activeId = created.id;
       async function expectArchiveBlocked(packageId: string) {
