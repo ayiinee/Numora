@@ -7,7 +7,7 @@ ALTER TABLE public.measurement_contexts
 --> statement-breakpoint
 ALTER TABLE public.measurement_contexts
   DROP CONSTRAINT measurement_contexts_scope_ck;
---> statement-breakpointt
+--> statement-breakpoint
 ALTER TABLE public.measurement_contexts
   ADD CONSTRAINT measurement_contexts_scope_ck CHECK (
     (ecosystem='DRILL' AND level_id IS NOT NULL AND tryout_batch_id IS NULL AND generation_package_id IS NULL)
