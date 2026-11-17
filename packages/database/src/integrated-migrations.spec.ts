@@ -71,7 +71,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
         expect(after.slice(0, before.length)).toEqual([...before]);
         expect(after).toHaveLength(before.length + 7);
         expect(after.map((row) => row.hash)).toContain(
-          migrations.find((entry) => entry.tag === '0078_generator_package_context')!.hash,
+          migrations[78]!.hash,
         );
         expect((await client`SELECT revision FROM public.pvp_content_revision`)[0]).toEqual(
           revision,
@@ -99,7 +99,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       expect(after.slice(0, before.length)).toEqual([...before]);
       expect(after).toHaveLength(before.length + 5);
       expect(after.map((row) => row.hash)).toContain(
-        migrations.find((entry) => entry.tag === '0078_generator_package_context')!.hash,
+        migrations[78]!.hash,
       );
       expect(await client`SELECT revision FROM public.pvp_content_revision`).toHaveLength(1);
       await migrateIntegratedDatabase(client, folder);
@@ -131,7 +131,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       expect(after.slice(0, before.length)).toEqual([...before]);
       expect(after).toHaveLength(before.length + 7);
       expect(after.map((row) => row.hash)).toContain(
-        migrations.find((entry) => entry.tag === '0078_generator_package_context')!.hash,
+        migrations[78]!.hash,
       );
       await migrateIntegratedDatabase(client, folder);
       expect(
