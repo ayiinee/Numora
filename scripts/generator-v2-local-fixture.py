@@ -37,9 +37,8 @@ class Fixtures(base.Fixtures):
                         chapter=one(db,"INSERT INTO chapters(code,slug,name,display_order) VALUES(%s,%s,'TEST ONLY TRYOUT',%s) RETURNING id",(key,key,len(scopes)+1))
                         sub=one(db,"INSERT INTO subchapters(chapter_id,code,slug,name,display_order) VALUES(%s,%s,%s,'TEST ONLY',1) RETURNING id",(chapter,key,key))
                         level=None
-                        parent=one(db,"INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(%s,1,'TEST ONLY batch','TRYOUT') RETURNING id",(key,))
-                        batch=one(db,"INSERT INTO tryout_batches(package_id,starts_at,closes_at,cutoff_at,result_due_at) VALUES(%s,now(),now()+interval '1 day',now()+interval '1 day',now()+interval '4 days') RETURNING id",(parent,))
-                        context=one(db,"INSERT INTO measurement_contexts(ecosystem,dimension,tryout_batch_id,scale_code) VALUES('TRYOUT','TEST',%s,%s) RETURNING id",(batch,key))
+                        parent=one(db,"INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(%s,1,'SHAFWAN MAU TRY OUT [LOCAL TEST]','TRYOUT') RETURNING id",(key,))
+                        context=one(db,"INSERT INTO measurement_contexts(ecosystem,dimension,generation_package_id,scale_code) VALUES('TRYOUT','PACKAGE_GENERATION',%s,%s) RETURNING id",(parent,key))
                     comp=one(db,"INSERT INTO competencies(subchapter_id,code,description) VALUES(%s,%s,'TEST ONLY') RETURNING id",(sub,key))
                     scopes[scope_key]=(chapter,sub,level,context,comp)
                 chapter,sub,level,context,comp=scopes[scope_key]
@@ -49,6 +48,8 @@ class Fixtures(base.Fixtures):
                 version=one(db,"""INSERT INTO question_versions(variant_id,version_number,question_type,stem,options_or_statements,answer_key,explanation,media,difficulty,level_id,scoring_rubric_version_id,content_status,reviewed_by_user_id,reviewed_at)
                  VALUES(%s,1,%s,%s,%s,%s,'{"text":"TEST ONLY approved original explanation"}','[]','MEDIUM',%s,%s,'READY',%s,now()) RETURNING id""",
                  (variant,content['questionType'],Jsonb(content['stem']),Jsonb(content['optionsOrStatements']),Jsonb(content['answerKey']),level,rubric,self.actor))
+                if usage=='TRYOUT':
+                    db.execute('INSERT INTO package_items(package_id,question_version_id,display_order,rubric_version_id,maximum_score_category,max_points) VALUES(%s,%s,%s,%s,1,1)',(parent,version,1+sum(i['usage']=='TRYOUT' for i in items),rubric))
                 item={'questionExternalId':qid,'parentQuestionVersionId':str(version),'familyId':str(family),
                       'rubricVersionId':str(rubric),'contextId':str(context),'mediaProfile':media_profile(qid)}
                 if qid in stock:
@@ -58,11 +59,21 @@ class Fixtures(base.Fixtures):
                 else:item.update(mode='NUMERIC',configVersion=self.configs.load(qid)[0]['config_version'])
                 manifest.append(item)
                 items.append({'qid':qid,'version':str(version),'family':str(family),'rubric':str(rubric),'chapter':str(chapter),'level':str(level) if level else None,'usage':usage,'scope':scope_key})
+            if sum(i['usage']=='TRYOUT' for i in items)==30:
+                policy=one(db,"INSERT INTO scoring_policy_versions(policy_code,version,configuration,status) VALUES(%s,1,'{\"testOnly\":true}','PUBLISHED') RETURNING id",(key,))
+                db.execute("UPDATE assessment_packages SET status='PUBLISHED',scoring_policy_version_id=%s,release_at=now() WHERE id=%s",(policy,parent))
         m={'serviceContract':'generator-service-v2','items':manifest}
         dry=register(self.repository,self.bank,self.configs,m)
         assert all(i['generatorConfigId'] is None for i in dry['items'])
-        registered=register(self.repository,self.bank,self.configs,m,apply=True,seal=True)
-        assert register(self.repository,self.bank,self.configs,m,apply=True,seal=True)==registered
+        registered=register(self.repository,self.bank,self.configs,m,apply=True)
+        # Sealing is an operator step: the shared guard reads protected attempt data.
+        # Compute must never gain participant-table access to prepare a test fixture.
+        with self.db() as db:
+            for reg in registered['items']:
+                db.execute("UPDATE irt_compute.generator_configs SET status='SEALED' WHERE id=%s AND status='DRAFT' AND digest=%s",(reg['generatorConfigId'],reg['digest']))
+        registered=register(self.repository,self.bank,self.configs,m,apply=True)
+        assert all(i['status']=='SEALED' for i in registered['items'])
+        assert register(self.repository,self.bank,self.configs,m,apply=True)==registered
         with self.db('main') as db:
             for item,mapping,reg in zip(items,manifest,registered['items']):
                 item['approval']=str(one(db,"INSERT INTO configuration_approvals(generator_config_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id",(reg['generatorConfigId'],reg['digest'],Jsonb({'ecosystem':item['usage'],'contextId':mapping['contextId'],'testOnly':True}),self.actor)))
