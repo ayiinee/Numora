@@ -15,7 +15,7 @@ from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVICE = Path(os.environ.get('NUMORA_AI_SERVICE_PATH', str(Path(__file__).resolve().parents[2] / 'numora-ai-service')))
-BIN = Path(os.environ.get('POSTGRES_BIN', str(ROOT / '.tmp/pg-runtime/node_modules/@embedded-postgres/windows-x64/native/bin')))
+BIN = Path(os.environ.get('POSTGRES_BIN', str(ROOT / 'node_modules/@embedded-postgres/windows-x64/native/bin' if (ROOT / 'node_modules/@embedded-postgres/windows-x64/native/bin').is_dir() else ROOT / '.tmp/pg-runtime/node_modules/@embedded-postgres/windows-x64/native/bin')))
 def port():
     with socket.socket() as s:
         s.bind(('127.0.0.1', 0))
@@ -46,7 +46,8 @@ def main():
             qids=['pg-6-1-1','mcma-16-1-7','kategori-16-1-10']
             if v2:
                 selected=os.environ.get('GENERATOR_V2_IDS')
-                items=fixtures.all(selected.split(',') if selected else None)
+                qids=selected.split(',') if selected else [qid for qid in fixtures.bank.ids() if qid.startswith('tryout-1-')] if os.environ.get('GENERATOR_DEMO')=='true' else None
+                items=fixtures.all(qids)
                 print(f'TEST ONLY: {len(items)} v2 sources/registrations; shared DB untouched',flush=True)
             elif os.environ.get('GENERATOR_DEMO')=='true' or os.environ.get('GENERATOR_PACKAGE_TEST')=='true':
                 items=[]
@@ -74,15 +75,15 @@ def main():
                 time.sleep(.1)
             else:raise RuntimeError('Local service startup timed out')
             env={**serviceenv,'DATABASE_URL':fixtures.main_url+'?sslmode=disable','TEST_COMPUTE_OWNER_URL':url,'GENERATOR_FIXTURE_FILE':str(file),'NUMORA_GENERATOR_URL':f'http://127.0.0.1:{serviceport}'}
-            if v2:
+            if os.environ.get('GENERATOR_DEMO')=='true':
+                run(['node','apps/api/scripts/serve-generator-local.mjs'],env)
+            elif v2:
                 try:
                     run(['node','apps/api/scripts/test-generator-v2.mjs'],env)
                 except Exception:
                     log.flush()
                     print((target/'service.log').read_text(encoding='utf8')[-12000:])
                     raise
-            elif os.environ.get('GENERATOR_DEMO')=='true':
-                run(['node','apps/api/scripts/serve-generator-local.mjs'],env)
             elif os.environ.get('GENERATOR_PACKAGE_TEST')=='true':
                 run(['node','apps/api/scripts/test-generator-packages.mjs'],env)
             else:

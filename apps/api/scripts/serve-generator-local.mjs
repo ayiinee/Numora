@@ -19,6 +19,9 @@ import { ConfigModule } from '@nestjs/config';
 import { ContentImportService } from '../dist/modules/content/content-import.service.js';
 import { ContentPackagesService } from '../dist/modules/content/content-packages.service.js';
 import { R2MediaStorage } from '../dist/modules/content/r2-media.storage.js';
+import { MediaUploadsService } from '../dist/modules/content/media-uploads.service.js';
+import { MediaUploadsRepository } from '../dist/modules/content/media-uploads.repository.js';
+import { ContentPackagesController } from '../dist/modules/content/content-packages.controller.js';
 import { configureApplication } from '../dist/bootstrap.js';
 const fixture = JSON.parse(await readFile(process.env.GENERATOR_FIXTURE_FILE, 'utf8'));
 for (const name of ['TEST_COMPUTE_OWNER_URL', 'DATABASE_URL', 'COMPUTE_DATABASE_URL']) {
@@ -31,6 +34,35 @@ const owner = postgres(process.env.TEST_COMPUTE_OWNER_URL, { max: 2, onnotice: (
 const compute = postgres(process.env.COMPUTE_DATABASE_URL, { max: 2, onnotice: () => {} });
 const { client } = getDatabase();
 process.env.CONTENT_IMPORT_PREVIEW_ENABLED = 'true';
+assert.equal(process.env.NODE_ENV, 'test');
+// TEST ONLY storage; images never leave this process or reach configured R2.
+const objects = new Map();
+const storage = createServer(async (req, res) => {
+  const key = new URL(req.url, 'http://localhost').pathname;
+  if (req.method === 'PUT') {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    objects.set(key, Buffer.concat(chunks));
+    res.writeHead(200, { ETag: '"TEST"' });
+    res.end();
+  } else if (objects.has(key)) {
+    const bytes = objects.get(key);
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Content-Length': bytes.length });
+    res.end(req.method === 'HEAD' ? undefined : bytes);
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+await new Promise((r) => storage.listen(0, '127.0.0.1', r));
+Object.assign(process.env, {
+  R2_ACCOUNT_ID: 'a'.repeat(32),
+  R2_ACCESS_KEY_ID: 'TEST',
+  R2_SECRET_ACCESS_KEY: 'TEST',
+  R2_BUCKET: 'test-numora',
+  R2_MEDIA_UPLOADS_ENABLED: 'true',
+  R2_TEST_ENDPOINT: `http://127.0.0.1:${storage.address().port}`,
+});
 const actors = {};
 let app, web, loginFile;
 const auth = createServer((req, res) => {
@@ -114,13 +146,15 @@ try {
   process.env.CORS_ORIGINS = webOrigin;
   const module = await Test.createTestingModule({
     imports: [IdentityModule, ConfigModule.forRoot({ ignoreEnvFile: true })],
-    controllers: [GeneratorController, GeneratorPackagesController],
+    controllers: [GeneratorController, GeneratorPackagesController, ContentPackagesController],
     providers: [
       GeneratorService,
       GeneratorPackagesService,
       ContentImportService,
       ContentPackagesService,
       R2MediaStorage,
+      MediaUploadsService,
+      MediaUploadsRepository,
     ],
   }).compile();
   app = module.createNestApplication({ logger: false });
@@ -141,6 +175,7 @@ try {
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
       NEXT_PUBLIC_GENERATOR_DEMO: 'true',
       NEXT_PUBLIC_GENERATOR_DEMO_QA_EMAIL: fixture.realQa?.email ?? '',
+      ...(!fixture.realQa ? { NEXT_PUBLIC_MAIN_API_URL: `${apiUrl}/api/v1` } : {}),
     },
   });
   let log = '';
@@ -200,4 +235,6 @@ try {
   await closeDatabaseConnection();
   await owner.end();
   await compute.end();
+  storage.closeAllConnections();
+  await new Promise((r) => storage.close(r));
 }

@@ -81,6 +81,10 @@ async function historyState() {
     'student_item_exposures',
   ])
     state[table] = await owner.unsafe(`SELECT to_jsonb(t) AS row FROM ${table} t ORDER BY id`);
+  state.originals = await owner`select to_jsonb(q) as row from question_versions q
+    join question_variants v on v.id=q.variant_id where v.kind='ORIGINAL' order by q.id`;
+  state.sourceItems = await owner`select to_jsonb(i) as row from package_items i
+    join assessment_packages p on p.id=i.package_id where p.status='PUBLISHED' order by i.id`;
   return state;
 }
 let baseline;
@@ -354,6 +358,7 @@ try {
       packages: options.length,
       historyAndXpUnchanged: true,
       historyContentCompared: true,
+      originalContentCompared: true,
       historicalAttempts: baseline.assessment_attempts.length,
     }),
   );
