@@ -66,7 +66,7 @@ export async function setupGenerator(
       sourcePackages: [
         {
           id: id(7000),
-          name: 'Tryout original Oktober',
+          name: 'SHAFWAN MAU TRY OUT',
           packageVersion: 1,
           itemCount: 30,
           familyCount: 30,
@@ -121,6 +121,7 @@ export async function setupGenerator(
         expectedCount:
           body.assessmentType === 'TRYOUT' ? 30 : body.assessmentType === 'DRILL' ? 10 : 20,
         completedCount: 0,
+        sourcePackageId: body.assessmentType === 'TRYOUT' ? body.sourcePackageId : null,
       };
       state.items.unshift(pack);
       return route.fulfill({ status: 201, json: pack });

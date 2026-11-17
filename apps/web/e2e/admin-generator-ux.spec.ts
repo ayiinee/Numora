@@ -29,9 +29,9 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
           .analyze()
       ).violations,
     ).toEqual([]);
-    const trigger = page.getByRole('button', { name: 'Generate paket', exact: true });
+    const trigger = page.getByRole('button', { name: 'Generate Variant', exact: true });
     await trigger.click();
-    const dialog = page.getByRole('dialog', { name: 'Buat paket generator', exact: true });
+    const dialog = page.getByRole('dialog', { name: 'Generate Variant Tryout', exact: true });
     await expect(dialog.locator('.generator-source-summary dd')).toHaveText(['30', '45']);
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
@@ -62,13 +62,13 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
       style: 'nextjs-portal{visibility:hidden!important}',
     });
     const action = await dialog
-      .getByRole('button', { name: 'Buat paket', exact: true })
+      .getByRole('button', { name: 'Generate Variant', exact: true })
       .boundingBox();
     expect(action).not.toBeNull();
     expect(action!.y + action!.height).toBeLessThanOrEqual(568);
     await dialog.locator('.generator-source-summary').scrollIntoViewIfNeeded();
     await expect(dialog.locator('.generator-source-summary')).toBeVisible();
-    await expect(dialog.getByRole('heading', { name: 'Buat paket generator' })).toBeInViewport();
+    await expect(dialog.getByRole('heading', { name: 'Generate Variant Tryout' })).toBeInViewport();
     await expect(dialog.locator('button[type=submit]')).toBeInViewport();
     await dialog.locator('button[type=submit]').focus();
     await page.keyboard.press('Tab');
@@ -107,18 +107,42 @@ test('Generator pagination survives detail navigation and reload without generat
   expect(generator.requests.filter((request) => request.method === 'POST')).toEqual([]);
 });
 
+test('Tryout Generate Variant selects source package and posts one 30-item group', async ({
+  page,
+}) => {
+  const { generator } = await setupGenerator(page);
+  await page.goto('/admin/content/generator');
+  await page.getByRole('button', { name: 'Generate Variant', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByLabel('Paket Tryout original')).toHaveValue(id(7000));
+  await expect(dialog.locator('.generator-source-summary dd')).toHaveText(['30', '45']);
+  await dialog.getByLabel('Nama paket').fill('Variant SHAFWAN MAU TRY OUT');
+  await dialog.locator('button[type=submit]').click();
+  await expect(
+    page.getByRole('heading', { name: 'Variant SHAFWAN MAU TRY OUT', exact: true }),
+  ).toBeVisible();
+  const post = generator.requests.find((request) => request.method === 'POST');
+  expect(post?.body).toEqual({
+    assessmentType: 'TRYOUT',
+    title: 'Variant SHAFWAN MAU TRY OUT',
+    sourcePackageId: id(7000),
+  });
+  expect(post?.key).toBeTruthy();
+  expect(generator.items[0]?.expectedCount).toBe(30);
+});
+
 test('Generator preserves scoped form and idempotency on failure and blocks duplicate submit', async ({
   page,
 }) => {
   const { generator } = await setupGenerator(page);
   generator.failMutation = true;
   await page.goto('/admin/content/generator');
-  await page.getByRole('button', { name: 'Generate paket', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Buat paket generator' });
+  await page.getByRole('button', { name: 'Generate Variant', exact: true }).click();
+  const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Jenis paket').selectOption('DRILL');
   await dialog.getByLabel('Subbab dan level').selectOption(id(8100));
   await dialog.getByLabel('Nama paket').fill('Latihan operasi kelas IX');
-  await dialog.getByRole('button', { name: 'Buat paket', exact: true }).click();
+  await dialog.locator('button[type=submit]').click();
   await expect(dialog.getByRole('alert')).toContainText('Layanan sementara tidak tersedia.');
   await expect(dialog.getByLabel('Nama paket')).toHaveValue('Latihan operasi kelas IX');
   await expect(dialog.getByLabel('Subbab dan level')).toHaveValue(id(8100));
@@ -134,7 +158,7 @@ test('Generator preserves scoped form and idempotency on failure and blocks dupl
   const pending = page.waitForRequest(
     (request) => request.method() === 'POST' && request.url().endsWith('/generator/packages'),
   );
-  await dialog.getByRole('button', { name: 'Buat paket', exact: true }).click();
+  await dialog.locator('button[type=submit]').click();
   await pending;
   await expect(dialog.locator('button[type=submit]')).toBeDisabled();
   await page.keyboard.press('Escape');
@@ -159,8 +183,8 @@ test('Generator uses catalog availability and never creates with insufficient so
 }) => {
   const { generator } = await setupGenerator(page);
   await page.goto('/admin/content/generator');
-  await page.getByRole('button', { name: 'Generate paket', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Buat paket generator' });
+  await page.getByRole('button', { name: 'Generate Variant', exact: true }).click();
+  const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Jenis paket').selectOption('PRETEST');
   await dialog.getByLabel('Bab', { exact: true }).selectOption(id(8200));
   await expect(dialog.locator('.generator-source-summary dd')).toHaveText(['20', '12']);
@@ -212,12 +236,12 @@ test('Generator distinguishes failed list, failed catalog and an empty history',
   await page.getByRole('button', { name: 'Coba lagi', exact: true }).click();
   await expect(page.locator('.generator-table tbody tr')).toHaveCount(10);
   generator.failCatalog = true;
-  await page.getByRole('button', { name: 'Generate paket', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Buat paket generator' });
+  await page.getByRole('button', { name: 'Generate Variant', exact: true }).click();
+  const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('alert')).toContainText('Layanan sementara tidak tersedia.');
   generator.failCatalog = false;
   await dialog.getByRole('button', { name: 'Muat ulang sumber' }).click();
-  await expect(dialog.getByRole('button', { name: 'Buat paket', exact: true })).toBeEnabled();
+  await expect(dialog.locator('button[type=submit]')).toBeEnabled();
   await page.keyboard.press('Escape');
   generator.items = [];
   await page.getByRole('button', { name: 'Muat ulang', exact: true }).click();
@@ -240,7 +264,7 @@ for (const target of ['catalog', 'detail'] as const) {
     generator.denied = true;
     await page
       .getByRole('button', {
-        name: target === 'detail' ? 'Perbarui status' : 'Generate paket',
+        name: target === 'detail' ? 'Perbarui status' : 'Generate Variant',
         exact: true,
       })
       .click();
@@ -347,8 +371,8 @@ test('Generator explains a disabled environment without offering an enabled crea
   await expect(page.locator('.admin-state[role=alert]')).toContainText(
     'Generator belum diaktifkan pada lingkungan ini.',
   );
-  await page.getByRole('button', { name: 'Generate paket', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Buat paket generator' });
+  await page.getByRole('button', { name: 'Generate Variant', exact: true }).click();
+  const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('alert')).toContainText(
     'Generator belum diaktifkan pada lingkungan ini.',
   );

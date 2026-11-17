@@ -171,7 +171,7 @@ function GeneratorPackageScreenProtected() {
           {activeId ? (
             <Link href="/admin/content/imports">Impor soal</Link>
           ) : (
-            <Button onClick={() => setCreating(true)}>Generate paket</Button>
+            <Button onClick={() => setCreating(true)}>Generate Variant</Button>
           )}
         </div>
         {process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true' && (
@@ -384,7 +384,7 @@ function GeneratorResultsScreenProtected({
               {items === null ? (
                 !error && <AdminLoading message="Memuat riwayat generator..." />
               ) : !items.length ? (
-                <AdminMessage message="Belum ada paket generator. Pilih Generate paket untuk membuat kandidat soal." />
+                <AdminMessage message="Belum ada paket generator. Pilih Generate Variant untuk membuat kandidat soal." />
               ) : (
                 <>
                   <table className="generator-table">

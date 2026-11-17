@@ -477,7 +477,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                         ? 'Daftar demo diringkas hingga 10 soal unik. Semua versi tersedia di Verifikasi & riwayat.'
                         : 'Revisi menghasilkan versi baru. Riwayat pengerjaan tetap dipertahankan.'}
                     </p>
-                    <Link href="/admin/content/generator">Generator varian</Link>
+                    <Link href="/admin/content/generator">Generator Variant Tryout</Link>
                     <Link href="/admin/content/imports?mode=json">Impor JSON</Link>
                   </div>
                   <Dialog

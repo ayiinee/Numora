@@ -213,7 +213,7 @@ function GeneratorImportWorkflowProtected({ id }: { id: string }) {
                       })
                     }
                   >
-                    Simpan draft
+                    Import sebagai DRAFT
                   </Button>
                 </div>
               </section>
