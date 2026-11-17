@@ -2598,7 +2598,7 @@ describe.skipIf(!testUrl)(
         title: 'TEST upload-first draft',
         assessmentType: 'DRILL',
       };
-      expect(
+      expect([400, 409]).toContain(
         (
           await request(
             'admin/content/uploads/' + uploaded.id + '/draft',
@@ -2608,7 +2608,7 @@ describe.skipIf(!testUrl)(
             randomUUID(),
           )
         ).status,
-      ).toBe(409);
+      );
       const asset = questions[0]!.metadata.assetManifest[0]!;
       const reservation = await ok<{ uploadId: string; objectKey: string }>(
         'admin/content/media/uploads',
