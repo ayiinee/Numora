@@ -100,4 +100,11 @@ export class ContentPackagesController {
   ) {
     return this.packages.archive(r.adminId, id, body.expectedRevision);
   }
+  @Post('packages/:id/restore') @ApiOkResponse({ type: ContentMutationDto }) restore(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ArchiveContentPackageDto,
+  ) {
+    return this.packages.restore(r.adminId, id, body.expectedRevision);
+  }
 }

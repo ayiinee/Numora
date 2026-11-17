@@ -251,7 +251,11 @@ export class ContentPackagesService {
           ? sql`(position(lower(${query.search.trim()}) in lower(${assessmentPackages.name})) > 0 or position(lower(${query.search.trim()}) in lower(${assessmentPackages.familyCode})) > 0)`
           : undefined,
         query.usageType ? eq(assessmentPackages.assessmentType, query.usageType) : undefined,
-        query.status ? sql`${assessmentPackages.status}::text = ${query.status}` : undefined,
+        query.status === 'ACTIVE'
+          ? sql`${assessmentPackages.status}::text <> 'ARCHIVED'`
+          : query.status
+            ? sql`${assessmentPackages.status}::text = ${query.status}`
+            : undefined,
         query.chapterId
           ? sql`(${assessmentPackages.chapterId} = ${query.chapterId} or ${assessmentPackages.levelId} in (select l.id from levels l join subchapters s on s.id=l.subchapter_id where s.chapter_id=${query.chapterId}))`
           : undefined,
@@ -1101,6 +1105,22 @@ export class ContentPackagesService {
       await tx
         .update(assessmentPackages)
         .set({ status: 'ARCHIVED' })
+        .where(eq(assessmentPackages.id, id));
+      return { id };
+    });
+  }
+  restore(actor: string, id: string, revision: number) {
+    this.importer.enabled();
+    return adminMutation(actor, 'content_package_restored', 'assessment_package', async (tx) => {
+      const p = await packageContext(tx, id, true);
+      if (p.status !== 'ARCHIVED' || p.contentRevision !== revision)
+        throw new ConflictException({
+          code: 'PACKAGE_RESTORE_CONFLICT',
+          detail: 'Muat ulang paket sebelum memulihkannya.',
+        });
+      await tx
+        .update(assessmentPackages)
+        .set({ status: 'DRAFT', contentRevision: p.contentRevision + 1 })
         .where(eq(assessmentPackages.id, id));
       return { id };
     });

@@ -10,6 +10,7 @@ import { useAdminAccessError } from './admin-workspace';
 import {
   approveContentPackage,
   archiveContentPackage,
+  restoreContentPackage,
   createContentPackage,
   getContentPackage,
   listContentPackages,
@@ -1600,7 +1601,25 @@ export function ContentPackageWorkspace({
 
                   {error && <p role="alert">{error}</p>}
                   {detail.status === 'ARCHIVED' && (
-                    <p>Paket diarsipkan. Histori pengerjaan tetap dipertahankan.</p>
+                    <>
+                      <p>Paket diarsipkan. Histori pengerjaan tetap dipertahankan.</p>
+                      <Button
+                        variant="secondary"
+                        disabled={locked}
+                        onClick={() =>
+                          void run(async () => {
+                            await restoreContentPackage(token, detail.id, {
+                              expectedRevision: detail.contentRevision,
+                            });
+                            await choose(detail.id);
+                            setReload((n) => n + 1);
+                            setNotice('Paket dipulihkan sebagai DRAFT.');
+                          })
+                        }
+                      >
+                        Pulihkan sebagai DRAFT
+                      </Button>
+                    </>
                   )}
                 </section>
               </Dialog>

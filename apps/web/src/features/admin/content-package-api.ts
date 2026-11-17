@@ -22,6 +22,11 @@ export const archiveContentPackage = (token: string, id: string, body: ArchiveCo
     method: 'POST',
     body: JSON.stringify(body),
   });
+export const restoreContentPackage = (token: string, id: string, body: ArchiveContentPackageDto) =>
+  apiRequest<ContentMutationDto>(`${root}/packages/${encodeURIComponent(id)}/restore`, token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 export const approveContentPackage = (token: string, id: string, body: ApproveContentPackageDto) =>
   apiRequest<ContentMutationDto>(`${root}/packages/${encodeURIComponent(id)}/approval`, token, {
     method: 'POST',

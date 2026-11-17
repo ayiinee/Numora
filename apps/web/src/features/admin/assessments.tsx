@@ -20,16 +20,23 @@ import {
 import { packageAvailabilityLabel } from './package-availability';
 import type { AdminCurriculumDto, ContentPackagesDto } from './generated-types';
 
-type Props = { usage: AssessmentUsage; mode?: 'list' | 'create' | 'detail'; packageId?: string };
+type Props = {
+  usage: AssessmentUsage;
+  mode?: 'list' | 'create' | 'detail';
+  packageId?: string;
+  archived?: boolean;
+};
 export const AdminAssessmentsScreen = withAdminWorkspace(Assessments, 'content');
-function Assessments({ usage, mode = 'list', packageId }: Props) {
+function Assessments({ usage, mode = 'list', packageId, archived = false }: Props) {
   const { state } = useAuth();
   const url = useAdminUrl();
   if (state.status !== 'ready') return null;
-  const back = assessmentPath(usage) + assessmentListQuery(url.params);
+  const back = archived
+    ? '/admin/assessments/tryout/archived'
+    : assessmentPath(usage) + assessmentListQuery(url.params);
   return (
     <AdminFrame
-      title={`${mode === 'create' ? 'Tambah paket ' : usage === 'TRYOUT' ? 'Bank paket ' : ''}${assessmentLabels[usage]}`}
+      title={`${archived ? 'Paket arsip ' : mode === 'create' ? 'Tambah paket ' : usage === 'TRYOUT' ? 'Bank paket ' : ''}${assessmentLabels[usage]}`}
       description=""
       icon="target"
       management
@@ -41,6 +48,7 @@ function Assessments({ usage, mode = 'list', packageId }: Props) {
           key={`${state.profile.id}:${usage}`}
           token={state.session.access_token}
           usage={usage}
+          archived={archived}
         />
       ) : (
         <>
@@ -63,7 +71,15 @@ function Assessments({ usage, mode = 'list', packageId }: Props) {
   );
 }
 
-function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsage }) {
+function AssessmentTable({
+  token,
+  usage,
+  archived,
+}: {
+  token: string;
+  usage: AssessmentUsage;
+  archived: boolean;
+}) {
   const url = useAdminUrl();
   const reportAccessError = useAdminAccessError();
   const [data, setData] = useState<ContentPackagesDto | null>(null);
@@ -72,7 +88,11 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   const search = url.params.get('search') ?? '';
-  const status = url.params.get('status') ?? '';
+  const status = archived
+    ? 'ARCHIVED'
+    : usage === 'TRYOUT'
+      ? 'ACTIVE'
+      : (url.params.get('status') ?? '');
   const chapter = url.params.get('chapter') ?? '';
   const source = url.params.get('source') ?? '';
   const offset = adminOffset(url.params.get('offset'));
@@ -173,6 +193,11 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
         >
           Muat ulang
         </Button>
+        {usage === 'TRYOUT' && !archived && (
+          <Link className="button-link" href="/admin/assessments/tryout/archived">
+            Lihat paket arsip
+          </Link>
+        )}
         <Link className="button-link" href={assessmentPath(usage, 'new') + context}>
           Tambah paket
         </Link>
@@ -282,7 +307,8 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                 </thead>
                 <tbody>
                   {data.items.map((pack, index) => {
-                    const href = assessmentPath(usage, pack.id) + context;
+                    const href =
+                      assessmentPath(usage, pack.id) + (archived ? '?status=ARCHIVED' : context);
                     return (
                       <tr key={pack.id}>
                         <td className="assessment-row-number">{offset + index + 1}</td>
