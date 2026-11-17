@@ -26,6 +26,10 @@ const fixture = JSON.parse(await readFile(process.env.GENERATOR_FIXTURE_FILE, 'u
 const owner = postgres(process.env.TEST_COMPUTE_OWNER_URL, { max: 2, onnotice: () => {} });
 const computeRole = postgres(process.env.COMPUTE_DATABASE_URL, { max: 2, onnotice: () => {} });
 const { client } = getDatabase();
+await assert.rejects(
+  () => computeRole`select 1 from public.attempt_items limit 0`,
+  (error) => error.code === '42501',
+);
 const objects = new Map();
 let failUploads = false;
 const s3 = createServer(async (req, res) => {
@@ -289,7 +293,8 @@ try {
   const levels = new Set(
     fixture.items.filter((i) => ['16-4', '16-5'].includes(i.scope)).map((i) => i.level),
   );
-  const options = (await packages.catalog()).options.filter(
+  const packageCatalog = await packages.catalog();
+  const options = packageCatalog.options.filter(
     (o) => o.canGenerate && (o.assessmentType === 'TRYOUT' || levels.has(o.scopeId)),
   );
   if (process.env.GENERATOR_EXPECTED_PACKAGE_COUNT)
@@ -299,10 +304,21 @@ try {
       assessmentType: option.assessmentType,
       scopeId: option.scopeId,
       title: 'TEST ONLY v2 package',
+      ...(option.assessmentType === 'TRYOUT'
+        ? { sourcePackageId: packageCatalog.sourcePackages.find((p) => p.canGenerate)?.id }
+        : {}),
     });
     await parallel(group.requests, (r) => compute(r.id));
     const file = await packages.export(group.id);
-    assert.equal((await packages.validate(group.id, file)).report.canImportDraft, true);
+    assert.equal(file.items.length, option.requiredCount);
+    const tampered = structuredClone(file);
+    tampered.items[0].question.stem.text += ' tampered';
+    await assert.rejects(
+      () => packages.validate(group.id, tampered),
+      (error) => error.getResponse().code === 'GENERATOR_JSON_CHANGED',
+    );
+    const validation = await packages.validate(group.id, file);
+    assert.equal(validation.report.canImportDraft, true, JSON.stringify(validation.report));
     const draft = await packages.import(fixture.actor, group.id, file);
     assert.deepEqual(await packages.import(fixture.actor, group.id, file), draft);
     const [p] =
