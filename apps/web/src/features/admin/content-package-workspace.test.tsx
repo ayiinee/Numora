@@ -311,7 +311,16 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     />,
   );
   fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
-  fireEvent.click((await screen.findAllByRole('button', { name: 'Coba muat gambar lagi' }))[0]!);
+  fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
+  expect(await screen.findByAltText('Diagram soal')).toBeTruthy();
+  expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
+  // JSDOM does not load remote images. Trigger failure explicitly instead of
+  // depending on runner timing to invoke the image error handler.
+  fireEvent.error(screen.getByAltText('Diagram soal'));
+  fireEvent.error(screen.getByAltText('Diagram pembahasan'));
+  const retryButtons = await screen.findAllByRole('button', { name: 'Coba muat gambar lagi' });
+  fireEvent.click(retryButtons[1]!);
+  fireEvent.click(retryButtons[0]!);
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   expect(screen.getByAltText('Diagram soal')).toBeTruthy();
   expect(submitPreview).toHaveBeenCalledWith('TEST ONLY', id, expect.any(String));
