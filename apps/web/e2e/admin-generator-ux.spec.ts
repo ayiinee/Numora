@@ -131,6 +131,29 @@ test('Tryout Generate Variant selects source package and posts one 30-item group
   expect(generator.items[0]?.expectedCount).toBe(30);
 });
 
+test('Drill Generate Variant selects LEVEL and posts one 10-item group', async ({ page }) => {
+  const { generator } = await setupGenerator(page);
+  await page.goto('/admin/content/generator');
+  await page.getByRole('button', { name: 'Generate Variant', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Jenis paket').selectOption('DRILL');
+  await dialog.getByLabel('Subbab dan level').selectOption(id(8100));
+  await dialog.getByLabel('Nama paket').fill('Variant Drill Level 1');
+  await expect(dialog.locator('.generator-source-summary dd')).toHaveText(['10', '18']);
+  await dialog.locator('button[type=submit]').click();
+  await expect(
+    page.getByRole('heading', { name: 'Variant Drill Level 1', exact: true }),
+  ).toBeVisible();
+  const post = generator.requests.find((request) => request.method === 'POST');
+  expect(post?.body).toEqual({
+    assessmentType: 'DRILL',
+    title: 'Variant Drill Level 1',
+    scopeId: id(8100),
+  });
+  expect(post?.key).toBeTruthy();
+  expect(generator.items[0]?.expectedCount).toBe(10);
+});
+
 test('Generator preserves scoped form and idempotency on failure and blocks duplicate submit', async ({
   page,
 }) => {
