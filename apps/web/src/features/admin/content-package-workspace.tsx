@@ -313,6 +313,11 @@ export function ContentPackageWorkspace({
     detail.items.length > 0 &&
     detail.items.length === detail.readiness.expectedCount &&
     detail.items.every((item) => item.question);
+  const printableTryoutTitle = printableTryout
+    ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
+    : detail?.items.length !== detail?.readiness.expectedCount
+      ? `Lengkapi paket: ${detail?.items.length ?? 0}/${detail?.readiness.expectedCount ?? 0} soal tersedia.`
+      : `${detail?.items.filter((item) => !item.question).length ?? 0} soal belum lolos validasi.`;
   const printTryout = () => {
     if (!printableTryout) return;
     const previousTitle = document.title;
@@ -648,11 +653,7 @@ export function ContentPackageWorkspace({
                     variant="secondary"
                     disabled={!printableTryout}
                     onClick={printTryout}
-                    title={
-                      printableTryout
-                        ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
-                        : 'Lengkapi seluruh soal paket sebelum mengekspor'
-                    }
+                    title={printableTryoutTitle}
                   >
                     Export PDF
                   </Button>
@@ -1098,18 +1099,16 @@ export function ContentPackageWorkspace({
                       Berikutnya
                     </Button>
                   </div>
-                  {detail.items.some(
-                    (item) => {
-                      const question = item.question;
-                      return Boolean(
-                        item.questionVersionId === inspectingId &&
-                          question &&
-                          (question.metadata.assetManifest.length ||
-                            question.stem.text.includes('[[asset:') ||
-                            question.explanation.text.includes('[[asset:')),
-                      );
-                    },
-                  ) && (
+                  {detail.items.some((item) => {
+                    const question = item.question;
+                    return Boolean(
+                      item.questionVersionId === inspectingId &&
+                      question &&
+                      (question.metadata.assetManifest.length ||
+                        question.stem.text.includes('[[asset:') ||
+                        question.explanation.text.includes('[[asset:')),
+                    );
+                  }) && (
                     <Button variant="secondary" onClick={loadMedia} disabled={locked}>
                       Tampilkan gambar soal
                     </Button>

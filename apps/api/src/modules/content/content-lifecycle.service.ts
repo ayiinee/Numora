@@ -26,6 +26,7 @@ import {
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { structuralErrors } from './content-import.validation';
+import { contentExternalId } from './content-external-id';
 import type { ContentVersionDetailDto, ReviewContentDto } from './content-lifecycle.dto';
 
 @Injectable()
@@ -78,7 +79,12 @@ export class ContentLifecycleService {
       categories?: NonNullable<ImportQuestion['metadata']['categories']>;
     };
     const payload: ImportQuestion = {
-      externalId: r.identity?.externalId ?? v.id,
+      externalId: contentExternalId(
+        r.identity?.externalId,
+        r.question.sourceRef,
+        r.question.id,
+        (v.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>,
+      ),
       type: v.questionType,
       chapterCode: r.chapter?.code ?? null,
       subchapterCode: r.subchapter?.code ?? null,
