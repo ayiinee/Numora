@@ -32,6 +32,7 @@ import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 import { adminOffset, useAdminUrl } from './admin-url';
 import { PackageAvailability } from './package-availability';
 import { assessmentPath, assessmentListQuery } from './assessment-routes';
+import { formatTryoutAnswer } from './tryout-pdf';
 type Usage = CreateContentPackageDto['assessmentType'];
 const checklistActions: Record<string, string> = {
   STRUCTURE:
@@ -307,6 +308,24 @@ export function ContentPackageWorkspace({
       setMedia(review.media);
     });
   const locked = busy || disabled || detailLoading;
+  const printableTryout =
+    detail?.assessmentType === 'TRYOUT' &&
+    detail.items.length > 0 &&
+    detail.items.length === detail.readiness.expectedCount &&
+    detail.items.every((item) => item.question);
+  const printTryout = () => {
+    if (!printableTryout) return;
+    const previousTitle = document.title;
+    document.title = `${detail.name} - Soal`;
+    const restore = () => {
+      document.title = previousTitle;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore, { once: true });
+    window.print();
+    // Some browsers do not emit afterprint for cancelled dialogs.
+    window.setTimeout(restore, 1000);
+  };
   const publicationProblems =
     detail?.readiness.checks.filter(
       (check) => !check.passed && !['REVIEW', 'BLUEPRINT'].includes(check.code),
@@ -624,6 +643,20 @@ export function ContentPackageWorkspace({
                 </p>
               </div>
               <div className="assessment-header-actions">
+                {detail.assessmentType === 'TRYOUT' && (
+                  <Button
+                    variant="secondary"
+                    disabled={!printableTryout}
+                    onClick={printTryout}
+                    title={
+                      printableTryout
+                        ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
+                        : 'Lengkapi seluruh soal paket sebelum mengekspor'
+                    }
+                  >
+                    Export PDF
+                  </Button>
+                )}
                 <Button variant="secondary" onClick={() => setSettingsOpen(true)}>
                   <Icon name="settings" />
                   Pengaturan
@@ -1607,6 +1640,40 @@ export function ContentPackageWorkspace({
             </aside>
           </div>
         </div>
+      )}
+      {detail?.assessmentType === 'TRYOUT' && (
+        <section className="tryout-pdf-print" aria-label="Soal Tryout untuk dicetak">
+          <h1>{detail.name}</h1>
+          {detail.items.map((item, index) =>
+            item.question ? (
+              <article className="tryout-pdf-question" key={item.questionVersionId}>
+                <h2>{index + 1}. Soal</h2>
+                <ContentRichText
+                  text={item.question.stem.text}
+                  media={media}
+                  retry={loadMedia}
+                  renderBareMath
+                />
+                <ol className="tryout-pdf-options" type="A">
+                  {item.question.options.map((option) => (
+                    <li key={option.id}>
+                      <strong>{option.id}.</strong>{' '}
+                      <ContentRichText
+                        text={option.content.text}
+                        media={media}
+                        retry={loadMedia}
+                        renderBareMath
+                      />
+                    </li>
+                  ))}
+                </ol>
+                <p className="tryout-pdf-answer">
+                  <strong>Kunci jawaban:</strong> {formatTryoutAnswer(item.question.answer)}
+                </p>
+              </article>
+            ) : null,
+          )}
+        </section>
       )}
       {detailLoading && <p role="status">Memuat detail paket…</p>}
       {busy && (

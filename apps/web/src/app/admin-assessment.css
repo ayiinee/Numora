@@ -2905,3 +2905,23 @@
 @media (max-width: 600px) {
   .tryout-batch-confirmation .numora-dialog__actions > button { flex: 1 1 100%; }
 }
+
+.tryout-pdf-print { display: none; }
+@media print {
+  @page { margin: 16mm; }
+  body { background: #fff !important; color: #000 !important; }
+  body > * { display: none !important; }
+  .tryout-pdf-print {
+    display: block !important;
+    font-family: Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+  .tryout-pdf-print h1 { font-size: 18pt; margin: 0 0 18pt; }
+  .tryout-pdf-question { break-inside: avoid; margin: 0 0 20pt; }
+  .tryout-pdf-question h2 { font-size: 12pt; margin: 0 0 7pt; }
+  .tryout-pdf-question p { margin: 5pt 0; }
+  .tryout-pdf-options { margin: 7pt 0; padding-left: 24pt; }
+  .tryout-pdf-options li { margin: 3pt 0; }
+  .tryout-pdf-answer { margin-top: 9pt !important; }
+}
