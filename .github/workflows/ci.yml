@@ -93,8 +93,36 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Migrate isolated test database
         run: pnpm --filter @tka/database db:migrate
+      - name: Enable TLS on disposable PostgreSQL for production preflight tests
+        run: bash scripts/prepare-test-postgres-tls.sh '${{ job.services.postgres.id }}'
+      - name: PostgreSQL VPS config and HBA on a second disposable Linux cluster
+        run: bash scripts/test-postgres-vps-config.sh '${{ job.services.postgres.id }}'
+      - name: Install explicit PostgreSQL 16 backup clients
+        run: |
+          # ubuntu-latest now uses 26.04; do not assume its default client matches the 16 fixture.
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-common ca-certificates curl
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client-16
+          /usr/lib/postgresql/16/bin/pg_dump --version
+          /usr/lib/postgresql/16/bin/pg_restore --version
+      - name: Install checksum-pinned restic for isolated encrypted recovery tests
+        run: bash scripts/prepare-test-restic.sh
       - name: Unit and integration tests (no cached test results)
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
+          NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
+          TEST_RESTIC_PATH: ${{ env.TEST_RESTIC_PATH }}
         run: pnpm exec turbo run test --force --concurrency=1
+      - name: Restored API and worker with restricted TLS logins and an isolated queue
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ env.TEST_DATABASE_TLS_CA_FILE }}
+          NUMORA_BACKUP_PG_BIN: /usr/lib/postgresql/16/bin
+          NUMORA_RESTORE_RUNTIME_PROBE: 'true'
+        run: |
+          pnpm exec turbo run build --filter=@tka/api --filter=@tka/worker
+          pnpm --filter @tka/database exec vitest run src/restore-vps.integration.spec.ts
       - name: QA Admin provisioning tests
         run: pnpm test:qa-admins
       - name: Database upgrade checks

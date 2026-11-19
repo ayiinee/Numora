@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   redisConstructor: vi.fn(),
   workerConstructor: vi.fn(),
   checkDatabase: vi.fn(),
+  productionCheck: vi.fn(),
   closeDatabase: vi.fn(),
   outbox: vi.fn(),
   status: vi.fn(),
@@ -40,6 +41,8 @@ vi.mock('@tka/database', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tka/database')>()),
   checkDatabaseConnection: mocks.checkDatabase,
   closeDatabaseConnection: mocks.closeDatabase,
+  getDatabase: () => ({ client: {} }),
+  verifyProductionDatabase: mocks.productionCheck,
 }));
 vi.mock('./tryout-recovery.js', () => ({ recoverOverdueTryouts: mocks.recover }));
 vi.mock('./notifications.js', () => ({
@@ -75,6 +78,7 @@ describe('worker Redis outage lifecycle', () => {
     mocks.worker.run.mockImplementation(() => new Promise(() => {}));
     mocks.worker.close.mockResolvedValue(undefined);
     mocks.checkDatabase.mockResolvedValue(undefined);
+    mocks.productionCheck.mockResolvedValue(undefined);
     mocks.closeDatabase.mockResolvedValue(undefined);
     mocks.status.mockResolvedValue({ pending: 0, failed: 0, retryReady: 0, coolingDown: 0 });
     mocks.outbox.mockResolvedValue({ processed: 0, failed: 0 });
@@ -209,5 +213,61 @@ describe('worker Redis outage lifecycle', () => {
     expect(exit).toHaveBeenCalledExactlyOnceWith(1);
     expect(mocks.workerConstructor).not.toHaveBeenCalled();
     expect(process.listenerCount('SIGTERM')).toBe(initialListeners);
+  });
+  it('rejects missing Production target before Redis, consumers or business jobs', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NUMORA_DEPLOYMENT_PROFILE', '');
+    const exit = vi.fn();
+    await runWorker(exit);
+    expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    expect(mocks.redisConstructor).not.toHaveBeenCalled();
+    expect(mocks.productionCheck).not.toHaveBeenCalled();
+    expect(mocks.outbox).not.toHaveBeenCalled();
+    expect(mocks.workerConstructor).not.toHaveBeenCalled();
+  });
+  it('waits for the Production database preflight before allowing the consumer to start', async () => {
+    for (const [key, value] of Object.entries({
+      NODE_ENV: 'production',
+      NUMORA_DEPLOYMENT_PROFILE: 'production-vps',
+      DATABASE_URL:
+        'postgres://worker:TEST_ONLY@db.example.test:5432/numora_production?sslmode=verify-full',
+      DATABASE_EXPECTED_HOST: 'db.example.test',
+      DATABASE_EXPECTED_PORT: '5432',
+      DATABASE_EXPECTED_NAME: 'numora_production',
+      DATABASE_EXPECTED_USER: 'worker',
+      DB_POOL_MAX: '1',
+      DATABASE_MIGRATION_URL: '',
+      ALLOW_SYNTHETIC_CONTENT: 'false',
+      PVP_MODE: 'disabled',
+      PVP_CONTENT_MODE: 'strict',
+      REDIS_URL: 'rediss://default:TEST_ONLY@redis.example.test:6379',
+      BULLMQ_PREFIX: 'numora:prod:fixture',
+      NUMORA_OBSERVABILITY_ENABLED: 'false',
+      NUMORA_IRT_DATABASE_URL: '',
+      NUMORA_GENERATOR_ENABLED: 'false',
+      PGOPTIONS: '',
+      NODE_TLS_REJECT_UNAUTHORIZED: '1',
+    }))
+      vi.stubEnv(key, value);
+    let release!: () => void;
+    mocks.productionCheck.mockImplementationOnce(
+      () =>
+        new Promise<void>((done) => {
+          release = done;
+        }),
+    );
+    const exit = vi.fn();
+    const starting = runWorker(exit);
+    expect(mocks.productionCheck).toHaveBeenCalledOnce();
+    expect(mocks.redisConstructor).not.toHaveBeenCalled();
+    expect(mocks.workerConstructor).not.toHaveBeenCalled();
+    release();
+    const runtime = await starting;
+    expect(mocks.workerConstructor).toHaveBeenCalledOnce();
+    expect(mocks.productionCheck.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.redisConstructor.mock.invocationCallOrder[0]!,
+    );
+    await runtime!.stop();
+    expect(exit).toHaveBeenCalledExactlyOnceWith(0);
   });
 });

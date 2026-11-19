@@ -1,4 +1,5 @@
 export * from './client.js';
+export * from './production-runtime.js';
 export * from './runtime-metrics.js';
 export * from './runtime-heartbeat.js';
 export * from './package-runtime.js';
