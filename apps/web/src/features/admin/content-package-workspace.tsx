@@ -1101,7 +1101,9 @@ export function ContentPackageWorkspace({
                   {detail.items.some(
                     (item) =>
                       item.questionVersionId === inspectingId &&
-                      item.question?.metadata.assetManifest.length,
+                      (item.question?.metadata.assetManifest.length ||
+                        item.question.stem.text.includes('[[asset:') ||
+                        item.question.explanation.text.includes('[[asset:')),
                   ) && (
                     <Button variant="secondary" onClick={loadMedia} disabled={locked}>
                       Tampilkan gambar soal
