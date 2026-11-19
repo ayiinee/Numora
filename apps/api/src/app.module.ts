@@ -19,6 +19,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
       envFilePath: ['.env.local', '.env', '../../.env.local', '../../.env'],
     }),
     HealthModule,
