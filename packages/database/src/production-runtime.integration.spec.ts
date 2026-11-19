@@ -181,6 +181,12 @@ describe.skipIf(!base || !tlsUrl || !ca)(
       }
     });
     it('rejects actual excessive privileges and ownership, including inherited ownership', async () => {
+      await owner.unsafe(`ALTER ROLE "${login}" REPLICATION`);
+      try {
+        expect((await run()).code).toBe(1);
+      } finally {
+        await owner.unsafe(`ALTER ROLE "${login}" NOREPLICATION`);
+      }
       await owner.unsafe(`ALTER ROLE "${login}" BYPASSRLS`);
       try {
         expect((await run()).code).toBe(1);

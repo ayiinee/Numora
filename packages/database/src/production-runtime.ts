@@ -241,6 +241,7 @@ export interface RuntimeDatabaseState {
   superuser: boolean;
   createdb: boolean;
   createrole: boolean;
+  replication: boolean;
   bypassrls: boolean;
   elevated_membership: boolean;
   main_member: boolean;
@@ -268,6 +269,7 @@ export function assertRuntimeDatabaseState(
     state.superuser ||
     state.createdb ||
     state.createrole ||
+    state.replication ||
     state.bypassrls ||
     state.elevated_membership ||
     !state.main_member ||
@@ -294,8 +296,8 @@ export async function verifyProductionDatabase(client: Sql, target: ProductionTa
       await tx.unsafe("SET LOCAL statement_timeout = '5s'");
       const [state] = await tx<RuntimeDatabaseState[]>`
         SELECT current_database() AS database, session_user AS login, current_user AS actor,
-          r.rolsuper AS superuser,r.rolcreatedb AS createdb,r.rolcreaterole AS createrole,r.rolbypassrls AS bypassrls,
-          EXISTS(SELECT 1 FROM pg_roles a WHERE (a.rolsuper OR a.rolcreatedb OR a.rolcreaterole OR a.rolbypassrls
+          r.rolsuper AS superuser,r.rolcreatedb AS createdb,r.rolcreaterole AS createrole,r.rolreplication AS replication,r.rolbypassrls AS bypassrls,
+          EXISTS(SELECT 1 FROM pg_roles a WHERE (a.rolsuper OR a.rolcreatedb OR a.rolcreaterole OR a.rolreplication OR a.rolbypassrls
             OR a.rolname IN ('pg_read_server_files','pg_write_server_files','pg_execute_server_program','pg_signal_backend','pg_create_subscription','pg_read_all_data','pg_write_all_data','pg_maintain'))
             AND pg_has_role(current_user,a.oid,'MEMBER')) AS elevated_membership,
           coalesce((SELECT pg_has_role(current_user,oid,'MEMBER') FROM pg_roles WHERE rolname='numora_main_runtime'),false) AS main_member,
