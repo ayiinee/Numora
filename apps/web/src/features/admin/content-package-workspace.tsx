@@ -1099,11 +1099,16 @@ export function ContentPackageWorkspace({
                     </Button>
                   </div>
                   {detail.items.some(
-                    (item) =>
-                      item.questionVersionId === inspectingId &&
-                      (item.question?.metadata.assetManifest.length ||
-                        item.question.stem.text.includes('[[asset:') ||
-                        item.question.explanation.text.includes('[[asset:')),
+                    (item) => {
+                      const question = item.question;
+                      return Boolean(
+                        item.questionVersionId === inspectingId &&
+                          question &&
+                          (question.metadata.assetManifest.length ||
+                            question.stem.text.includes('[[asset:') ||
+                            question.explanation.text.includes('[[asset:')),
+                      );
+                    },
                   ) && (
                     <Button variant="secondary" onClick={loadMedia} disabled={locked}>
                       Tampilkan gambar soal
