@@ -2910,13 +2910,17 @@
 @media print {
   @page { margin: 16mm; }
   body { background: #fff !important; color: #000 !important; }
-  body > * { display: none !important; }
+  body * { visibility: hidden !important; }
   .tryout-pdf-print {
     display: block !important;
+    position: absolute;
+    inset: 0;
     font-family: Arial, sans-serif;
     font-size: 11pt;
     line-height: 1.45;
+    visibility: visible !important;
   }
+  .tryout-pdf-print * { visibility: visible !important; }
   .tryout-pdf-print h1 { font-size: 18pt; margin: 0 0 18pt; }
   .tryout-pdf-question { break-inside: avoid; margin: 0 0 20pt; }
   .tryout-pdf-question h2 { font-size: 12pt; margin: 0 0 7pt; }
