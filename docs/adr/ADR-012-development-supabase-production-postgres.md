@@ -16,6 +16,8 @@ Business data remains PostgreSQL through the same canonical Drizzle stream (`pub
 
 ## Scope and consequences
 
+**ENGINEERING DECISION — integration of existing main staging workflow, 20 November 2026:** retain main's dedicated capacity-staging topology under the explicit `staging-supabase` profile with `NODE_ENV=production`. It uses the same pinned endpoint, verified TLS, non-owner Main role and no-synthetic-content checks, while requiring a `numora:staging:` queue prefix and rejecting the known shared Development/Production projects. This preserves staging isolation without permitting a staging prefix in either Production profile. Staging capacity validation remains an additional operator check; local Development stays unchanged. Migration/evidence credentials remain outside API/worker env.
+
 This amends ADR-010's managed Production database preference for the owner's VPS target. ADR-004 migration ownership, ADR-005 identity, ADR-007 atomic outbox, ADR-009 immutable XP and ADR-011 Main/IRT boundaries remain in force.
 
 This first PR provides configuration/startup validation and operator examples. It does not provision roles/server, copy data, enable IRT/publication, change secrets, connect to the real VPS, or authorize cutover. Bootstrap, source inventory, restore/integrity, off-host backup and recovery/cutover rehearsals remain separate work. A single API/DB VPS shares failure/resource domains; actual pool/memory/disk budgets require measurement.

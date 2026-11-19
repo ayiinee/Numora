@@ -26,6 +26,8 @@ The expected target values are operator assertions, not cryptographic proof of a
 
 ## TLS and private networking
 
+For the dedicated capacity-staging workflow already on main, `.env.staging.example` declares `NUMORA_DEPLOYMENT_PROFILE=staging-supabase` with `NODE_ENV=production`, pinned managed endpoint/login, verify-full TLS and `numora:staging:` queues. Known shared Development/Production project refs are rejected. Run `scripts/check-staging-env.mjs` on the private operator inventory too; inject only the service subset into runtime, excluding migration/evidence credentials. This does not turn local Development into staging or allow staging queue prefixes in Production. All ordinary production role/content/secret checks still apply to this built staging runtime.
+
 Use a DNS hostname covered by the PostgreSQL certificate and trusted by Node. A hostname may resolve to loopback/private networking when API/DB share a VPS; public DB access is not required. IP-literal production targets are intentionally unsupported by this first profile. Do not turn off TLS or set `NODE_TLS_REJECT_UNAUTHORIZED=0`. The installed postgres-js `require` mode does not verify certificates; this profile requires `verify-full`. Arbitrary/duplicate URL query overrides and `PGOPTIONS` are rejected so they cannot change the pinned route, TLS or role.
 
 Node's extra CA file is loaded at process start, not by setting the variable after the server is running. Certificate trust is verified by the actual Node driver, not just URL parsing. The VPS profile additionally requires `pg_stat_ssl` to report an encrypted direct PostgreSQL session. A VPS PgBouncer/proxy topology is outside this initial direct-connection contract and needs separate compatibility tests.

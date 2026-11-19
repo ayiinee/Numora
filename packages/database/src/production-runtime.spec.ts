@@ -28,6 +28,16 @@ const fixture: NodeJS.ProcessEnv = {
   PVP_CONTENT_MODE: 'strict',
 };
 const target = () => productionTarget('api', fixture)!;
+const stagingFixture: NodeJS.ProcessEnv = {
+  ...fixture,
+  NUMORA_DEPLOYMENT_PROFILE: 'staging-supabase',
+  SUPABASE_PROJECT_REF: ref,
+  DATABASE_EXPECTED_HOST: `db.${ref}.supabase.co`,
+  DATABASE_EXPECTED_NAME: 'postgres',
+  DATABASE_EXPECTED_USER: 'numora_stage',
+  DATABASE_URL: `postgres://numora_stage:TEST_ONLY_PASSWORD@db.${ref}.supabase.co:5432/postgres?sslmode=verify-full`,
+  BULLMQ_PREFIX: 'numora:staging:capacity',
+};
 const state: RuntimeDatabaseState = {
   database: 'numora_production',
   login: 'numora_app',
@@ -45,6 +55,22 @@ const state: RuntimeDatabaseState = {
   can_create: false,
   tls: true,
 };
+
+it('keeps the main staging build profile isolated without accepting staging queues in Production', () => {
+  for (const service of ['api', 'worker'] as const)
+    expect(productionTarget(service, stagingFixture)?.profile).toBe('staging-supabase');
+  for (const change of [
+    { BULLMQ_PREFIX: 'numora:prod:capacity' },
+    { DATABASE_MIGRATION_URL: 'NEVER_PRINT' },
+    { DATABASE_URL: stagingFixture.DATABASE_URL!.replace('verify-full', 'require') },
+    { SUPABASE_PROJECT_REF: 'pkamenfnwmoeisccnrnk' },
+    { SUPABASE_PROJECT_REF: 'bfvbstmkcpanqqehfevr' },
+  ])
+    expect(() => productionTarget('api', { ...stagingFixture, ...change })).toThrow();
+  expect(() =>
+    productionTarget('api', { ...fixture, BULLMQ_PREFIX: 'numora:staging:capacity' }),
+  ).toThrow();
+});
 
 it('accepts split VPS database and existing Supabase Auth without changing development/test', () => {
   expect(target().profile).toBe('production-vps');

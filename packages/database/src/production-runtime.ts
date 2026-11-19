@@ -3,7 +3,7 @@ import type { Sql } from 'postgres';
 
 export type ProductionService = 'api' | 'worker';
 export interface ProductionTarget {
-  profile: 'production-vps' | 'production-supabase';
+  profile: 'production-vps' | 'production-supabase' | 'staging-supabase';
   host: string;
   port: number;
   database: string;
@@ -63,8 +63,12 @@ export function productionTarget(
   if (env.PGOPTIONS)
     problems.push('PGOPTIONS overrides must not be present in runtime configuration');
   const profile = env.NUMORA_DEPLOYMENT_PROFILE;
-  if (profile !== 'production-vps' && profile !== 'production-supabase')
-    problems.push('NUMORA_DEPLOYMENT_PROFILE must be production-vps or production-supabase');
+  const staging = profile === 'staging-supabase';
+  const managed = profile === 'production-supabase' || staging;
+  if (profile !== 'production-vps' && !managed)
+    problems.push(
+      'NUMORA_DEPLOYMENT_PROFILE must be production-vps, production-supabase or staging-supabase',
+    );
   const host = env.DATABASE_EXPECTED_HOST?.toLowerCase();
   const port = Number(env.DATABASE_EXPECTED_PORT);
   const database = env.DATABASE_EXPECTED_NAME;
@@ -114,7 +118,7 @@ export function productionTarget(
 
   const ref = env.SUPABASE_PROJECT_REF;
   let databaseRole = login ?? '';
-  if (profile === 'production-supabase') {
+  if (managed) {
     if (!ref || !/^[a-z0-9]{20}$/.test(ref))
       problems.push('SUPABASE_PROJECT_REF must identify the Auth/database project');
     const direct = host === `db.${ref}.supabase.co`;
@@ -122,6 +126,10 @@ export function productionTarget(
     if ((!direct && !pooler) || port !== 5432 || database !== 'postgres')
       problems.push('Supabase production requires a pinned direct or session-pooler target');
     if (pooler) databaseRole = login!.slice(0, -`.${ref}`.length);
+    if (staging && ['bfvbstmkcpanqqehfevr', 'pkamenfnwmoeisccnrnk'].includes(ref ?? ''))
+      problems.push(
+        'Staging must use a dedicated project, separate from shared Development and Production',
+      );
   } else if (
     profile === 'production-vps' &&
     (host?.endsWith('.supabase.co') || host?.endsWith('.pooler.supabase.com'))
@@ -151,8 +159,16 @@ export function productionTarget(
     problems.push('Production PVP_MODE must be disabled or official');
   if (env.PVP_CONTENT_MODE && env.PVP_CONTENT_MODE !== 'strict')
     problems.push('Production PvP content must use strict eligibility');
-  if (!/^numora:prod:[a-z0-9][a-z0-9:_-]*$/.test(env.BULLMQ_PREFIX ?? ''))
-    problems.push('BULLMQ_PREFIX must be a distinct numora:prod: namespace');
+  if (
+    staging
+      ? !/^numora:staging:[a-z0-9_-]+$/.test(env.BULLMQ_PREFIX ?? '')
+      : !/^numora:prod:[a-z0-9][a-z0-9:_-]*$/.test(env.BULLMQ_PREFIX ?? '')
+  )
+    problems.push(
+      staging
+        ? 'BULLMQ_PREFIX must be a distinct numora:staging: namespace'
+        : 'BULLMQ_PREFIX must be a distinct numora:prod: namespace',
+    );
   try {
     const redis = new URL(env.REDIS_URL ?? '');
     if (redis.protocol !== 'rediss:' || !redis.hostname || !redis.password || redis.hash)
@@ -194,7 +210,7 @@ export function productionTarget(
   }
   if (service === 'api') {
     if (!httpsOrigin(env.SUPABASE_URL)) problems.push('SUPABASE_URL must be an HTTPS Auth origin');
-    if (profile === 'production-supabase') {
+    if (managed) {
       try {
         const authHost = new URL(env.SUPABASE_URL ?? '').hostname;
         if (authHost.endsWith('.supabase.co') && authHost !== `${ref}.supabase.co`)
