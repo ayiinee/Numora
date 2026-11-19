@@ -209,9 +209,16 @@ jobs:
         run: node scripts/qa/browser-shards.mjs plan
       - name: Install browser for fixture E2E
         run: pnpm --filter @tka/web exec playwright install --with-deps chromium
+      - name: Build web for production E2E
+        env:
+          NUMORA_E2E_PRODUCTION: 'true'
+          NUMORA_WEB_DIST_DIR: .next-e2e
+        run: pnpm --filter @tka/web build
       - name: Browser E2E
         env:
           DEBUG: pw:webserver
+          NUMORA_E2E_PRODUCTION: 'true'
+          NUMORA_WEB_DIST_DIR: .next-e2e
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/.tmp/browser-e2e-${{ matrix.shard }}.json
         # Keep main's complete test-level partition and one worker per host.
         # Reporters come from playwright.config.ts so JSON, JUnit and HTML all survive.
