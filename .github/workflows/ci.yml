@@ -213,7 +213,14 @@ jobs:
         env:
           NUMORA_E2E_PRODUCTION: 'true'
           NUMORA_WEB_DIST_DIR: .next-e2e
-        run: pnpm --filter @tka/web build
+          # NEXT_PUBLIC_* values are embedded by Next during build. Keep them
+          # identical to the runtime webServer environment below.
+          NEXT_PUBLIC_API_URL: http://localhost:3301/api/v1
+          NEXT_PUBLIC_SUPABASE_URL: https://numora-e2e.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-only-public-key
+        run: |
+          pnpm --filter @tka/web build
+          test -d apps/web/.next-e2e
       - name: Browser E2E
         env:
           DEBUG: pw:webserver
