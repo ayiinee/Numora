@@ -4,7 +4,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "items"
+    "items",
+    "packages",
+    "respondents"
   ],
   "properties": {
     "items": {
@@ -101,6 +103,45 @@
           "qualityEvidence": {
             "type": "object"
           }
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["packageId", "packageVersion", "armId", "armKind", "manifestDigest"],
+        "properties": {
+          "packageId": { "type": "string", "format": "uuid" },
+          "packageVersion": { "type": "integer", "minimum": 1 },
+          "armId": { "type": "string", "format": "uuid" },
+          "armKind": { "enum": ["ORIGINAL", "VARIANT"] },
+          "manifestDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "respondents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["respondentId", "attemptId", "packageId", "packageVersion", "assignedArmId", "deliveredArmId", "status", "theta", "standardError", "score", "scoreMapping", "referencePackage", "usedQuestionVersionIds", "reasonCodes"],
+        "properties": {
+          "respondentId": { "type": "string", "minLength": 1 },
+          "attemptId": { "type": "string", "format": "uuid" },
+          "packageId": { "type": "string", "format": "uuid" },
+          "packageVersion": { "type": "integer", "minimum": 1 },
+          "assignedArmId": { "type": "string", "format": "uuid" },
+          "deliveredArmId": { "type": "string", "format": "uuid" },
+          "status": { "enum": ["SCORED", "INSUFFICIENT", "NOT_COMPARABLE", "UNSCORABLE", "NOT_EVALUATED"] },
+          "theta": { "type": ["number", "null"] },
+          "standardError": { "type": ["number", "null"], "minimum": 0 },
+          "score": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+          "scoreMapping": { "type": ["object", "null"] },
+          "referencePackage": { "type": ["object", "null"] },
+          "usedQuestionVersionIds": { "type": "array", "items": { "type": "string", "format": "uuid" }, "uniqueItems": true },
+          "reasonCodes": { "type": "array", "items": { "type": "string" } }
         }
       }
     }
