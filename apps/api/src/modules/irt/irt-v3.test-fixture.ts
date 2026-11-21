@@ -51,16 +51,17 @@ export async function tryoutMeasurementFixture(
   const [policy] = await owner<
     { id: string }[]
   >`INSERT INTO scoring_policy_versions(policy_code,version,configuration) VALUES(${key},1,'{"fixture":true}') RETURNING id`;
-  const manifestDigest = 'b'.repeat(64),
-    armId = randomUUID();
+  const armId = randomUUID();
   const [pack] = await owner<
     { id: string }[]
   >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id,status) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id},'DRAFT') RETURNING id`;
   const [pi] = await owner<
     { id: string }[]
   >`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
-  await owner`UPDATE assessment_packages SET manifest_digest=${manifestDigest} WHERE id=${pack!.id}`;
-  await owner`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id}`;
+  const [frozen] = await owner<
+    { manifest_digest: string }[]
+  >`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id} RETURNING manifest_digest`;
+  const manifestDigest = frozen!.manifest_digest;
   const [batch] = await main<
     { id: string }[]
   >`INSERT INTO tryout_batches(package_id,starts_at,closes_at,cutoff_at,result_due_at,status,release_policy,release_policy_digest)
