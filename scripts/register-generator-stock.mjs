@@ -49,7 +49,7 @@ export async function registerGeneratorStockInventory(client, manifest, apply = 
       if (!source) throw new Error('STOCK_ORIGINAL_MAPPING_MISMATCH');
       if (apply) await tx`select pg_advisory_xact_lock(hashtextextended(${familyId},5))`;
       const [digest] =
-        await tx`select irt_compute.payload_digest(${JSON.stringify(definition)}::jsonb) as value`;
+        await tx`select irt_compute.payload_digest(${JSON.stringify(definition)}::text::jsonb) as value`;
       let [row] =
         await tx`select * from generator_stock_sets where family_id=${familyId} and version=${version}`;
       if (
@@ -60,7 +60,7 @@ export async function registerGeneratorStockInventory(client, manifest, apply = 
         throw new Error('STOCK_REGISTRATION_CONFLICT');
       if (apply && !row)
         [row] =
-          await tx`insert into generator_stock_sets(family_id,original_question_version_id,version,digest,definition,item_count) values(${familyId},${parentQuestionVersionId},${version},${digest.value},${JSON.stringify(definition)}::jsonb,${definition.items.length}) returning *`;
+          await tx`insert into generator_stock_sets(family_id,original_question_version_id,version,digest,definition,item_count) values(${familyId},${parentQuestionVersionId},${version},${digest.value},${JSON.stringify(definition)}::text::jsonb,${definition.items.length}) returning *`;
       result.push({
         familyId,
         parentQuestionVersionId,

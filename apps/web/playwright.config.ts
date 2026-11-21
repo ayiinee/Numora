@@ -1,4 +1,8 @@
 import { defineConfig } from '@playwright/test';
+
+const productionE2E = process.env.NUMORA_E2E_PRODUCTION === 'true';
+const next = 'node node_modules/next/dist/bin/next';
+
 export default defineConfig({
   testDir: './e2e',
   workers: 1,
@@ -21,7 +25,11 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `node node_modules/next/dist/bin/next ${process.env.NUMORA_E2E_PRODUCTION === 'true' ? 'start' : 'dev'} -p 3300${process.env.NUMORA_E2E_WEBPACK === 'true' && process.env.NUMORA_E2E_PRODUCTION !== 'true' ? ' --webpack' : ''}`,
+    // Production E2E uses a prebuilt app; `next dev` can stop on the
+    // repository's security advisory reminder before tests connect.
+    command: productionE2E
+      ? `${next} start -p 3300`
+      : `${next} dev -p 3300${process.env.NUMORA_E2E_WEBPACK === 'true' ? ' --webpack' : ''}`,
     gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
     url: 'http://localhost:3300',
     reuseExistingServer: false,
