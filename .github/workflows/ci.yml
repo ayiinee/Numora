@@ -93,6 +93,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Migrate isolated test database
         run: pnpm --filter @tka/database db:migrate
+      - name: Enable TLS on disposable PostgreSQL for production preflight tests
+        run: bash scripts/prepare-test-postgres-tls.sh '${{ job.services.postgres.id }}'
       - name: Unit and integration tests (no cached test results)
         run: pnpm exec turbo run test --force --concurrency=1
       - name: QA Admin provisioning tests

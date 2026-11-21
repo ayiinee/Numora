@@ -13,6 +13,7 @@
     "test:qa-workflow": "node --test scripts/qa/*.test.mjs scripts/qa/capacity/*.test.mjs scripts/check-staging-env.test.mjs",
     "dev": "pnpm dev:prepare && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api",
     "env:check": "dotenv -e .env -- node scripts/check-dev-env.mjs",
+    "env:check:production": "pnpm --filter @tka/database env:check:production",
     "db:check": "dotenv -e .env -- pnpm --filter @tka/database db:check",
     "build": "turbo run build",
     "lint": "eslint . --max-warnings=0",
