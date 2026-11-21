@@ -151,7 +151,8 @@ export function validateCalibrationPayload(
         'usedQuestionVersionIds',
         'reasonCodes',
       ]) ||
-      !uuid(respondent.respondentId) ||
+      typeof respondent.respondentId !== 'string' ||
+      respondent.respondentId.length === 0 ||
       !uuid(respondent.attemptId) ||
       !uuid(respondent.packageId) ||
       !count(respondent.packageVersion) ||
