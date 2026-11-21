@@ -27,7 +27,7 @@ def main():
         context = db.execute("INSERT INTO measurement_contexts(ecosystem,dimension,tryout_batch_id,scale_code) VALUES('TRYOUT','RESEARCH',%s,%s) RETURNING id", (batch, uuid4().hex)).fetchone()['id']
         # Existing simulator, no generated attempts: exercise the real start-table transaction below.
         from research.irt.synthetic import generate
-        source = generate(1, arms=2, include_mcma=True)[0]
+        source = generate(1, arms=2)[0]
         source['respondents'] = []
         source['responses'] = []
         application = os.environ.get('IRT_DELIVERY_APP_TEST') == 'true'
