@@ -55,10 +55,11 @@ export async function tryoutMeasurementFixture(
     armId = randomUUID();
   const [pack] = await owner<
     { id: string }[]
-  >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id,manifest_digest) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id},${manifestDigest}) RETURNING id`;
+  >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id}) RETURNING id`;
   const [pi] = await owner<
     { id: string }[]
   >`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
+  await owner`UPDATE assessment_packages SET manifest_digest=${manifestDigest} WHERE id=${pack!.id}`;
   await owner`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id}`;
   const [batch] = await main<
     { id: string }[]
