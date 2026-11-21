@@ -55,7 +55,7 @@ export async function tryoutMeasurementFixture(
     armId = randomUUID();
   const [pack] = await owner<
     { id: string }[]
-  >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id}) RETURNING id`;
+  >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id,status) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id},'DRAFT') RETURNING id`;
   const [pi] = await owner<
     { id: string }[]
   >`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
