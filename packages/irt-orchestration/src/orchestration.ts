@@ -390,15 +390,63 @@ export async function adoptTryoutArtifact(client: Sql, id: string, actorId?: str
         )
       )
         fail('IRT_ARTIFACT_ITEM_MISMATCH');
+      const snapshotPeople = await tx<
+        { attempt_id: string; respondent_id: string; package_id: string; package_version: number }[]
+      >`SELECT DISTINCT i.attempt_id::text,i.respondent_id,a.package_id::text,p.package_version
+        FROM response_snapshot_items i
+        JOIN assessment_attempts a ON a.id=i.attempt_id
+        JOIN assessment_packages p ON p.id=a.package_id
+        WHERE i.snapshot_id=${r.snapshot_id}`;
+      const expectedPeople = new Map(snapshotPeople.map((person) => [person.attempt_id, person]));
+      if (
+        output.payload.respondents.length !== expectedPeople.size ||
+        new Set(output.payload.respondents.map((person) => person.attemptId)).size !==
+          output.payload.respondents.length ||
+        output.payload.respondents.some((person) => {
+          const expected = expectedPeople.get(person.attemptId);
+          return (
+            !expected ||
+            expected.respondent_id !== person.respondentId ||
+            expected.package_id !== person.packageId ||
+            expected.package_version !== person.packageVersion
+          );
+        })
+      )
+        fail('IRT_RESPONDENT_COVERAGE_INVALID');
       const [model] = await tx<
         { code: string; version: number }[]
       >`SELECT t.code,t.version FROM configuration_approvals a JOIN irt_compute.technical_policy_versions t ON t.id=a.technical_policy_version_id WHERE a.id=ANY(${r.configuration_pins.map((p) => p.approvalId)}::uuid[]) AND t.kind='IRT_MODEL' ORDER BY a.id LIMIT 1`;
       if (!model) fail('IRT_ARTIFACT_PROVENANCE_INVALID');
+      const [receipt] = await tx<{ id: string }[]>`
+        INSERT INTO irt_artifact_adoption_receipts_v1(request_id,execution_id,artifact_id,artifact_digest,status)
+        VALUES(${id},${e.id},${output.id},${output.digest},'RECEIVED')
+        ON CONFLICT(request_id) DO UPDATE SET execution_id=excluded.execution_id,artifact_id=excluded.artifact_id,
+          artifact_digest=excluded.artifact_digest,status='RECEIVED',failure_code=NULL,updated_at=clock_timestamp()
+        WHERE irt_artifact_adoption_receipts_v1.status='FAILED'
+        RETURNING id::text`;
+      if (!receipt) fail('IRT_ADOPTION_CONFLICT');
       await tx`UPDATE analysis_requests SET accepted_execution_id=${e.id},status='COMPLETED' WHERE id=${id}`;
       const [batch] = await tx<
         { id: string }[]
       >`INSERT INTO irt_batches(package_id,batch_kind,model_version,status,finished_at,context_id,response_snapshot_id,analysis_request_id,source_output_id,output_snapshot)
         VALUES(${r.package_id},'TRYOUT',${`${model.code}@${model.version}`},'SUCCEEDED',clock_timestamp(),${r.context_id},${r.snapshot_id},${id},${output.id},${JSON.stringify(output.payload)}::text::jsonb) RETURNING id`;
+      for (const pkg of output.payload.packages) {
+        const [source] = await tx<{ manifest_digest: string | null }[]>`
+          SELECT manifest_digest FROM assessment_packages
+          WHERE id=${pkg.packageId} AND package_version=${pkg.packageVersion}`;
+        if (!source?.manifest_digest || source.manifest_digest !== pkg.manifestDigest)
+          fail('IRT_PACKAGE_MANIFEST_MISMATCH');
+        await tx`INSERT INTO irt_artifact_adoption_packages_v1
+          (receipt_id,package_id,package_version,arm_id,arm_kind,manifest_digest)
+          VALUES(${receipt.id},${pkg.packageId},${pkg.packageVersion},${pkg.armId},${pkg.armKind},${pkg.manifestDigest})`;
+      }
+      for (const person of output.payload.respondents) {
+        await tx`INSERT INTO irt_artifact_adoption_attempts_v1
+          (receipt_id,attempt_id,respondent_id,package_id,package_version,assigned_arm_id,delivered_arm_id,result_status,reason_codes,result_snapshot)
+          VALUES(${receipt.id},${person.attemptId},${person.respondentId},${person.packageId},${person.packageVersion},
+            ${person.assignedArmId},${person.deliveredArmId},${person.status},${JSON.stringify(person.reasonCodes)}::jsonb,
+            ${JSON.stringify(person)}::jsonb)`;
+      }
       for (const item of output.payload.items) {
         const dataStatus =
           item.measurementState === 'CALIBRATED'

@@ -255,6 +255,33 @@ describe.skipIf(!databaseUrl)(
             qualityEvidence: { fixture: true },
           },
         ],
+        packages: [
+          {
+            packageId: f.packageId,
+            packageVersion: 1,
+            armId: f.armId,
+            armKind: 'ORIGINAL',
+            manifestDigest: f.manifestDigest,
+          },
+        ],
+        respondents: [
+          {
+            respondentId: '00000000-0000-4000-8000-000000000099',
+            attemptId: f.attemptId,
+            packageId: f.packageId,
+            packageVersion: 1,
+            assignedArmId: f.armId,
+            deliveredArmId: f.armId,
+            status: options.insufficient ? 'INSUFFICIENT' : 'SCORED',
+            theta: options.insufficient ? null : 0.1,
+            standardError: options.insufficient ? null : 0.2,
+            score: options.insufficient ? null : 50,
+            scoreMapping: options.insufficient ? null : {},
+            referencePackage: options.insufficient ? null : {},
+            usedQuestionVersionIds: options.insufficient ? [] : [f.versionId],
+            reasonCodes: options.insufficient ? ['INSUFFICIENT_SAMPLE'] : [],
+          },
+        ],
       };
       if (options.duplicate) payload.items.push({ ...payload.items[0]! });
       const output = await writeComputeArtifact(compute, {

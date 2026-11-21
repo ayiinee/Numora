@@ -58,6 +58,9 @@ export async function tryoutMeasurementFixture(
     { id: string }[]
   >`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
   await owner`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id}`;
+  const manifestDigest = 'b'.repeat(64),
+    armId = randomUUID();
+  await owner`UPDATE assessment_packages SET manifest_digest=${manifestDigest} WHERE id=${pack!.id}`;
   const [batch] = await main<
     { id: string }[]
   >`INSERT INTO tryout_batches(package_id,starts_at,closes_at,cutoff_at,result_due_at,status,release_policy,release_policy_digest)
@@ -110,6 +113,8 @@ export async function tryoutMeasurementFixture(
     principal: principal!.id,
     quality,
     pins,
+    armId,
+    manifestDigest,
     attemptId,
     itemId,
     partial,
