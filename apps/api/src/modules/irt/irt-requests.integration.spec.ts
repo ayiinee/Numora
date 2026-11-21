@@ -228,6 +228,9 @@ describe.skipIf(!databaseUrl)(
       await compute`INSERT INTO irt_compute.analysis_response_selections(dataset_id,snapshot_id,snapshot_item_id,decision,reasons)
       SELECT ${dataset!.id},snapshot_id,id,CASE WHEN operational_eligible THEN 'INCLUDE' ELSE 'EXCLUDE' END,CASE WHEN operational_eligible THEN '[]'::jsonb ELSE '["UNSCORED"]'::jsonb END FROM irt_input_responses_v3 WHERE snapshot_id=${r.snapshotId}`;
       await compute`UPDATE irt_compute.analysis_datasets SET status='SEALED' WHERE id=${dataset!.id}`;
+      const [snapshotPerson] = await main<
+        { respondent_id: string }[]
+      >`SELECT respondent_id FROM response_snapshot_items WHERE snapshot_id=${r.snapshotId} LIMIT 1`;
       const payload: CalibrationArtifactPayloadV3 = {
         items: [
           {
@@ -266,7 +269,7 @@ describe.skipIf(!databaseUrl)(
         ],
         respondents: [
           {
-            respondentId: '00000000-0000-4000-8000-000000000099',
+            respondentId: snapshotPerson!.respondent_id,
             attemptId: f.attemptId,
             packageId: f.packageId,
             packageVersion: 1,
