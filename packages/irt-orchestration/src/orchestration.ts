@@ -53,6 +53,11 @@ export async function prepareTryoutAnalysis(
   input: PrepareTryoutAnalysis,
 ) {
   requireIrtEnabled();
+  // Production Tryout must use the delivery-binding adapter. This legacy
+  // entrypoint selects one package and cannot freeze multi-arm roster,
+  // assigned/delivered arms, or crossover evidence safely.
+  if (process.env.NUMORA_IRT_MODE === 'PRODUCTION')
+    fail('IRT_PRODUCTION_DELIVERY_BINDING_REQUIRED');
   if (
     !uuid(input.contextId) ||
     !Array.isArray(input.configurationPins) ||
@@ -353,9 +358,9 @@ export async function adoptTryoutArtifact(client: Sql, id: string, actorId?: str
         return { requestId: id, adopted: false };
       attemptedExecutionId = e.id;
       const outputs = await tx<
-        { id: string; payload: unknown; scientific_decision: string; valid: boolean }[]
+        { id: string; digest: string; payload: unknown; scientific_decision: string; valid: boolean }[]
       >`
-        SELECT o.id,o.payload,o.scientific_decision,(o.contract_version=3 AND o.kind='CALIBRATE_TRYOUT' AND o.sequence_number=1 AND o.input_digest=${r.input_digest} AND o.digest=irt_compute.payload_digest(o.payload) AND d.status='SEALED' AND d.snapshot_id=${r.snapshot_id} AND d.execution_id=${e.id}
+        SELECT o.id,o.digest,o.payload,o.scientific_decision,(o.contract_version=3 AND o.kind='CALIBRATE_TRYOUT' AND o.sequence_number=1 AND o.input_digest=${r.input_digest} AND o.digest=irt_compute.payload_digest(o.payload) AND d.status='SEALED' AND d.snapshot_id=${r.snapshot_id} AND d.execution_id=${e.id}
           AND EXISTS(SELECT 1 FROM configuration_approvals a JOIN irt_compute.technical_policy_versions p ON p.id=a.technical_policy_version_id WHERE a.id=ANY(${r.configuration_pins.map((p) => p.approvalId)}::uuid[]) AND p.id=d.selection_policy_id AND p.kind='QUALITY_GATE')) AS valid
         FROM irt_compute.compute_outputs o LEFT JOIN irt_compute.analysis_datasets d ON d.id=o.dataset_id WHERE o.execution_id=${e.id}`;
       const output = outputs[0];
