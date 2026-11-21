@@ -58,6 +58,17 @@ export async function tryoutMeasurementFixture(
   const [pi] = await owner<
     { id: string }[]
   >`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
+  const [beforeFreeze] = await owner<
+    { status: string; manifest_digest: string | null; frozen_at: Date | null }[]
+  >`SELECT status,manifest_digest,frozen_at FROM assessment_packages WHERE id=${pack!.id}`;
+  if (
+    beforeFreeze?.status !== 'DRAFT' ||
+    beforeFreeze.manifest_digest !== null ||
+    beforeFreeze.frozen_at !== null
+  )
+    throw new Error(
+      `Fixture package unexpectedly pinned before freeze: ${JSON.stringify(beforeFreeze)}`,
+    );
   const [frozen] = await owner<
     { manifest_digest: string }[]
   >`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id} RETURNING manifest_digest`;
