@@ -24,6 +24,16 @@ export class IrtBatchHealthDto {
   @ApiProperty({ type: String, nullable: true, format: 'date-time' }) publishedAt!: string | null;
   @ApiProperty({ type: [String] }) prepareBlockers!: string[];
   @ApiProperty({ type: [String] }) publicationBlockers!: string[];
+  @ApiProperty({ type: String, nullable: true }) requestStatus!: string | null;
+  @ApiProperty({ type: String, nullable: true }) executionStatus!: string | null;
+  @ApiProperty({ type: String, nullable: true }) executionFailureCode!: string | null;
+  @ApiProperty({ type: String, nullable: true }) deliveryBlocker!: string | null;
+  @ApiProperty() respondentCount!: number;
+  @ApiProperty() scoredCount!: number;
+  @ApiProperty() insufficientCount!: number;
+  @ApiProperty() notComparableCount!: number;
+  @ApiProperty() unscorableCount!: number;
+  @ApiProperty({ type: Number, nullable: true }) executionAgeSeconds!: number | null;
 }
 export class IrtOperationalOptionsDto {
   @ApiProperty() enabled!: boolean;
@@ -32,4 +42,12 @@ export class IrtOperationalOptionsDto {
 }
 export class IrtBatchHealthListDto {
   @ApiProperty({ type: [IrtBatchHealthDto] }) items!: IrtBatchHealthDto[];
+  @ApiProperty()
+  flags!: {
+    intakeEnabled: boolean;
+    deliveryEnabled: boolean;
+    releaseEnabled: boolean;
+    publicationEnabled: boolean;
+    reconcilerEnabled: boolean;
+  };
 }
