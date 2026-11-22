@@ -480,10 +480,9 @@ it('prepares scoring with revision, shows progress and refreshes validation', as
   expect(screen.getByText(/Memproses paket/)).toBeTruthy();
   expect(screen.queryByRole('link', { name: 'Perbaiki' })).toBeNull();
   vi.mocked(getContentPackage).mockResolvedValue({ ...pack, contentRevision: 8, items: [] });
-  itemCount: 0,
-  expectedItemCount: 0,
   finish();
   await screen.findByText(/Penilaian otomatis siap/);
   expect(screen.queryByText(/Memproses paket/)).toBeNull();
   expect(screen.queryByText('Aturan penilaian belum sesuai.')).toBeNull();
 });
+
