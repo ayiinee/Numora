@@ -2,6 +2,8 @@
 
 ## Preferred production topology
 
+**ENGINEERING DECISION — owner, 15 November 2026:** [ADR-012](../adr/ADR-012-development-supabase-production-postgres.md) adds the selected PostgreSQL VPS Production target; Development stays Supabase. The diagram below records the earlier managed baseline. Follow [Production PostgreSQL configuration](POSTGRES_VPS_CONFIGURATION.md) for explicit profiles and startup checks. Bootstrap, backup/restore and cutover remain separate release prerequisites; a merged configuration PR does not migrate data.
+
 ```text
 Cloudflare DNS/CDN
       │

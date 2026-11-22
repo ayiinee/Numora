@@ -5,6 +5,9 @@ import {
   measureRuntime,
   observeRuntime,
   gaugeRuntime,
+  productionTarget,
+  verifyProductionDatabase,
+  startupFailureMessage,
 } from '@tka/database';
 import { pollGenerator } from '@tka/irt-orchestration';
 import { discoverNotificationReleases, drainNotificationBatch } from './notifications.js';
@@ -140,6 +143,8 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   process.on('SIGTERM', onSignal);
 
   try {
+    const target = productionTarget('worker');
+    if (target) await bounded(verifyProductionDatabase(getDatabase().client, target));
     const redisUrl = process.env.REDIS_URL;
     const prefix = process.env.BULLMQ_PREFIX;
     if (!redisUrl?.startsWith('rediss://') || !prefix || prefix.includes('<')) {
@@ -304,10 +309,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   } catch (error) {
     if (!stopping) {
       if (isRedisQuotaError(error)) reportError(error);
-      else
-        console.error(
-          '[worker] startup failed; check Redis TLS/prefix and database availability, then restart manually',
-        );
+      else console.error('[worker] startup failed:', startupFailureMessage(error));
     }
     await shutdown(1, true);
   }
