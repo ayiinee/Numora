@@ -159,14 +159,32 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     subchapterCode: null,
     competencyCode: null,
     difficulty: null,
-    stem: { text: 'Soal' },
+    stem: { text: 'Soal [[asset:diagram-1]]' },
     options: [
       { id: 'A', content: { text: 'Benar' } },
       { id: 'B', content: { text: 'Salah' } },
     ],
     answer: { optionId: 'A' },
     explanation: { text: 'Penjelasan' },
-    metadata: { sourceLevelNumber: null, assetManifest: [] },
+    metadata: {
+      sourceLevelNumber: null,
+      assetManifest: [
+        {
+          externalId: 'GEN-image',
+          assetId: 'diagram-1',
+          textMarker: '[[asset:diagram-1]]',
+          placement: 'STEM' as const,
+          itemId: null,
+          assetOrder: 1,
+          altText: 'Diagram soal',
+          objectKey: 'question-media/GEN-image/v1/diagram-1.png',
+          sha256: 'a'.repeat(64),
+          contentType: 'image/png' as const,
+          byteLength: 1,
+          bucket: 'numora-prod',
+        },
+      ],
+    },
   };
   const pack = {
     id: 'tryout-pdf',
@@ -211,6 +229,31 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     ],
   } as unknown as ContentPackageDetailDto;
   vi.mocked(getContentPackage).mockResolvedValue(pack);
+  vi.mocked(createPreview).mockResolvedValue({
+    id: 'preview',
+    state: 'IN_PROGRESS',
+    scoringStatus: 'NOT_SCORED',
+    score: null,
+    items: [],
+    media: [],
+  });
+  vi.mocked(submitPreview).mockResolvedValue({
+    id: 'preview',
+    state: 'SUBMITTED',
+    scoringStatus: 'NOT_SCORED',
+    score: null,
+    items: [],
+    media: [
+      {
+        instanceId: 'preview-item',
+        assetId: 'diagram-1',
+        altText: 'Diagram soal',
+        url: 'https://example.invalid/diagram.png',
+        expiresAt: '2099-01-01T00:00:00Z',
+      },
+    ],
+  });
+  const print = vi.spyOn(window, 'print').mockImplementation(() => {});
   render(
     <ContentPackageWorkspace
       token="TEST"
@@ -229,6 +272,10 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
   expect(screen.getByRole('button', { name: 'Export PDF' }).getAttribute('title')).toContain(
     'Cetak soal',
   );
+  fireEvent.click(exportButton);
+  await waitFor(() => expect(submitPreview).toHaveBeenCalledWith('TEST', 'preview', expect.any(String)));
+  expect(print).toHaveBeenCalled();
+  print.mockRestore();
 });
 
 it('loads package choices five at a time and disables next on the final full page', async () => {
@@ -392,7 +439,6 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     />,
   );
   fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
-  fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
   expect(await screen.findByAltText('Diagram soal')).toBeTruthy();
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   // JSDOM does not load remote images. Trigger failure explicitly instead of
