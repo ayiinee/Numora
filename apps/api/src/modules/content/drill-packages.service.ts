@@ -12,6 +12,7 @@ import {
   chapters,
   competencies,
   getDatabase,
+  generatorPackages,
   levels,
   packageItems,
   questions,
@@ -302,6 +303,16 @@ export class DrillPackagesService {
       );
       const row = await this.lock(tx, id);
       if (row.status === 'PUBLISHED') return { id };
+      const [generated] = await tx
+        .select({ id: generatorPackages.id })
+        .from(generatorPackages)
+        .where(
+          and(
+            eq(generatorPackages.canonicalPackageId, id),
+            sql`${generatorPackages.drillManifest} IS NOT NULL`,
+          ),
+        );
+      if (generated) throw new ConflictException({ code: 'DRILL_VARIANT_USE_REVIEW_PUBLICATION' });
       if (row.status !== 'DRAFT') throw new ConflictException('Hanya draf yang dapat diterbitkan.');
       if (row.scoringPolicyVersionId === null)
         throw new ConflictException(

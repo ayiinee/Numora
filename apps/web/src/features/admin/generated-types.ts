@@ -335,7 +335,23 @@ export type GeneratorDraftDto = { "id": string; };
 
 export type PrepareGeneratorDto = { "mappingId": string; };
 
-export type CreateGeneratorPackageDto = { "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "scopeId"?: string; "sourcePackageId"?: string; };
+export type CreateGeneratorPackageDto = { "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "scopeId"?: string; "sourcePackageId"?: string; "anchorQuestionVersionIds"?: (string)[]; "focalQuestionVersionIds"?: (string)[]; "sourceDigest"?: string; };
+
+export type DrillGeneratorCatalogDto = { "runtime": DrillGeneratorRuntimeDto | null; "blockers": (string)[]; "items": (DrillGeneratorSourceDto)[]; };
+
+export type DrillGeneratorSourceDto = { "id": string; "name": string; "status": string; "packageVersion": number; "levelId": string; "levelLabel": string; "contextId": string | null; "contextRevision": number | null; "sourceDigest": string; "anchorIds": (string)[]; "blockers": (string)[]; "items": (DrillGeneratorSourceItemDto)[]; };
+
+export type DrillGeneratorSourceItemDto = { "displayOrder": number; "questionVersionId": string; "familyId": string; "rubricVersionId": string | null; "mapping": DrillGeneratorMappingDto | null; "blockers": (string)[]; };
+
+export type DrillGeneratorRuntimeDto = { "runtimeProfile": string; "imageDigest": string; };
+
+export type DrillGeneratorMappingDto = { "approvalId": string; "configId": string; "configVersion": number; "configDigest": string; "mode": "NUMERIC" | "CONCEPTUAL_STOCK"; };
+
+export type DrillGeneratorManifestDto = { "sourcePackageVersion": number; "contextId": string; "contextRevision": number; "policyVersionId": string; "manifestDigest": string; "runtime": DrillGeneratorRuntimeDto; "items": (DrillGeneratorLineageDto)[]; "curriculumApprovalReference"?: string; };
+
+export type DrillGeneratorLineageDto = { "role": "ANCHOR" | "FOCAL"; "displayOrder": number; "parentQuestionVersionId": string; "familyId": string; "rubricVersionId": string; "sourceFingerprint": string; "contentHash": string; "requestId": string | null; "seed": number | null; "mapping": DrillGeneratorMappingDto | null; "artifactDigest"?: string; "questionVersionId"?: string; "reviewedBy"?: string | null; "mediaReceiptIds"?: (string)[]; };
+
+export type DrillGeneratorAnchorDto = { "question": ExcelQuestionDto; "lineage": DrillGeneratorLineageDto; };
 
 export type GeneratorPackageOptionDto = { "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "scopeId": string | null; "scopeLabel": string; "availableCount": number; "requiredCount": number; "canGenerate": boolean; };
 
@@ -343,12 +359,12 @@ export type GeneratorSourcePackageDto = { "id": string; "name": string; "package
 
 export type GeneratorPackageCatalogDto = { "options": (GeneratorPackageOptionDto)[]; "sourcePackages": (GeneratorSourcePackageDto)[]; };
 
-export type GeneratorPackageDto = { "id": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "completedCount": number; "failedCount": number; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "packageId": string | null; "createdAt": string; "requests": (GeneratorRequestDto)[]; };
+export type GeneratorPackageDto = { "id": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "completedCount": number; "failedCount": number; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED" | "CANCELLED"; "packageId": string | null; "createdAt": string; "requests": (GeneratorRequestDto)[]; "drillVariant"?: DrillGeneratorManifestDto; "blockers"?: (string)[]; };
 
 export type GeneratorPackagesDto = { "items": (GeneratorPackageDto)[]; };
 
-export type GeneratorPackageFileItemDto = { "requestId": string; "candidateId": string; "question": ExcelQuestionDto; "content": Record<string, unknown>; };
+export type GeneratorPackageFileItemDto = { "requestId": string; "candidateId": string; "question": ExcelQuestionDto; "content": Record<string, unknown>; "lineage"?: DrillGeneratorLineageDto; };
 
-export type GeneratorPackageFileDto = { "contractVersion": "numora-generator-package-v1"; "generatorPackageId": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "items": (GeneratorPackageFileItemDto)[]; };
+export type GeneratorPackageFileDto = { "contractVersion": "numora-generator-package-v1"; "generatorPackageId": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "items": (GeneratorPackageFileItemDto)[]; "anchors"?: (DrillGeneratorAnchorDto)[]; "drillVariant"?: DrillGeneratorManifestDto; };
 
 export type GeneratorJsonPreviewDto = { "file": GeneratorPackageFileDto; "report": ImportReportDto; };

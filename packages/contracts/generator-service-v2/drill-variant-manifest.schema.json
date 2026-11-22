@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:generator-service-v2:drill-variant-manifest",
+  "title": "Drill LEVEL wave item manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "ecosystem",
+    "dimension",
+    "armKind",
+    "sourcePackageId",
+    "sourcePackageVersion",
+    "sourceDigest",
+    "levelId",
+    "contextId",
+    "contextRevision",
+    "policyVersionId",
+    "originalRevisionId",
+    "variantArmId",
+    "blueprintVersionId",
+    "runtime",
+    "items",
+    "manifestDigest"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "generator-service-v2"
+    },
+    "ecosystem": {
+      "const": "DRILL"
+    },
+    "dimension": {
+      "const": "LEVEL"
+    },
+    "armKind": {
+      "const": "VARIANT"
+    },
+    "sourcePackageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sourcePackageVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sourceDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "levelId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "contextId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "contextRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "policyVersionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "originalRevisionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "variantArmId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "blueprintVersionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtimeProfile",
+        "imageDigest"
+      ],
+      "properties": {
+        "runtimeProfile": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]{1,128}$"
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "contains": {
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "properties": {
+          "role": {
+            "const": "ANCHOR"
+          }
+        }
+      },
+      "minContains": 3,
+      "maxContains": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "displayOrder",
+          "questionVersionId",
+          "familyId",
+          "rubricVersionId",
+          "contentHash",
+          "sourceFingerprint",
+          "competencyCode",
+          "maxPoints",
+          "maximumScoreCategory",
+          "mapping",
+          "seed"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "ANCHOR",
+              "FOCAL"
+            ]
+          },
+          "displayOrder": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "familyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rubricVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "sourceFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "competencyCode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxPoints": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]+)?$"
+          },
+          "maximumScoreCategory": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "approvalId",
+                  "configId",
+                  "configVersion",
+                  "configDigest",
+                  "mode",
+                  "sourceFingerprint",
+                  "originalHash",
+                  "originalVersion",
+                  "mediaProfile"
+                ],
+                "properties": {
+                  "approvalId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "configId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "configVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "configDigest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "mode": {
+                    "enum": [
+                      "NUMERIC",
+                      "CONCEPTUAL_STOCK"
+                    ]
+                  },
+                  "sourceFingerprint": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "originalHash": {
+                    "type": "string",
+                    "pattern": "^(?:[a-f0-9]{16}|[a-f0-9]{64})$"
+                  },
+                  "originalVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "mediaProfile": {
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000000
+          }
+        },
+        "if": {
+          "properties": {
+            "role": {
+              "const": "ANCHOR"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "seed": {
+              "type": "null"
+            },
+            "mapping": {
+              "type": "null"
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "mapping": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "manifestDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

@@ -2,6 +2,25 @@
 .admin-generator-workspace {
   min-width: 0;
 }
+.generator-drill-roster {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding-inline-start: 1.5rem;
+}
+.generator-drill-roster > li {
+  padding-block: 0.5rem;
+  min-width: 0;
+}
+.generator-drill-roster select {
+  margin-block: 0.25rem;
+  width: 100%;
+}
+.generator-drill-roster dd,
+.generator-drill-lineage dd,
+#drill-generator-form code {
+  overflow-wrap: anywhere;
+}
 .admin-generator-workspace .generator-taskbar {
   display: flex;
   flex-wrap: wrap;

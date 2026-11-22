@@ -20,6 +20,7 @@ import {
   validateGeneratorJson,
 } from './generator-package-api';
 import { GeneratorFilePreview, generatorTypeLabels, useGeneratorToken } from './generator-packages';
+import { assessmentPath } from './assessment-routes';
 export const GeneratorImportWorkflow = withAdminWorkspace(
   GeneratorImportWorkflowProtected,
   'content',
@@ -169,8 +170,8 @@ function GeneratorImportWorkflowProtected({ id }: { id: string }) {
               <section className="upload-panel">
                 <h2>3. Pemetaan dan validasi</h2>
                 <p>
-                  {file.items.length}/{file.expectedCount} soal. Materi mengikuti original yang
-                  dipin pada generator.
+                  {file.items.length + (file.anchors?.length ?? 0)}/{file.expectedCount} soal.
+                  Materi mengikuti original yang dipin pada generator.
                 </p>
                 <p>
                   {preview?.report.canImportDraft
@@ -264,6 +265,20 @@ function GeneratorImportWorkflowProtected({ id }: { id: string }) {
                           Publish mengikuti pemeriksaan, review dan persetujuan Curriculum yang
                           berlaku.
                         </p>
+                        {file.drillVariant && (
+                          <Link href={assessmentPath('DRILL', pack.id)}>
+                            Tinjau soal dan catat persetujuan Curriculum
+                          </Link>
+                        )}
+                        {file.drillVariant && (
+                          <Button
+                            variant="secondary"
+                            disabled={busy}
+                            onClick={() => void run(detail)}
+                          >
+                            Muat ulang status persetujuan
+                          </Button>
+                        )}
                         <label className="upload-confirm">
                           <input
                             type="checkbox"

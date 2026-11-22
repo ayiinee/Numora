@@ -14,6 +14,12 @@ import { adminOffset, useAdminUrl } from './admin-url';
 import { AdminPagination, useAdminPagination } from './admin-pagination';
 import { downloadFile } from './content-excel-api';
 import { ContentExcelPreview } from './content-excel-preview';
+import { createPreview, submitPreview } from './content-preview-api';
+import {
+  DrillGeneratorDialog,
+  DrillGeneratorLineage,
+  drillGeneratorBlocker,
+} from './drill-generator';
 import {
   GeneratorCreateDialog,
   generatorError,
@@ -27,6 +33,7 @@ import type {
 } from './generated-types';
 import {
   getGeneratorPackage,
+  cancelGeneratorPackage,
   getGeneratorPackageFile,
   listGeneratorPackages,
   retryGeneratorPackage,
@@ -38,6 +45,7 @@ const statusLabels: Record<GeneratorPackageDto['status'], string> = {
   FAILED: 'Perlu dicoba lagi',
   READY: 'Siap diimpor',
   IMPORTED: 'Sudah diimpor',
+  CANCELLED: 'Dibatalkan',
 };
 export function useGeneratorToken() {
   const { state } = useAuth();
@@ -51,17 +59,14 @@ export function useGeneratorToken() {
 export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }) {
   const token = useGeneratorToken();
   const [previews, setPreviews] = useState<Record<string, GeneratorPreviewDto>>({});
+  const [anchorMedia, setAnchorMedia] = useState<ExcelParseDto['media']>([]);
   const [mediaError, setMediaError] = useState('');
   useEffect(() => {
     let active = true;
     if (token)
       void Promise.all(
         file.items
-          .filter(
-            (item) =>
-              item.question.stem.text.includes('[[asset:') ||
-              item.question.explanation.text.includes('[[asset:'),
-          )
+          .filter((item) => item.question.metadata.assetManifest.length > 0)
           .map(
             async (item) =>
               [
@@ -85,30 +90,65 @@ export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }
               'Gambar kandidat belum dapat dimuat. Muat ulang preview untuk mencoba lagi.',
             );
         });
+    const anchors = file.anchors?.filter((item) => item.question.metadata.assetManifest.length);
+    if (token && anchors?.length) {
+      void createPreview(
+        token,
+        {
+          questionVersionIds: anchors.map((item) => item.lineage.parentQuestionVersionId),
+        },
+        crypto.randomUUID(),
+      )
+        .then((preview) => submitPreview(token, preview.id, crypto.randomUUID()))
+        .then((review) => {
+          if (!active) return;
+          setAnchorMedia(
+            anchors.flatMap((anchor) => {
+              const instance = review.items.find(
+                (item) => item.questionVersionId === anchor.lineage.parentQuestionVersionId,
+              );
+              return review.media
+                .filter((asset) => asset.instanceId === instance?.instanceId)
+                .map((asset) => ({
+                  externalId: anchor.question.externalId,
+                  assetId: asset.assetId,
+                  url: asset.url,
+                  base64: '',
+                }));
+            }),
+          );
+        })
+        .catch(() => {
+          if (active) setMediaError('Gambar anchor belum dapat dimuat.');
+        });
+    }
     return () => {
       active = false;
     };
   }, [file, token]);
-  const questions = file.items.map((item) => ({
-    ...item.question,
-    metadata: {
-      ...item.question.metadata,
-      assetManifest: (previews[item.requestId]?.media ?? []).map((m, index) => ({
-        externalId: item.question.externalId,
-        assetId: m.assetId,
-        textMarker: `[[asset:${m.assetId}]]`,
-        placement: m.placement,
-        itemId: null,
-        assetOrder: index + 1,
-        altText: m.altText,
-        objectKey: null,
-        sha256: m.sha256,
-        contentType: m.contentType,
-        byteLength: m.byteLength,
-        bucket: '',
-      })),
-    },
-  }));
+  const questions = [
+    ...file.items.map((item) => ({
+      ...item.question,
+      metadata: {
+        ...item.question.metadata,
+        assetManifest: (previews[item.requestId]?.media ?? []).map((m, index) => ({
+          externalId: item.question.externalId,
+          assetId: m.assetId,
+          textMarker: `[[asset:${m.assetId}]]`,
+          placement: m.placement,
+          itemId: null,
+          assetOrder: index + 1,
+          altText: m.altText,
+          objectKey: null,
+          sha256: m.sha256,
+          contentType: m.contentType,
+          byteLength: m.byteLength,
+          bucket: '',
+        })),
+      },
+    })),
+    ...(file.anchors?.map((item) => item.question) ?? []),
+  ].sort((a, b) => (a.metadata.sourceOrder ?? 0) - (b.metadata.sourceOrder ?? 0));
   const media: ExcelParseDto['media'] = file.items.flatMap((item) =>
     (previews[item.requestId]?.media ?? []).map((m) => ({
       externalId: item.question.externalId,
@@ -120,13 +160,24 @@ export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }
   return (
     <>
       {mediaError && <p role="alert">{mediaError}</p>}
+      {file.drillVariant && (
+        <DrillGeneratorLineage
+          manifest={{
+            ...file.drillVariant,
+            items: file.drillVariant.items.map(
+              (item) =>
+                file.items.find((focal) => focal.requestId === item.requestId)?.lineage ?? item,
+            ),
+          }}
+        />
+      )}
       <ContentExcelPreview
         excel={{
           envelope: { questions },
-          media,
+          media: [...media, ...anchorMedia],
           issues: [],
         }}
-        selected={new Set(file.items.map((item) => item.question.externalId))}
+        selected={new Set(questions.map((question) => question.externalId))}
         report={null}
         disabled
         hideIndicator={file.assessmentType === 'TRYOUT'}
@@ -148,8 +199,10 @@ function GeneratorPackageScreenProtected() {
   const url = useAdminUrl();
   const activeId = url.params.get('package') || undefined;
   const [creating, setCreating] = useState(false);
+  const [creatingDrill, setCreatingDrill] = useState(false);
   useEffect(() => {
     if (activeId) setCreating(false);
+    if (activeId) setCreatingDrill(false);
   }, [activeId]);
   return (
     <AdminFrame
@@ -171,7 +224,12 @@ function GeneratorPackageScreenProtected() {
           {activeId ? (
             <Link href="/admin/content/imports">Impor soal</Link>
           ) : (
-            <Button onClick={() => setCreating(true)}>Generate Variant</Button>
+            <>
+              <Button variant="secondary" onClick={() => setCreatingDrill(true)}>
+                Varian Drill
+              </Button>
+              <Button onClick={() => setCreating(true)}>Generate Variant</Button>
+            </>
           )}
         </div>
         {process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true' && (
@@ -193,6 +251,16 @@ function GeneratorPackageScreenProtected() {
             onClose={() => setCreating(false)}
             onCreated={(id) => {
               setCreating(false);
+              url.update({ package: id, offset: null });
+            }}
+          />
+        )}
+        {!activeId && token && creatingDrill && (
+          <DrillGeneratorDialog
+            token={token}
+            onClose={() => setCreatingDrill(false)}
+            onCreated={(id) => {
+              setCreatingDrill(false);
               url.update({ package: id, offset: null });
             }}
           />
@@ -249,7 +317,8 @@ function GeneratorResultsScreenProtected({
   const [file, setFile] = useState<GeneratorPackageFileDto | null>(null);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [action, setAction] = useState<'retry' | 'preview' | 'download' | null>(null);
+  const [action, setAction] = useState<'retry' | 'preview' | 'download' | 'cancel' | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const retryKey = useRef<string | null>(null);
   const active = useRef(false);
   const scope = useRef(0);
@@ -281,6 +350,7 @@ function GeneratorResultsScreenProtected({
     scope.current += 1;
     mutating.current = false;
     setAction(null);
+    setConfirmCancel(false);
     retryKey.current = null;
     setFile(null);
     setCurrent(null);
@@ -294,7 +364,7 @@ function GeneratorResultsScreenProtected({
     };
   }, [load]);
   useEffect(() => {
-    if (!id || current?.status !== 'GENERATING') return;
+    if (!id || current?.status !== 'GENERATING' || current.blockers?.length) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     async function poll() {
@@ -306,15 +376,21 @@ function GeneratorResultsScreenProtected({
       stopped = true;
       clearTimeout(timer);
     };
-  }, [id, current?.status, load]);
+  }, [id, current?.status, current?.blockers?.length, load]);
   useEffect(() => {
-    if (autoOpen && current?.id === id && current && ['READY', 'IMPORTED'].includes(current.status))
+    if (
+      autoOpen &&
+      current?.id === id &&
+      current &&
+      !current.drillVariant &&
+      ['READY', 'IMPORTED'].includes(current.status)
+    )
       router.replace(`/admin/content/imports?generatorPackage=${encodeURIComponent(current.id)}`);
   }, [autoOpen, current, id, router]);
   useEffect(() => {
     if (current?.id) heading.current?.focus();
   }, [current?.id]);
-  async function perform(kind: 'retry' | 'preview' | 'download') {
+  async function perform(kind: 'retry' | 'preview' | 'download' | 'cancel') {
     if (!token || !current || mutating.current) return;
     const identity = scope.current;
     const valid = () => active.current && scope.current === identity;
@@ -330,6 +406,12 @@ function GeneratorResultsScreenProtected({
         if (valid()) {
           setCurrent(result);
           retryKey.current = null;
+        }
+      } else if (kind === 'cancel') {
+        const result = await cancelGeneratorPackage(token, current.id);
+        if (valid()) {
+          setCurrent(result);
+          setConfirmCancel(false);
         }
       } else {
         const json = await getGeneratorPackageFile(token, current.id);
@@ -476,8 +558,10 @@ function GeneratorResultsScreenProtected({
                     {current.title}
                   </h2>
                   <p>
-                    {generatorTypeLabels[current.assessmentType]} · {current.expectedCount} soal per
-                    paket
+                    {generatorTypeLabels[current.assessmentType]} ·{' '}
+                    {current.drillVariant
+                      ? '3 anchor original dan 7 focal'
+                      : `${current.expectedCount} soal per paket`}
                   </p>
                 </div>
                 <Button
@@ -491,7 +575,7 @@ function GeneratorResultsScreenProtected({
               </header>
               <dl className="generator-progress">
                 <div>
-                  <dt>Soal selesai</dt>
+                  <dt>{current.drillVariant ? 'Focal selesai' : 'Soal selesai'}</dt>
                   <dd>
                     {current.completedCount}
                     <span> dari {current.expectedCount}</span>
@@ -503,16 +587,20 @@ function GeneratorResultsScreenProtected({
                 </div>
               </dl>
               <p className="generator-status-copy" role="status">
-                {current.status === 'GENERATING'
-                  ? 'Pembuatan soal sedang berjalan. Status diperbarui otomatis; kamu dapat kembali ke riwayat.'
-                  : current.status === 'FAILED'
-                    ? 'Sebagian proses belum berhasil. Coba kembali proses yang gagal tanpa membuat paket baru.'
-                    : autoOpen
-                      ? 'Hasil siap. Membuka Preview & tujuan di Impor soal...'
-                      : 'Hasil siap diperiksa melalui preview impor. Konten belum otomatis diterbitkan.'}
+                {current.blockers?.length
+                  ? current.blockers.map(drillGeneratorBlocker).join(' ')
+                  : current.status === 'CANCELLED'
+                    ? 'Permintaan varian Drill dibatalkan.'
+                    : current.status === 'GENERATING'
+                      ? 'Pembuatan soal sedang berjalan. Status diperbarui otomatis; kamu dapat kembali ke riwayat.'
+                      : current.status === 'FAILED'
+                        ? 'Sebagian proses belum berhasil. Coba kembali proses yang gagal tanpa membuat paket baru.'
+                        : autoOpen && !current.drillVariant
+                          ? 'Hasil siap. Membuka Preview & tujuan di Impor soal...'
+                          : 'Hasil siap diperiksa melalui preview impor. Konten belum otomatis diterbitkan.'}
               </p>
               <div className="generator-detail-actions">
-                {current.failedCount > 0 && (
+                {current.status === 'FAILED' && !current.blockers?.length && (
                   <Button
                     disabled={action !== null || refreshing}
                     loading={action === 'retry'}
@@ -521,6 +609,35 @@ function GeneratorResultsScreenProtected({
                     Coba generate lagi
                   </Button>
                 )}
+                {current.drillVariant &&
+                  ['GENERATING', 'FAILED', 'READY'].includes(current.status) &&
+                  (confirmCancel ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        disabled={action !== null}
+                        onClick={() => setConfirmCancel(false)}
+                      >
+                        Kembali
+                      </Button>
+                      <Button
+                        variant="danger"
+                        disabled={action !== null}
+                        loading={action === 'cancel'}
+                        onClick={() => void perform('cancel')}
+                      >
+                        Konfirmasi pembatalan
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      disabled={action !== null}
+                      onClick={() => setConfirmCancel(true)}
+                    >
+                      Batalkan generation
+                    </Button>
+                  ))}
                 {['READY', 'IMPORTED'].includes(current.status) && (
                   <>
                     <Button
@@ -550,6 +667,12 @@ function GeneratorResultsScreenProtected({
                 <p className="generator-footnote">
                   Paket sudah diimpor. Status publikasi mengikuti review dan validasi paket.
                 </p>
+              )}
+              {current.drillVariant && (
+                <DrillGeneratorLineage
+                  manifest={current.drillVariant}
+                  requests={current.requests}
+                />
               )}
               <details className="generator-identity">
                 <summary>Identitas paket</summary>

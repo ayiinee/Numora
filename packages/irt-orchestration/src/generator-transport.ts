@@ -1,5 +1,9 @@
 import type { Sql } from 'postgres';
-import { requireGeneratorEnabled, requireGeneratorMain } from './generator.js';
+import {
+  drillVariantGenerationEnabled,
+  requireGeneratorEnabled,
+  requireGeneratorMain,
+} from './generator.js';
 import type { ComputeNotificationV3 } from '@tka/database';
 import { fail } from './validation.js';
 
@@ -39,13 +43,15 @@ export async function pollGenerator(client: Sql) {
       service_contract: string;
     }[]
   >`
-    SELECT r.id,r.input_digest,d.id AS dispatch_id,d.generation,w.constraints->>'serviceContract' AS service_contract FROM analysis_requests r
+    SELECT r.id,r.input_digest,d.id AS dispatch_id,d.generation,w.constraints->>'serviceContract' AS service_contract
+    FROM analysis_requests r
     JOIN generation_wave_items w ON w.id=r.wave_item_id
     JOIN LATERAL(SELECT id,generation FROM analysis_request_dispatches WHERE request_id=r.id ORDER BY generation DESC LIMIT 1)d ON true
     JOIN analytics_outbox o ON o.entity_id=r.id AND o.event_name='analysis.requested'
     JOIN outbox_deliveries delivery ON delivery.outbox_id=o.id AND delivery.consumer='irt_compute'
     LEFT JOIN irt_compute.compute_executions e ON e.dispatch_id=d.id
     WHERE r.request_type='GENERATE_VARIANTS' AND r.status IN ('PENDING','RUNNING')
+    AND (${drillVariantGenerationEnabled()} OR NOT (w.constraints ? 'drillVariantManifest'))
     AND (delivery.retry_at IS NULL OR delivery.retry_at<=clock_timestamp())
     AND (e.id IS NULL OR (e.status='RUNNING' AND e.lease_expires_at<=clock_timestamp()))
     ORDER BY r.created_at,r.id LIMIT 10`;

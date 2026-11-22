@@ -32,6 +32,8 @@ export const generatorPackages = pgTable(
     levelId: uuid('level_id').references(() => levels.id, { onDelete: 'restrict' }),
     mappingIds: jsonb('mapping_ids').$type<string[]>().notNull(),
     requestIds: jsonb('request_ids').$type<string[]>().notNull(),
+    drillManifest: jsonb('drill_manifest'),
+    drillImportDigest: text('drill_import_digest'),
     canonicalPackageId: uuid('canonical_package_id').references(() => assessmentPackages.id, {
       onDelete: 'restrict',
     }),
@@ -45,10 +47,13 @@ export const generatorPackages = pgTable(
       sql`jsonb_typeof(${t.mappingIds})='array' and jsonb_typeof(${t.requestIds})='array'`,
     ),
     uniqueIndex('generator_packages_operation_uq').on(t.actorUserId, t.operationKey),
+    uniqueIndex('generator_packages_drill_canonical_uq')
+      .on(t.canonicalPackageId)
+      .where(sql`${t.drillManifest} is not null`),
     index('generator_packages_created_idx').on(t.createdAt),
     check(
       'generator_packages_count_ck',
-      sql`${t.expectedCount}=case ${t.assessmentType} when 'DRILL' then 10 when 'PRETEST' then 20 when 'TRYOUT' then 30 end and jsonb_array_length(${t.mappingIds})=${t.expectedCount} and jsonb_array_length(${t.requestIds})=${t.expectedCount}`,
+      sql`${t.expectedCount}=case when ${t.drillManifest} is not null then 7 when ${t.assessmentType}='DRILL' then 10 when ${t.assessmentType}='PRETEST' then 20 else 30 end and jsonb_array_length(${t.mappingIds})=${t.expectedCount} and jsonb_array_length(${t.requestIds})=${t.expectedCount}`,
     ),
     check(
       'generator_packages_scope_ck',
@@ -56,7 +61,18 @@ export const generatorPackages = pgTable(
     ),
     check(
       'generator_packages_source_package_ck',
-      sql`(${t.assessmentType}='TRYOUT' and ${t.sourcePackageId} is not null) or (${t.assessmentType}<>'TRYOUT' and ${t.sourcePackageId} is null)`,
+      sql`(${t.sourcePackageId} is not null)=(${t.assessmentType}='TRYOUT' or ${t.drillManifest} is not null)
+        and (${t.drillManifest} is null or (${t.assessmentType}='DRILL'
+          and ${t.drillManifest}->>'sourcePackageId'=${t.sourcePackageId}::text
+          and ${t.drillManifest}->>'levelId'=${t.levelId}::text
+          and ${t.drillManifest}->>'manifestDigest' ~ '^[a-f0-9]{64}$'
+          and jsonb_array_length(${t.drillManifest}->'items')=10) is true)`,
+    ),
+    check(
+      'generator_packages_drill_import_ck',
+      sql`${t.drillImportDigest} is null and (${t.drillManifest} is null or ${t.canonicalPackageId} is null)
+        or (${t.drillManifest} is not null and ${t.canonicalPackageId} is not null
+          and ${t.drillImportDigest} is not null and ${t.drillImportDigest} ~ '^[a-f0-9]{64}$')`,
     ),
   ],
 ).enableRLS();

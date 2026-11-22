@@ -1,6 +1,7 @@
 import { apiRequest } from '@/lib/api';
 import type {
   CreateGeneratorPackageDto,
+  DrillGeneratorCatalogDto,
   GeneratorPackageCatalogDto,
   GeneratorPackageDto,
   GeneratorPackageFileDto,
@@ -11,6 +12,8 @@ import type {
 const root = 'admin/content/generator/packages';
 export const generatorPackageCatalog = (token: string) =>
   apiRequest<GeneratorPackageCatalogDto>(`${root}/catalog`, token);
+export const drillGeneratorCatalog = (token: string) =>
+  apiRequest<DrillGeneratorCatalogDto>(`${root}/drill-catalog`, token);
 export const listGeneratorPackages = (token: string) =>
   apiRequest<GeneratorPackagesDto>(root, token);
 export const getGeneratorPackage = (token: string, id: string) =>
@@ -32,6 +35,8 @@ export const retryGeneratorPackage = (token: string, id: string, key: string) =>
     method: 'POST',
     headers: { 'Idempotency-Key': key },
   });
+export const cancelGeneratorPackage = (token: string, id: string) =>
+  apiRequest<GeneratorPackageDto>(`${root}/${id}/cancel`, token, { method: 'POST' });
 export const validateGeneratorJson = (token: string, id: string, file: object) =>
   apiRequest<GeneratorJsonPreviewDto>(`${root}/${id}/validate-json`, token, {
     method: 'POST',

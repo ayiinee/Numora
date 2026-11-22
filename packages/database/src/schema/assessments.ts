@@ -91,6 +91,12 @@ export const assessmentPackages = pgTable(
       approvedAt: string;
       manifestDigest: string;
       compositionDigest?: string;
+      reviewDigest?: string;
+      generationManifestDigest?: string;
+      contextId?: string;
+      contextRevision?: number;
+      approvedByUserId?: string;
+      revokedAt?: string;
     }>(),
     scoringPolicyVersionId: uuid('scoring_policy_version_id').references(
       () => scoringPolicyVersions.id,

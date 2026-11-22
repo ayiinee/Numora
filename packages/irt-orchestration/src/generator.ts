@@ -7,6 +7,17 @@ import { contentFingerprint, fingerprint, type Json } from './generator-fingerpr
 export function requireGeneratorEnabled() {
   if (process.env.NUMORA_GENERATOR_ENABLED !== 'true') fail('GENERATOR_DISABLED', 503);
 }
+export function drillVariantGenerationEnabled() {
+  return (
+    process.env.NUMORA_DRILL_VARIANT_GENERATION_ENABLED === 'true' &&
+    process.env.NUMORA_GENERATOR_V2_ENABLED === 'true' &&
+    ['development', 'test'].includes(process.env.NODE_ENV ?? '') &&
+    process.env.NUMORA_IRT_MODE !== 'PRODUCTION'
+  );
+}
+export function requireDrillVariantGeneration() {
+  if (!drillVariantGenerationEnabled()) fail('DRILL_VARIANT_GENERATION_DISABLED', 503);
+}
 export async function requireGeneratorMain(client: Sql | TransactionSql) {
   const [role] = await client<{ safe: boolean }[]>`SELECT
     (pg_has_role(current_user,'numora_main_runtime','member') AND NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolbypassrls
@@ -24,6 +35,7 @@ function operation(actor: string, key: string, action: string) {
 type Mapping = {
   id: string;
   config_id: string;
+  config_version: number;
   context_id: string;
   original_id: string;
   family_id: string;
@@ -40,8 +52,10 @@ type Mapping = {
 };
 // Mapping is explicit registration provenance plus a main-owned scoped approval.
 // No local record number is converted into Curriculum taxonomy.
-async function mappings(tx: Sql | TransactionSql, approvalId?: string) {
-  const rows = await tx<Mapping[]>`SELECT a.id,g.id AS config_id,g.context_id,q.id AS original_id,
+async function mappings(tx: Sql | TransactionSql, approvalId?: string, contextIds?: string[]) {
+  const rows = await tx<
+    Mapping[]
+  >`SELECT a.id,g.id AS config_id,g.config_version,g.context_id,q.id AS original_id,
     v.question_id AS family_id,q.scoring_rubric_version_id AS rubric_id,
     a.approved_digest,g.parameters->>'questionExternalId' AS label,g.parameters,
     q.question_type,q.stem,q.options_or_statements,q.answer_key,q.media,q.explanation
@@ -51,6 +65,7 @@ async function mappings(tx: Sql | TransactionSql, approvalId?: string) {
     JOIN scoring_rubric_versions rubric ON rubric.id=q.scoring_rubric_version_id
     JOIN measurement_contexts c ON c.id=g.context_id
     WHERE (${approvalId ?? null}::uuid IS NULL OR a.id=${approvalId ?? null}::uuid)
+    AND (${contextIds === undefined} OR g.context_id=ANY(${contextIds ?? []}::uuid[]))
     AND a.revoked_at IS NULL AND g.status='SEALED' AND a.approved_digest=g.digest
     AND g.digest=irt_compute.payload_digest(g.parameters)
     AND (g.parameters->>'serviceContract'='generator-service-v1' OR
@@ -152,6 +167,15 @@ export async function generatorCatalog(
       })),
   };
 }
+export async function approvedDrillGeneratorMappings(
+  tx: Sql | TransactionSql,
+  contextIds: string[],
+) {
+  if (!contextIds.length) return [];
+  return (await mappings(tx, undefined, contextIds)).filter(
+    (m) => m.parameters.serviceContract === 'generator-service-v2',
+  );
+}
 async function mapping(tx: Sql | TransactionSql, id: string) {
   const rows = await mappings(tx, id);
   if (rows.length !== 1) fail('GENERATOR_MAPPING_NOT_APPROVED');
@@ -181,32 +205,47 @@ export async function prepareGenerationWithin(
   actor: string,
   key: string,
   mappingId: string,
+  drill?: { waveId: string; manifest: Json; seed: number | null; approvedDigest: string },
 ) {
   const op = operation(actor, key, 'PREPARE'),
-    fp = hash({ mappingId });
+    fp = hash({ mappingId, ...(drill ? { manifest: drill.manifest, seed: drill.seed } : {}) });
 
   const previous = await duplicate(tx, op, fp);
   if (previous) return previous;
   const m = await mapping(tx, mappingId);
   const stock = m.parameters.mode === 'CONCEPTUAL_STOCK';
-  const constraints = JSON.stringify({
+  if (drill) {
+    requireDrillVariantGeneration();
+    if (
+      m.parameters.serviceContract !== 'generator-service-v2' ||
+      m.approved_digest !== drill.approvedDigest ||
+      stock !== (drill.seed === null)
+    )
+      fail('DRILL_VARIANT_MAPPING_CHANGED');
+  }
+  const constraints = {
     serviceContract: m.parameters.serviceContract,
-    ...(!stock ? { seed: randomInt(1, 1000000001) } : {}),
-  });
-  const [wave] = await tx<
-    { id: string }[]
-  >`INSERT INTO generation_waves(code,status,created_by_user_id,approved_at,constraints)
-      VALUES(${randomUUID()},'APPROVED',${actor},clock_timestamp(),'{}') RETURNING id`;
+    ...(!stock ? { seed: drill?.seed ?? randomInt(1, 1000000001) } : {}),
+    ...(drill ? { drillVariantManifest: drill.manifest } : {}),
+  };
+  const waveId =
+    drill?.waveId ??
+    (
+      await tx<
+        { id: string }[]
+      >`INSERT INTO generation_waves(code,status,created_by_user_id,approved_at,constraints)
+      VALUES(${randomUUID()},'APPROVED',${actor},clock_timestamp(),'{}') RETURNING id`
+    )[0]!.id;
   const [item] = await tx<
     { id: string }[]
   >`INSERT INTO generation_wave_items(wave_id,original_question_version_id,context_id,generator_config_id,configuration_approval_id,target_count,max_regenerate_attempts,constraints)
-      VALUES(${wave!.id},${m.original_id},${m.context_id},${m.config_id},${m.id},1,0,${constraints}::text::jsonb) RETURNING id`;
+      VALUES(${waveId},${m.original_id},${m.context_id},${m.config_id},${m.id},1,0,${JSON.stringify(constraints)}::text::jsonb) RETURNING id`;
   if (stock) {
     const [reservation] = await tx<
       { id: string }[]
     >`select (public.reserve_generator_stock(${String(m.parameters.stockSetId)}::uuid,${item!.id}::uuid)).*`;
     if (!reservation) fail('GENERATOR_STOCK_RESERVATION_FAILED');
-    await tx`update generation_wave_items set constraints=jsonb_build_object('serviceContract','generator-service-v2','stockReservationId',${reservation.id}::text) where id=${item!.id}`;
+    await tx`update generation_wave_items set constraints=constraints||jsonb_build_object('stockReservationId',${reservation.id}::text) where id=${item!.id}`;
   }
   const request = await createAnalysisRequest(tx, {
     idempotencyKey: op,
@@ -229,14 +268,32 @@ export async function retryGeneration(client: Sql, actor: string, key: string, i
     if (await duplicate(tx, op, fp)) return;
     await tx`SELECT pg_advisory_xact_lock(hashtextextended(${id},3))`;
     const [r] = await tx<
-      { approval_id: string }[]
-    >`SELECT w.configuration_approval_id AS approval_id
+      { approval_id: string; status: string; drill_variant: boolean }[]
+    >`SELECT w.configuration_approval_id AS approval_id,r.status,w.constraints ? 'drillVariantManifest' AS drill_variant
       FROM analysis_requests r JOIN generation_wave_items w ON w.id=r.wave_item_id WHERE r.id=${id} AND r.request_type='GENERATE_VARIANTS' FOR UPDATE OF r`;
     if (!r) fail('GENERATOR_REQUEST_NOT_FOUND', 404);
+    let reuseDispatch = false;
+    if (r.drill_variant) {
+      requireDrillVariantGeneration();
+      const [latest] = await tx<{ retryable: boolean; transport_failed: boolean }[]>`
+        SELECT (e.status IN ('FAILED','EXPIRED') OR
+          (e.status='RUNNING' AND e.lease_expires_at<=clock_timestamp())) AS retryable,
+          (e.id IS NULL AND delivery.failure_code IS NOT NULL) AS transport_failed
+        FROM analysis_request_dispatches d
+        LEFT JOIN irt_compute.compute_executions e ON e.dispatch_id=d.id
+        JOIN analytics_outbox o ON o.entity_id=d.request_id AND o.event_name='analysis.requested'
+        JOIN outbox_deliveries delivery ON delivery.outbox_id=o.id AND delivery.consumer='irt_compute'
+        WHERE d.request_id=${id} ORDER BY d.generation DESC LIMIT 1`;
+      reuseDispatch = latest?.transport_failed === true;
+      if (['COMPLETED', 'CANCELLED'].includes(r.status) || (!latest?.retryable && !reuseDispatch))
+        fail('GENERATOR_REQUEST_NOT_RETRYABLE');
+    }
     await mapping(tx, r.approval_id);
-    await tx`INSERT INTO analysis_request_dispatches(request_id,generation,operation_key,operation_fingerprint,actor_user_id)
-      SELECT ${id},max(generation)+1,${op},${fp},${actor} FROM analysis_request_dispatches WHERE request_id=${id}`;
-    await tx`UPDATE analysis_requests SET status='PENDING' WHERE id=${id}`;
+    if (!reuseDispatch) {
+      await tx`INSERT INTO analysis_request_dispatches(request_id,generation,operation_key,operation_fingerprint,actor_user_id)
+        SELECT ${id},max(generation)+1,${op},${fp},${actor} FROM analysis_request_dispatches WHERE request_id=${id}`;
+      await tx`UPDATE analysis_requests SET status='PENDING' WHERE id=${id}`;
+    }
     await tx`UPDATE outbox_deliveries SET delivered_at=NULL,retry_at=NULL,failure_code=NULL WHERE consumer='irt_compute'
       AND outbox_id IN (SELECT id FROM analytics_outbox WHERE entity_id=${id} AND event_name='analysis.requested')`;
   });
@@ -355,17 +412,29 @@ export async function acceptedCandidate(
       accepted_execution_id: string | null;
       configuration_pins: { approvalId: string; digest: string }[];
       wave_item_id: string;
+      status: string;
     }[]
   >`
     SELECT * FROM analysis_requests WHERE id=${id} AND request_type='GENERATE_VARIANTS' FOR UPDATE`;
   if (!r) fail('GENERATOR_REQUEST_NOT_FOUND', 404);
+  if (r.status === 'CANCELLED') fail('GENERATOR_REQUEST_CANCELLED');
   const [w] = await tx<
     {
       configuration_approval_id: string;
       original_question_version_id: string;
       generator_config_id: string;
       context_id: string;
-      constraints: { seed?: number; stockReservationId?: string; serviceContract: string };
+      constraints: {
+        seed?: number;
+        stockReservationId?: string;
+        serviceContract: string;
+        drillVariantManifest?: {
+          manifestDigest: string;
+          runtime: Json;
+          contextId: string;
+          contextRevision: number;
+        };
+      };
       target_count: number;
     }[]
   >`
@@ -396,8 +465,8 @@ export async function acceptedCandidate(
   )
     fail('GENERATOR_NOT_SUCCEEDED');
   const outputs = await tx<
-    { id: string; payload: { candidateIds: string[] }; valid: boolean }[]
-  >`SELECT id,payload,
+    { id: string; digest: string; payload: { candidateIds: string[] }; valid: boolean }[]
+  >`SELECT id,digest,payload,
     (kind='GENERATE_VARIANTS' AND sequence_number=1 AND contract_version=3 AND scientific_decision='CONTENT_VALID'
     AND input_digest=${r.input_digest} AND digest=irt_compute.payload_digest(payload) AND dataset_id IS NULL) AS valid
     FROM irt_compute.compute_outputs WHERE execution_id=${e.id}`;
@@ -457,7 +526,18 @@ export async function acceptedCandidate(
       provenance?.serviceContract !== 'generator-service-v2' ||
       provenance.mode !== m.parameters.mode ||
       fingerprint(provenance.mediaProfile ?? null) !==
-        fingerprint(m.parameters.mediaProfile ?? null)
+        fingerprint(m.parameters.mediaProfile ?? null) ||
+      (w.constraints.drillVariantManifest &&
+        (provenance.drillVariantManifestDigest !==
+          w.constraints.drillVariantManifest.manifestDigest ||
+          fingerprint(provenance.drillRuntime ?? null) !==
+            fingerprint(w.constraints.drillVariantManifest.runtime) ||
+          provenance.drillContextId !== w.context_id ||
+          provenance.drillContextRevision !== w.constraints.drillVariantManifest.contextRevision ||
+          provenance.drillFamilyId !== m.family_id ||
+          provenance.drillParentQuestionVersionId !== m.original_id ||
+          provenance.drillConfigDigest !== m.approved_digest ||
+          provenance.deterministicReplayDigest !== payload.contentFingerprint))
     )
       fail('GENERATOR_PIN_MISMATCH');
     if (stock) {
@@ -538,6 +618,8 @@ export async function acceptedCandidate(
     originalId: m.original_id,
     serviceContract: m.parameters.serviceContract,
     executionId: e.id,
+    artifactDigest: out.digest,
+    drillVariantManifestDigest: w.constraints.drillVariantManifest?.manifestDigest,
   };
 }
 export async function saveGenerationDraft(
@@ -557,8 +639,11 @@ export async function saveGenerationDraftWithin(
   id: string,
   validate: (payload: unknown) => CandidatePayload,
   materialization?: DraftMaterialization,
+  drillManifestDigest?: string,
 ) {
   const c = await acceptedCandidate(tx, id, validate);
+  if (c.drillVariantManifestDigest !== drillManifestDigest)
+    fail('DRILL_VARIANT_PACKAGE_IMPORT_REQUIRED');
   let p: CandidatePayload | DraftMaterialization['payload'] = c.payload;
   if (c.payload.media.length) {
     const [stored] = await tx<
