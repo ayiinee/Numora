@@ -367,6 +367,6 @@ export type TryoutVariantOptionsDto = { "packageId": string; "packageName": stri
 
 export type CreateTryoutVariantDto = { "anchorQuestionVersionIds": (string)[]; "operationKey": string; "expectedRevision": number; };
 
-export type TryoutVariantRequestDto = { "id": string; "label": string; "executionStatus": Record<string, unknown>; "failureCode": Record<string, unknown>; };
+export type TryoutVariantRequestDto = { "id": string; "label": string; "executionStatus": string | null; "failureCode": string | null; };
 
-export type TryoutVariantProcessDto = { "id": string; "sourcePackageId": string; "sourcePackageVersion": number; "anchorQuestionVersionIds": (string)[]; "focalQuestionVersionIds": (string)[]; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "generatedPackageId": Record<string, unknown> | null; "requests": (TryoutVariantRequestDto)[]; "createdAt": string; };
+export type TryoutVariantProcessDto = { "id": string; "sourcePackageId": string; "sourcePackageVersion": number; "anchorQuestionVersionIds": (string)[]; "focalQuestionVersionIds": (string)[]; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "generatedPackageId": string | null; "requests": (TryoutVariantRequestDto)[]; "createdAt": string; };

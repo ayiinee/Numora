@@ -18199,10 +18199,12 @@
             "type": "string"
           },
           "executionStatus": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           },
           "failureCode": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -18248,7 +18250,7 @@
             ]
           },
           "generatedPackageId": {
-            "type": "object",
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
