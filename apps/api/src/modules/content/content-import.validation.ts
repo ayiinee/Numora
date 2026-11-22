@@ -202,7 +202,10 @@ export function structuralErrors(
       (p.text.assetKeys ?? []).some(
         (k) =>
           !assets.some(
-            (a) => a.objectKey === k && a.placement === p.placement && a.itemId === p.itemId,
+            (a) =>
+              (a.assetId === k || a.objectKey === k) &&
+              a.placement === p.placement &&
+              a.itemId === p.itemId,
           ),
       )
     )
