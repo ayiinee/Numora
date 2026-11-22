@@ -814,7 +814,7 @@ export function ContentPackageWorkspace({
           >
             <div className="assessment-detail-workspace assessment-detail-settings-body">
               <label>Nama paket<input aria-label="Nama paket" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></label>
-              <Button variant="secondary" onClick={() => void run(async () => { await updateContentPackage(token, detail.id, { name: settingsName }); await choose(detail.id); })}>Simpan nama</Button>
+              <Button variant="secondary" onClick={() => void run(async () => { await updateContentPackage(token, detail.id, { name: settingsName, expectedRevision: detail.contentRevision, questionVersionIds: detail.items.map((item) => item.questionVersionId) }); await choose(detail.id); })}>Simpan nama</Button>
               <p>
                 {[
                   detail.chapterName,
