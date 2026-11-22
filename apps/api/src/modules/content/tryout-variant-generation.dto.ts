@@ -75,8 +75,8 @@ export class CreateTryoutVariantDto {
 export class TryoutVariantRequestDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() label!: string;
-  @ApiProperty() executionStatus!: string | null;
-  @ApiProperty() failureCode!: string | null;
+  @ApiProperty({ type: String, nullable: true }) executionStatus!: string | null;
+  @ApiProperty({ type: String, nullable: true }) failureCode!: string | null;
 }
 
 export class TryoutVariantProcessDto {
@@ -87,7 +87,8 @@ export class TryoutVariantProcessDto {
   @ApiProperty({ type: [String] }) focalQuestionVersionIds!: string[];
   @ApiProperty({ enum: ['GENERATING', 'FAILED', 'READY', 'IMPORTED'] })
   status!: 'GENERATING' | 'FAILED' | 'READY' | 'IMPORTED';
-  @ApiProperty({ format: 'uuid', nullable: true }) generatedPackageId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) generatedPackageId!: string | null;
   @ApiProperty({ type: [TryoutVariantRequestDto] }) requests!: TryoutVariantRequestDto[];
   @ApiProperty() createdAt!: string;
 }
+
