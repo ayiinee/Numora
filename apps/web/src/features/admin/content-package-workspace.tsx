@@ -1167,6 +1167,7 @@ export function ContentPackageWorkspace({
                           </small>
                           {item.question ? (
                             <>
+                              <Button variant="secondary" onClick={() => void loadMedia()}>Tampilkan gambar soal</Button>
                               <ContentRichText
                                 text={item.question.stem.text}
                                 media={media}
