@@ -133,12 +133,14 @@ function* contentParts(text: string, renderBareMath: boolean) {
 export function ContentRichText({
   text,
   media,
+  instanceId,
   retry,
   renderBareMath = true,
   renderMedia = true,
 }: {
   text: string;
   media: PreviewMediaDto[];
+  instanceId?: string | undefined;
   retry: () => void;
   renderBareMath?: boolean;
   renderMedia?: boolean;
@@ -151,7 +153,9 @@ export function ContentRichText({
   const inline = (value: string) =>
     Array.from(contentParts(value, renderBareMath), (part, i) => {
       if (part.asset && renderMedia) {
-        const asset = media.find((item) => item.assetId === part.asset);
+        const asset = media.find(
+          (item) => item.assetId === part.asset && (!instanceId || item.instanceId === instanceId),
+        );
         return <Media key={`${i}:${asset?.url ?? 'missing'}`} asset={asset} onRetry={retry} />;
       }
       if (part.formula !== undefined) {
