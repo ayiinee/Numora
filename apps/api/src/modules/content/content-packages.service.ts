@@ -52,6 +52,7 @@ import {
   placementErrors,
 } from './content-package.rules';
 import { canonicalExternalId, structuralErrors, digest } from './content-import.validation';
+import { contentExternalId } from './content-external-id';
 import { R2MediaStorage } from './r2-media.storage';
 import type {
   ClassifyQuestionDto,
@@ -1349,3 +1350,4 @@ export class ContentPackagesService {
     );
   }
 }
+
