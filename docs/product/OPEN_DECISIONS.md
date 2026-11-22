@@ -275,6 +275,8 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 
 ## Generator service v1 — dependency activation
 
+**OPEN - Varian Drill Admin.** Bank target masih membutuhkan paket original dengan roster anchor Curriculum, mapping tujuh focal, rubrik dan approval yang sah. Aktivasi LEVEL dan kebijakan IRT produksi mengikuti keputusan v2. [Alur admin dan prasyarat](../development/DRILL_VARIANT_ADMIN.md)
+
 **OPEN — Curriculum/Data:** original mapped, rubric/context SEALED, config register dan approval produksi belum boleh disimpulkan dari fixture TEST ONLY. Generator CONTENT_VALID hanya dapat diimpor DRAFT; tidak mengubah publication, scoring atau histori. **ENGINEERING DECISION:** integrasi lokal mengikuti [handoff generator v1](../content/GENERATOR_SERVICE_V1.md), flag default false.
 
 **ENGINEERING DECISION — generator paket, pemilik 7 Oktober 2026:** generate berdasarkan tujuan paket, hasil/download JSON dan impor dengan preview/validasi existing disetujui. **OPEN:** mapping/blueprint produksi tetap memerlukan handoff Curriculum; paket membutuhkan keluarga original mapped yang berbeda dan scope sesuai tujuan. Tidak mengarang original/approval untuk mengisi jumlah yang kurang.

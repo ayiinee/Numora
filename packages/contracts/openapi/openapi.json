@@ -3284,6 +3284,32 @@
         ]
       }
     },
+    "/api/v1/admin/content/generator/packages/drill-catalog": {
+      "get": {
+        "operationId": "GeneratorPackagesController_drillCatalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillGeneratorCatalogDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
     "/api/v1/admin/content/generator/packages": {
       "get": {
         "operationId": "GeneratorPackagesController_list",
@@ -3446,6 +3472,41 @@
         ],
         "responses": {
           "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackageDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/cancel": {
+      "post": {
+        "operationId": "GeneratorPackagesController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -14541,6 +14602,306 @@
           "sourcePackages"
         ]
       },
+      "DrillGeneratorRuntimeDto": {
+        "type": "object",
+        "properties": {
+          "runtimeProfile": {
+            "type": "string"
+          },
+          "imageDigest": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runtimeProfile",
+          "imageDigest"
+        ]
+      },
+      "DrillGeneratorMappingDto": {
+        "type": "object",
+        "properties": {
+          "approvalId": {
+            "type": "string"
+          },
+          "configId": {
+            "type": "string"
+          },
+          "configVersion": {
+            "type": "number"
+          },
+          "configDigest": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "NUMERIC",
+              "CONCEPTUAL_STOCK"
+            ]
+          }
+        },
+        "required": [
+          "approvalId",
+          "configId",
+          "configVersion",
+          "configDigest",
+          "mode"
+        ]
+      },
+      "DrillGeneratorSourceItemDto": {
+        "type": "object",
+        "properties": {
+          "displayOrder": {
+            "type": "number"
+          },
+          "questionVersionId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "string"
+          },
+          "rubricVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "mapping": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DrillGeneratorMappingDto"
+              }
+            ]
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "displayOrder",
+          "questionVersionId",
+          "familyId",
+          "rubricVersionId",
+          "mapping",
+          "blockers"
+        ]
+      },
+      "DrillGeneratorSourceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "levelId": {
+            "type": "string"
+          },
+          "levelLabel": {
+            "type": "string"
+          },
+          "contextId": {
+            "type": "string",
+            "nullable": true
+          },
+          "contextRevision": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceDigest": {
+            "type": "string"
+          },
+          "anchorIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillGeneratorSourceItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "packageVersion",
+          "levelId",
+          "levelLabel",
+          "contextId",
+          "contextRevision",
+          "sourceDigest",
+          "anchorIds",
+          "blockers",
+          "items"
+        ]
+      },
+      "DrillGeneratorCatalogDto": {
+        "type": "object",
+        "properties": {
+          "runtime": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DrillGeneratorRuntimeDto"
+              }
+            ]
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillGeneratorSourceDto"
+            }
+          }
+        },
+        "required": [
+          "runtime",
+          "blockers",
+          "items"
+        ]
+      },
+      "DrillGeneratorLineageDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "ANCHOR",
+              "FOCAL"
+            ]
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "parentQuestionVersionId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "string"
+          },
+          "rubricVersionId": {
+            "type": "string"
+          },
+          "sourceFingerprint": {
+            "type": "string"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "seed": {
+            "type": "number",
+            "nullable": true
+          },
+          "mapping": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DrillGeneratorMappingDto"
+              }
+            ]
+          },
+          "artifactDigest": {
+            "type": "string"
+          },
+          "questionVersionId": {
+            "type": "string"
+          },
+          "reviewedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "mediaReceiptIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "role",
+          "displayOrder",
+          "parentQuestionVersionId",
+          "familyId",
+          "rubricVersionId",
+          "sourceFingerprint",
+          "contentHash",
+          "requestId",
+          "seed",
+          "mapping"
+        ]
+      },
+      "DrillGeneratorManifestDto": {
+        "type": "object",
+        "properties": {
+          "sourcePackageVersion": {
+            "type": "number"
+          },
+          "contextId": {
+            "type": "string"
+          },
+          "contextRevision": {
+            "type": "number"
+          },
+          "policyVersionId": {
+            "type": "string"
+          },
+          "manifestDigest": {
+            "type": "string"
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/DrillGeneratorRuntimeDto"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillGeneratorLineageDto"
+            }
+          },
+          "curriculumApprovalReference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourcePackageVersion",
+          "contextId",
+          "contextRevision",
+          "policyVersionId",
+          "manifestDigest",
+          "runtime",
+          "items"
+        ]
+      },
       "GeneratorPackageDto": {
         "type": "object",
         "properties": {
@@ -14577,7 +14938,8 @@
               "GENERATING",
               "FAILED",
               "READY",
-              "IMPORTED"
+              "IMPORTED",
+              "CANCELLED"
             ]
           },
           "packageId": {
@@ -14591,6 +14953,15 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GeneratorRequestDto"
+            }
+          },
+          "drillVariant": {
+            "$ref": "#/components/schemas/DrillGeneratorManifestDto"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         },
@@ -14643,7 +15014,26 @@
           "sourcePackageId": {
             "type": "string",
             "format": "uuid",
-            "description": "Paket Tryout original yang menjadi sumber."
+            "description": "Paket original yang menjadi sumber Tryout atau varian Drill."
+          },
+          "anchorQuestionVersionIds": {
+            "minItems": 3,
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "focalQuestionVersionIds": {
+            "minItems": 7,
+            "maxItems": 7,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceDigest": {
+            "type": "string"
           }
         },
         "required": [
@@ -14666,6 +15056,9 @@
           "content": {
             "type": "object",
             "description": "Exact immutable generator-service-v1 candidate payload"
+          },
+          "lineage": {
+            "$ref": "#/components/schemas/DrillGeneratorLineageDto"
           }
         },
         "required": [
@@ -14673,6 +15066,21 @@
           "candidateId",
           "question",
           "content"
+        ]
+      },
+      "DrillGeneratorAnchorDto": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "$ref": "#/components/schemas/ExcelQuestionDto"
+          },
+          "lineage": {
+            "$ref": "#/components/schemas/DrillGeneratorLineageDto"
+          }
+        },
+        "required": [
+          "question",
+          "lineage"
         ]
       },
       "GeneratorPackageFileDto": {
@@ -14710,6 +15118,15 @@
             "items": {
               "$ref": "#/components/schemas/GeneratorPackageFileItemDto"
             }
+          },
+          "anchors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillGeneratorAnchorDto"
+            }
+          },
+          "drillVariant": {
+            "$ref": "#/components/schemas/DrillGeneratorManifestDto"
           }
         },
         "required": [

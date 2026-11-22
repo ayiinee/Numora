@@ -128,7 +128,12 @@ async function compute(id) {
   assert.equal(response.status, 'SUCCEEDED');
   return response;
 }
-async function parallel(items, fn, concurrency = 6) {
+async function parallel(
+  items,
+  fn,
+  concurrency = Number(process.env.GENERATOR_V2_CONCURRENCY ?? 6),
+) {
+  assert(Number.isInteger(concurrency) && concurrency > 0 && concurrency <= 6);
   let next = 0,
     finished = 0;
   await Promise.all(

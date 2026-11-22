@@ -9,14 +9,18 @@ import { randomUUID } from 'node:crypto';
 import { getDatabase, type ImportQuestion } from '@tka/database';
 import {
   acceptedCandidate,
+  drillVariantGenerationEnabled,
   generationDetail,
+  generatorHttp,
   IrtOrchestrationError,
   prepareGenerationWithin,
   requireGeneratorEnabled,
   requireGeneratorMain,
+  requireDrillVariantGeneration,
   retryGeneration,
   saveGenerationDraftWithin,
   type DraftMaterialization,
+  type GeneratorJson,
 } from '@tka/irt-orchestration';
 import type { TransactionSql } from 'postgres';
 import { GeneratorService, validateGeneratorCandidate } from './generator.service';
@@ -25,11 +29,23 @@ import { packageCounts, placementErrors } from './content-package.rules';
 import type { ContentPackageDto } from './content-packages.dto';
 import type {
   CreateGeneratorPackageDto,
+  DrillGeneratorCatalogDto,
+  DrillGeneratorManifestDto,
+  DrillGeneratorLineageDto,
   GeneratorPackageDto,
   GeneratorPackageFileDto,
   GeneratorJsonPreviewDto,
 } from './generator-packages.dto';
 import type { ImportReportDto } from './content-preview.dto';
+import type { ExcelQuestionDto } from './excel-import.dto';
+import { contentExternalId } from './content-external-id';
+import {
+  assertDrillSource,
+  createDrillManifest,
+  drillVariantSources,
+  type DrillRuntimePin,
+  type DrillVariantManifest,
+} from './drill-variant-sources';
 type Source = {
   id: string;
   family_id: string;
@@ -54,7 +70,35 @@ type Row = {
   created_at: Date | string;
   operation_fingerprint: string;
   source_package_id: string | null;
+  drill_manifest: DrillVariantManifest | null;
+  drill_import_digest: string | null;
 };
+function drillManifestView(
+  manifest: DrillVariantManifest,
+  requests: string[],
+): DrillGeneratorManifestDto {
+  let index = 0;
+  return {
+    sourcePackageVersion: manifest.sourcePackageVersion,
+    contextId: manifest.contextId,
+    contextRevision: manifest.contextRevision,
+    policyVersionId: manifest.policyVersionId,
+    manifestDigest: manifest.manifestDigest,
+    runtime: manifest.runtime,
+    items: manifest.items.map((item) => ({
+      role: item.role,
+      displayOrder: item.displayOrder,
+      parentQuestionVersionId: item.questionVersionId,
+      familyId: item.familyId,
+      rubricVersionId: item.rubricVersionId,
+      sourceFingerprint: item.sourceFingerprint,
+      contentHash: item.contentHash,
+      requestId: item.role === 'FOCAL' ? requests[index++]! : null,
+      seed: item.seed,
+      mapping: item.mapping,
+    })),
+  };
+}
 type SourcePackageItem = {
   package_id: string;
   name: string;
@@ -186,6 +230,123 @@ export class GeneratorPackagesService {
       return { options, sourcePackages: await this.tryoutSourcePackages(sources) };
     });
   }
+  private async drillRuntime(): Promise<DrillRuntimePin> {
+    requireDrillVariantGeneration();
+    const { serviceContract, drillVariantRuntime: pin } = (await generatorHttp(
+      '/api/v2/generators',
+    )) as {
+      serviceContract?: string;
+      drillVariantRuntime?: DrillRuntimePin;
+    };
+    if (
+      serviceContract !== 'generator-service-v2' ||
+      typeof pin?.runtimeProfile !== 'string' ||
+      !/^[a-z0-9_.-]{1,128}$/.test(pin.runtimeProfile) ||
+      typeof pin.imageDigest !== 'string' ||
+      !/^sha256:[a-f0-9]{64}$/.test(pin.imageDigest)
+    )
+      throw new HttpException(
+        {
+          code: 'DRILL_VARIANT_AI_RUNTIME_UNAVAILABLE',
+          detail: 'AI Service belum menyediakan runtime varian Drill yang dipin.',
+        },
+        503,
+      );
+    return pin;
+  }
+  drillCatalog(): Promise<DrillGeneratorCatalogDto> {
+    return this.execute(async () => {
+      const items = await drillVariantSources(getDatabase().client);
+      try {
+        return { items, runtime: await this.drillRuntime(), blockers: [] };
+      } catch (e) {
+        const code =
+          e instanceof IrtOrchestrationError ? e.code : 'DRILL_VARIANT_AI_RUNTIME_UNAVAILABLE';
+        return { items, runtime: null, blockers: [code] };
+      }
+    });
+  }
+  private async checkDrillSource(tx: TransactionSql, manifest: DrillVariantManifest) {
+    await tx`SELECT id FROM assessment_packages WHERE id=${manifest.sourcePackageId} FOR SHARE`;
+    await tx`SELECT a.id FROM assessment_arms a
+      WHERE a.id=(SELECT distribution_arm_id FROM assessment_packages WHERE id=${manifest.sourcePackageId}) FOR SHARE`;
+    await tx`SELECT v.id FROM question_versions v JOIN package_items pi ON pi.question_version_id=v.id
+      WHERE pi.package_id=${manifest.sourcePackageId} ORDER BY v.id FOR SHARE OF v`;
+    const [source] = await drillVariantSources(tx, manifest.sourcePackageId);
+    assertDrillSource(source, manifest.sourceDigest);
+  }
+  private async prepareDrill(
+    actor: string,
+    key: string,
+    body: CreateGeneratorPackageDto,
+    fingerprint: string,
+  ) {
+    requireDrillVariantGeneration();
+    if (
+      !body.sourcePackageId ||
+      !body.sourceDigest ||
+      !body.anchorQuestionVersionIds ||
+      !body.focalQuestionVersionIds ||
+      body.scopeId
+    )
+      throw new ConflictException({ code: 'DRILL_VARIANT_EXPLICIT_ROSTER_REQUIRED' });
+    const runtime = await this.drillRuntime();
+    const client = getDatabase().client;
+    const id = await client.begin(async (tx) => {
+      await tx`SELECT pg_advisory_xact_lock(hashtextextended(${actor + ':' + key},6))`;
+      const [prior] = await tx<
+        Row[]
+      >`SELECT * FROM generator_packages WHERE actor_user_id=${actor} AND operation_key=${key}`;
+      if (prior) {
+        if (prior.operation_fingerprint !== fingerprint)
+          throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
+        return prior.id;
+      }
+      await tx`SELECT id FROM assessment_packages WHERE id=${body.sourcePackageId!} FOR SHARE`;
+      const [source] = await drillVariantSources(tx, body.sourcePackageId);
+      assertDrillSource(source, body.sourceDigest!);
+      const manifest = createDrillManifest(
+        source,
+        body.anchorQuestionVersionIds!,
+        body.focalQuestionVersionIds!,
+        runtime,
+      );
+      await this.checkDrillSource(tx, manifest);
+      const id = randomUUID();
+      const [wave] = await tx<{ id: string }[]>`
+        INSERT INTO generation_waves(code,status,created_by_user_id,approved_at,constraints)
+        VALUES(${id},'APPROVED',${actor},clock_timestamp(),
+          jsonb_build_object('drillVariantManifestDigest',${manifest.manifestDigest}::text)) RETURNING id`;
+      const focal = manifest.items.filter((item) => item.role === 'FOCAL');
+      const mappingIds = focal.map((item) => item.mapping!.approvalId);
+      const requests = [];
+      for (const item of focal) {
+        requests.push(
+          await prepareGenerationWithin(
+            tx,
+            actor,
+            `${id}-${item.displayOrder}`,
+            item.mapping!.approvalId,
+            {
+              waveId: wave!.id,
+              manifest: manifest as unknown as GeneratorJson,
+              seed: item.seed,
+              approvedDigest: item.mapping!.configDigest,
+            },
+          ),
+        );
+      }
+      await tx`INSERT INTO generator_packages(id,actor_user_id,operation_key,operation_fingerprint,
+        assessment_type,title,expected_count,source_package_id,chapter_id,level_id,mapping_ids,request_ids,drill_manifest)
+        VALUES(${id},${actor},${key},${fingerprint},'DRILL',${body.title.trim()},7,
+          ${source.id},${source.chapterId},${source.levelId},${JSON.stringify(mappingIds)}::jsonb,
+          ${JSON.stringify(requests)}::jsonb,${JSON.stringify(manifest)}::jsonb)`;
+      await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id)
+        VALUES(${actor},'GENERATOR_PACKAGE_PREPARED','generator_package',${id})`;
+      return id;
+    });
+    return this.detail(id);
+  }
   prepare(actor: string, key: string, body: CreateGeneratorPackageDto) {
     return this.execute(async () => {
       if (!/^[A-Za-z0-9_-]{1,128}$/.test(key) || !body.title.trim())
@@ -200,6 +361,12 @@ export class GeneratorPackagesService {
           throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
         return this.detail(existing[0].id);
       }
+      const explicitDrill =
+        body.anchorQuestionVersionIds || body.focalQuestionVersionIds || body.sourceDigest;
+      if (body.assessmentType === 'DRILL' && (body.sourcePackageId || explicitDrill))
+        return this.prepareDrill(actor, key, body, fingerprint);
+      if (explicitDrill || (body.sourcePackageId && body.assessmentType !== 'TRYOUT'))
+        throw new HttpException({ code: 'GENERATOR_INPUT_INVALID' }, 400);
       const sources = await this.sources();
       const count = packageCounts[body.assessmentType];
       if (
@@ -298,6 +465,43 @@ export class GeneratorPackagesService {
             r.leaseExpired ||
             (!r.executionStatus && !!r.failureCode),
         ).length;
+      const drillVariant = row.drill_manifest
+        ? drillManifestView(row.drill_manifest, row.request_ids)
+        : undefined;
+      if (drillVariant && row.canonical_package_id) {
+        const canonical = await client<
+          {
+            display_order: number;
+            question_version_id: string;
+            reviewed_by_user_id: string | null;
+            receipt_ids: string[] | null;
+            artifact_digest: string | null;
+            approval: string | null;
+          }[]
+        >`
+          SELECT pi.display_order,pi.question_version_id,v.reviewed_by_user_id,m.receipt_ids,o.digest AS artifact_digest,
+            p.curriculum_approval->>'reference' AS approval
+          FROM assessment_packages p JOIN package_items pi ON pi.package_id=p.id
+          JOIN question_versions v ON v.id=pi.question_version_id
+          JOIN generator_packages g ON g.canonical_package_id=p.id
+          LEFT JOIN analysis_requests r ON r.id::text=g.request_ids->>(
+            SELECT (count(*)-1)::integer FROM package_items x
+            WHERE x.package_id=p.id AND x.item_role='FOCAL' AND x.display_order<=pi.display_order
+          ) AND pi.item_role='FOCAL'
+          LEFT JOIN irt_compute.compute_outputs o ON o.execution_id=r.accepted_execution_id
+          LEFT JOIN generator_candidate_materializations m ON m.candidate_id::text=o.payload->'candidateIds'->>0
+          WHERE p.id=${row.canonical_package_id} ORDER BY pi.display_order`;
+        for (const item of drillVariant.items) {
+          const linked = canonical.find((v) => v.display_order === item.displayOrder);
+          if (!linked) continue;
+          item.questionVersionId = linked.question_version_id;
+          item.reviewedBy = linked.reviewed_by_user_id;
+          item.mediaReceiptIds = linked.receipt_ids ?? [];
+          if (linked.artifact_digest) item.artifactDigest = linked.artifact_digest;
+        }
+        if (canonical[0]?.approval)
+          drillVariant.curriculumApprovalReference = canonical[0].approval;
+      }
       return {
         id: row.id,
         assessmentType: row.assessment_type,
@@ -308,14 +512,25 @@ export class GeneratorPackagesService {
         failedCount,
         status: row.canonical_package_id
           ? 'IMPORTED'
-          : failedCount
-            ? 'FAILED'
-            : completedCount === row.expected_count
-              ? 'READY'
-              : 'GENERATING',
+          : row.drill_manifest && requests.every((r) => r.status === 'CANCELLED')
+            ? 'CANCELLED'
+            : failedCount
+              ? 'FAILED'
+              : completedCount === row.expected_count
+                ? 'READY'
+                : 'GENERATING',
         packageId: row.canonical_package_id,
         createdAt: new Date(row.created_at).toISOString(),
         requests,
+        ...(drillVariant
+          ? {
+              drillVariant,
+              blockers:
+                drillVariantGenerationEnabled() || row.canonical_package_id
+                  ? []
+                  : ['DRILL_VARIANT_GENERATION_DISABLED'],
+            }
+          : {}),
       };
     });
   }
@@ -334,6 +549,15 @@ export class GeneratorPackagesService {
       if (!/^[A-Za-z0-9_-]{1,90}$/.test(key))
         throw new HttpException({ code: 'GENERATOR_INPUT_INVALID' }, 400);
       const group = await this.detail(id);
+      if (group.status === 'CANCELLED')
+        throw new ConflictException({ code: 'GENERATOR_REQUEST_CANCELLED' });
+      if (group.drillVariant) {
+        requireDrillVariantGeneration();
+        await getDatabase().client.begin(async (tx) => {
+          const row = await this.row(tx, id, true);
+          await this.checkDrillSource(tx, row.drill_manifest!);
+        });
+      }
       for (const r of group.requests)
         if (
           ['FAILED', 'EXPIRED'].includes(r.executionStatus ?? '') ||
@@ -344,8 +568,30 @@ export class GeneratorPackagesService {
       return this.detail(id);
     });
   }
+  cancel(actor: string, id: string) {
+    return this.execute(async () => {
+      const client = getDatabase().client;
+      await client.begin(async (tx) => {
+        const row = await this.row(tx, id, true);
+        if (!row.drill_manifest || row.canonical_package_id)
+          throw new ConflictException({ code: 'DRILL_VARIANT_CANNOT_CANCEL' });
+        for (const request of row.request_ids)
+          await tx`SELECT pg_advisory_xact_lock(hashtextextended(${request}::text,3))`;
+        const changed = await tx`UPDATE analysis_requests SET status='CANCELLED'
+          WHERE id=ANY(${row.request_ids}::uuid[]) AND status NOT IN ('COMPLETED','CANCELLED') RETURNING id`;
+        if (changed.length)
+          await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id)
+            VALUES(${actor},'DRILL_VARIANT_GENERATION_CANCELLED','generator_package',${id})`;
+      });
+      return this.detail(id);
+    });
+  }
   private async fileWithin(tx: TransactionSql, id: string): Promise<GeneratorPackageFileDto> {
     const row = await this.row(tx, id);
+    const manifest = row.drill_manifest;
+    if (manifest && !row.canonical_package_id) await this.checkDrillSource(tx, manifest);
+    const drillVariant = manifest ? drillManifestView(manifest, row.request_ids) : undefined;
+    const byRequest = new Map(drillVariant?.items.map((item) => [item.requestId, item]));
     const items = [];
     for (const requestId of row.request_ids) {
       const candidate = await acceptedCandidate(tx, requestId, validateGeneratorCandidate, false);
@@ -364,11 +610,21 @@ export class GeneratorPackagesService {
       if (scope?.usage_type !== row.assessment_type)
         throw new ConflictException({ code: 'QUESTION_USAGE_MISMATCH' });
       const p = candidate.payload;
+      const lineage = byRequest.get(requestId);
+      if (
+        lineage &&
+        (candidate.drillVariantManifestDigest !== manifest?.manifestDigest ||
+          candidate.originalId !== lineage.parentQuestionVersionId ||
+          candidate.familyId !== lineage.familyId ||
+          p.rubricVersionId !== lineage.rubricVersionId)
+      )
+        throw new ConflictException({ code: 'DRILL_VARIANT_CANDIDATE_PIN_MISMATCH' });
       const externalId = 'GEN_' + candidate.id.replaceAll('-', '');
       items.push({
         requestId,
         candidateId: candidate.id,
         content: p,
+        ...(lineage ? { lineage: { ...lineage, artifactDigest: candidate.artifactDigest } } : {}),
         question: {
           externalId,
           type: p.questionType,
@@ -383,8 +639,8 @@ export class GeneratorPackagesService {
           metadata: {
             sourceLevelNumber: scope.level_number,
             sourceSheet: 'Generator',
-            sourceRowNumber: items.length + 1,
-            sourceOrder: items.length + 1,
+            sourceRowNumber: lineage?.displayOrder ?? items.length + 1,
+            sourceOrder: lineage?.displayOrder ?? items.length + 1,
             assetManifest: p.media.map((asset, index) => ({
               externalId,
               assetId: asset.assetId,
@@ -412,9 +668,79 @@ export class GeneratorPackagesService {
       assessmentType: row.assessment_type,
       title: row.title,
       sourcePackageId: row.source_package_id,
-      expectedCount: row.expected_count,
+      expectedCount: manifest?.items.length ?? row.expected_count,
       items,
+      ...(drillVariant
+        ? {
+            drillVariant,
+            anchors: await this.drillAnchorPreview(
+              tx,
+              drillVariant.items.filter((i) => i.role === 'ANCHOR'),
+            ),
+          }
+        : {}),
     };
+  }
+  private async drillAnchorPreview(tx: TransactionSql, anchors: DrillGeneratorLineageDto[]) {
+    const originals = await tx<
+      {
+        id: string;
+        family: string;
+        source_ref: string | null;
+        type: ExcelQuestionDto['type'];
+        stem: ExcelQuestionDto['stem'];
+        options:
+          | ExcelQuestionDto['options']
+          | {
+              options: ExcelQuestionDto['options'];
+              categories: ExcelQuestionDto['metadata']['categories'];
+            };
+        answer: ExcelQuestionDto['answer'];
+        explanation: ExcelQuestionDto['explanation'];
+        difficulty: ExcelQuestionDto['difficulty'];
+        media: ExcelQuestionDto['metadata']['assetManifest'] | null;
+        chapter: string;
+        subchapter: string;
+        competency: string;
+        level_number: number;
+      }[]
+    >`
+      SELECT ver.id,v.question_id AS family,q.source_ref,ver.question_type AS type,
+        ver.stem,ver.options_or_statements AS options,ver.answer_key AS answer,ver.explanation,ver.difficulty,
+        ver.media,ch.code AS chapter,s.code AS subchapter,c.code AS competency,l.level_number
+      FROM question_versions ver JOIN question_variants v ON v.id=ver.variant_id
+      JOIN questions q ON q.id=v.question_id JOIN levels l ON l.id=ver.level_id
+      JOIN subchapters s ON s.id=l.subchapter_id JOIN chapters ch ON ch.id=s.chapter_id
+      JOIN competencies c ON c.id=q.primary_competency_id
+      WHERE ver.id=ANY(${anchors.map((item) => item.parentQuestionVersionId)}::uuid[])`;
+    return anchors.map((lineage) => {
+      const original = originals.find((item) => item.id === lineage.parentQuestionVersionId);
+      if (!original) throw new ConflictException({ code: 'DRILL_ANCHOR_VERSION_MISSING' });
+      const media = Array.isArray(original.media) ? original.media : [];
+      const question: ExcelQuestionDto = {
+        externalId: contentExternalId(undefined, original.source_ref, original.family, media),
+        type: original.type,
+        chapterCode: original.chapter,
+        subchapterCode: original.subchapter,
+        competencyCode: original.competency,
+        difficulty: original.difficulty,
+        stem: original.stem,
+        options: Array.isArray(original.options) ? original.options : original.options.options,
+        answer: original.answer,
+        explanation: original.explanation,
+        metadata: {
+          sourceLevelNumber: original.level_number,
+          sourceSheet: 'Original',
+          sourceRowNumber: lineage.displayOrder,
+          sourceOrder: lineage.displayOrder,
+          assetManifest: media,
+          ...(!Array.isArray(original.options) && original.options.categories?.length
+            ? { categories: original.options.categories }
+            : {}),
+        },
+      };
+      return { question, lineage };
+    });
   }
   export(id: string) {
     return this.execute(() => getDatabase().client.begin((tx) => this.fileWithin(tx, id)));
@@ -440,39 +766,44 @@ export class GeneratorPackagesService {
       subchapterCode: scope?.subchapter_code,
       levelNumber: scope?.level_number,
     } as ContentPackageDto;
-    const items = canonical.items.map((item) => {
-      // Accepted artifacts use logical asset IDs before storage receipts exist.
-      // Match those references for validation; materialize() still verifies/uploads
-      // the pinned bytes and stores real object keys before inserting any DRAFT.
-      const checked = {
-        ...item.question,
-        metadata: {
-          ...item.question.metadata,
-          assetManifest: item.question.metadata.assetManifest?.map((asset) => ({
-            ...asset,
-            objectKey: asset.assetId,
-          })),
-        },
-      };
-      const blockers = [
-        ...structuralErrors(checked, false, row.assessment_type === 'TRYOUT'),
-        ...placementErrors(item.question as ImportQuestion, target),
-      ];
-      return {
-        externalId: item.question.externalId,
-        canImportDraft: !blockers.length,
-        canPreview: !blockers.length,
-        blockers,
-        outcome: (!blockers.length ? 'VALIDATED' : 'INVALID') as 'VALIDATED' | 'INVALID',
-        questionVersionId: null,
-      };
-    });
+    const items = [...canonical.items, ...(canonical.anchors ?? [])]
+      .sort(
+        (a, b) => (a.question.metadata.sourceOrder ?? 0) - (b.question.metadata.sourceOrder ?? 0),
+      )
+      .map((item) => {
+        // Accepted artifacts use logical asset IDs before storage receipts exist.
+        // Match those references for validation; materialize() still verifies/uploads
+        // the pinned bytes and stores real object keys before inserting any DRAFT.
+        const checked = !('requestId' in item)
+          ? item.question
+          : {
+              ...item.question,
+              metadata: {
+                ...item.question.metadata,
+                assetManifest: item.question.metadata.assetManifest?.map((asset) => ({
+                  ...asset,
+                  objectKey: asset.assetId,
+                })),
+              },
+            };
+        const blockers = [
+          ...structuralErrors(checked, false, row.assessment_type === 'TRYOUT'),
+          ...placementErrors(item.question as ImportQuestion, target),
+        ];
+        return {
+          externalId: item.question.externalId,
+          canImportDraft: !blockers.length,
+          canPreview: !blockers.length,
+          blockers,
+          outcome: (!blockers.length ? 'VALIDATED' : 'INVALID') as 'VALIDATED' | 'INVALID',
+          questionVersionId: 'requestId' in item ? null : item.lineage.parentQuestionVersionId,
+        };
+      });
     const report: ImportReportDto = {
       id: null,
       sourceNamespace: 'GENERATOR_' + id.replaceAll('-', ''),
       canImportDraft:
-        canonical.items.length === packageCounts[row.assessment_type] &&
-        items.every((i) => i.canImportDraft),
+        items.length === packageCounts[row.assessment_type] && items.every((i) => i.canImportDraft),
       items,
     };
     return { file: canonical, report };
@@ -485,15 +816,26 @@ export class GeneratorPackagesService {
   import(actor: string, id: string, file: object) {
     return this.execute(async () => {
       const client = getDatabase().client;
+      const fileDigest = digest(file);
+      const replay = (row: Row) => {
+        if (!row.canonical_package_id || !row.drill_manifest) return;
+        if (row.drill_import_digest !== fileDigest)
+          throw new ConflictException({ code: 'GENERATOR_JSON_CHANGED' });
+        return { id: row.canonical_package_id };
+      };
+      const group = await this.row(client, id);
+      const imported = replay(group);
+      if (imported) return imported;
       const preliminary = await client.begin((tx) => this.validateWithin(tx, id, file));
       if (!preliminary.report.canImportDraft)
         throw new ConflictException({ code: 'GENERATOR_IMPORT_VALIDATION_REQUIRED' });
       const materializations = new Map<string, DraftMaterialization | undefined>();
-      const group = await this.row(client as unknown as TransactionSql, id);
       for (const requestId of group.request_ids)
         materializations.set(requestId, await this.generator.materialize(actor, requestId));
       return client.begin(async (tx) => {
         const row = await this.row(tx, id, true);
+        const imported = replay(row);
+        if (imported) return imported;
         const preview = await this.validateWithin(tx, id, file);
         if (!preview.report.canImportDraft)
           throw new ConflictException({ code: 'GENERATOR_IMPORT_VALIDATION_REQUIRED' });
@@ -508,6 +850,7 @@ export class GeneratorPackagesService {
                 requestId,
                 validateGeneratorCandidate,
                 materializations.get(requestId),
+                row.drill_manifest?.manifestDigest,
               )
             ).id,
           );
@@ -523,9 +866,22 @@ export class GeneratorPackagesService {
          sourcePackageId: row.source_package_id,
        }),
      })}::jsonb,'DRAFT',1) RETURNING id`;
-        for (let i = 0; i < versionIds.length; i++)
-          await tx`INSERT INTO package_items(package_id,question_version_id,display_order,max_points,rubric_version_id,maximum_score_category) SELECT ${canonical!.id},v.id,${i + 1},1,v.scoring_rubric_version_id,r.maximum_score_category FROM question_versions v JOIN scoring_rubric_versions r ON r.id=v.scoring_rubric_version_id WHERE v.id=${versionIds[i]!}`;
-        await tx`UPDATE generator_packages SET canonical_package_id=${canonical!.id} WHERE id=${id}`;
+        if (row.drill_manifest) {
+          let focalIndex = 0;
+          for (const item of row.drill_manifest.items) {
+            const version =
+              item.role === 'ANCHOR' ? item.questionVersionId : versionIds[focalIndex++]!;
+            await tx`INSERT INTO package_items(package_id,question_version_id,display_order,max_points,rubric_version_id,maximum_score_category,item_role)
+              VALUES(${canonical!.id},${version},${item.displayOrder},${item.maxPoints},
+                ${item.rubricVersionId},${item.maximumScoreCategory},${item.role === 'ANCHOR' ? 'REFERENCE' : 'FOCAL'})`;
+          }
+          await tx`UPDATE assessment_packages SET scoring_policy_version_id=${row.drill_manifest.policyVersionId}
+            WHERE id=${canonical!.id}`;
+        } else
+          for (let i = 0; i < versionIds.length; i++)
+            await tx`INSERT INTO package_items(package_id,question_version_id,display_order,max_points,rubric_version_id,maximum_score_category) SELECT ${canonical!.id},v.id,${i + 1},1,v.scoring_rubric_version_id,r.maximum_score_category FROM question_versions v JOIN scoring_rubric_versions r ON r.id=v.scoring_rubric_version_id WHERE v.id=${versionIds[i]!}`;
+        await tx`UPDATE generator_packages SET canonical_package_id=${canonical!.id},
+          drill_import_digest=${row.drill_manifest ? fileDigest : null} WHERE id=${id}`;
         await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id) VALUES(${actor},'GENERATOR_PACKAGE_IMPORTED','assessment_package',${canonical!.id})`;
         return { id: canonical!.id };
       });

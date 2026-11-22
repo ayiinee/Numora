@@ -5,6 +5,6 @@
   "scripts": {
     "build": "node -e \"console.log('contracts: no build required')\"",
     "typecheck": "node irt-calibration-v1/generate-types.mjs --check",
-    "test": "node --test irt-calibration-v1/contract.test.mjs"
+    "test": "node --test irt-calibration-v1/contract.test.mjs generator-service-v2/contract.test.mjs"
   }
 }

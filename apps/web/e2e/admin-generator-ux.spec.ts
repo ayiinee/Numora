@@ -2,6 +2,104 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupGenerator } from './fixtures/admin-generator';
 import { id } from './fixtures/admin';
+import type { DrillGeneratorSourceDto } from '../src/features/admin/generated-types';
+
+test('Varian Drill requires an explicit approved 3/7 roster and shows preflight blockers', async ({
+  page,
+}) => {
+  const { generator } = await setupGenerator(page);
+  const anchorOrders = new Set([2, 5, 9]);
+  const sourceDigest = '1'.repeat(64);
+  const source: DrillGeneratorSourceDto = {
+    id: id(7010),
+    name: 'Paket original Bilangan',
+    status: 'PUBLISHED',
+    packageVersion: 1,
+    levelId: id(7011),
+    levelLabel: 'Bilangan / Operasi / Level 1',
+    contextId: id(7012),
+    contextRevision: 1,
+    anchorIds: [2, 5, 9].map((order) => id(7100 + order)),
+    sourceDigest,
+    blockers: [],
+    items: Array.from({ length: 10 }, (_, i) => {
+      const order = i + 1;
+      return {
+        displayOrder: order,
+        questionVersionId: id(7100 + order),
+        familyId: id(7200 + order),
+        rubricVersionId: id(7300 + order),
+        blockers: [],
+        mapping: anchorOrders.has(order)
+          ? null
+          : {
+              approvalId: id(7400 + order),
+              configId: id(7500 + order),
+              configVersion: 1,
+              configDigest: '2'.repeat(64),
+              mode: 'NUMERIC',
+            },
+      };
+    }),
+  };
+  await page.route('**/generator/packages/drill-catalog', (route) =>
+    route.fulfill({
+      json: {
+        runtime: { runtimeProfile: 'test-only', imageDigest: 'sha256:' + '3'.repeat(64) },
+        blockers: [],
+        items: [
+          source,
+          {
+            ...source,
+            id: id(7013),
+            name: 'Paket dengan blocker',
+            blockers: ['DRILL_SOURCE_CONTEXT_UNAVAILABLE'],
+          },
+        ],
+      },
+    }),
+  );
+  await page.setViewportSize({ width: 390, height: 820 });
+  await page.goto('/admin/content/generator');
+  await page.getByRole('button', { name: 'Varian Drill', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Generate Varian Drill' });
+  const generate = dialog.getByRole('button', { name: 'Generate Variant', exact: true });
+  const packageSelector = dialog.getByLabel('Paket Drill original');
+  await packageSelector.selectOption(id(7013));
+  await expect(
+    dialog.getByText('Paket belum terhubung ke konteks LEVEL dan arm original yang disetujui.'),
+  ).toBeVisible();
+  await expect(generate).toBeDisabled();
+  await packageSelector.selectOption(source.id);
+  await expect(generate).toBeDisabled();
+  for (const item of source.items) {
+    const role = dialog.locator(`#role-${item.questionVersionId}`);
+    await role.selectOption(anchorOrders.has(item.displayOrder) ? 'ANCHOR' : 'FOCAL');
+  }
+  await expect(dialog.getByText('Anchor 3/3 · Focal 7/7')).toBeVisible();
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 820 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await expect(generate).toBeInViewport();
+  }
+  await expect(generate).toBeEnabled();
+  await generate.click();
+  await expect(dialog).toBeHidden();
+  const created = generator.requests.filter((request) => request.method === 'POST');
+  expect(created).toHaveLength(1);
+  expect(created[0]?.key).toBeTruthy();
+  expect(created[0]?.body).toMatchObject({
+    assessmentType: 'DRILL',
+    sourcePackageId: source.id,
+    sourceDigest,
+    anchorQuestionVersionIds: source.anchorIds,
+    focalQuestionVersionIds: source.items
+      .filter((item) => !anchorOrders.has(item.displayOrder))
+      .map((item) => item.questionVersionId),
+  });
+});
 
 for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
   test(`Generator directory visual audit ${role}`, async ({ page }) => {

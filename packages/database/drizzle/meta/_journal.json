@@ -561,6 +561,13 @@
       "when": 1795101000000,
       "tag": "0079_generator_context_view",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1795102000000,
+      "tag": "0080_drill_variant_generation",
+      "breakpoints": true
     }
   ]
 }

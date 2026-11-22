@@ -26,6 +26,7 @@ import type { AdminRequest } from '../identity/admin.guard';
 import { GeneratorPackagesService } from './generator-packages.service';
 import {
   CreateGeneratorPackageDto,
+  DrillGeneratorCatalogDto,
   GeneratorJsonPreviewDto,
   GeneratorPackageCatalogDto,
   GeneratorPackageDto,
@@ -69,6 +70,9 @@ export class GeneratorPackagesController {
   @Get('catalog') @ApiOkResponse({ type: GeneratorPackageCatalogDto }) catalog() {
     return this.service.catalog();
   }
+  @Get('drill-catalog') @ApiOkResponse({ type: DrillGeneratorCatalogDto }) drillCatalog() {
+    return this.service.drillCatalog();
+  }
   @Get() @ApiOkResponse({ type: GeneratorPackagesDto }) list() {
     return this.service.list();
   }
@@ -103,6 +107,12 @@ export class GeneratorPackagesController {
     @Headers('idempotency-key') key: string | undefined,
   ) {
     return this.service.retry(r.adminId, key ?? '', id);
+  }
+  @Post(':id/cancel')
+  @HttpCode(200)
+  @ApiOkResponse({ type: GeneratorPackageDto })
+  cancel(@Req() r: AdminRequest, @Param('id', ParseUUIDPipe) id: string) {
+    return this.service.cancel(r.adminId, id);
   }
   @Post(':id/validate-json')
   @HttpCode(200)

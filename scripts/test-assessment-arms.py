@@ -28,6 +28,11 @@ def legacy():
         p=one(c,"INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id) VALUES('TEST LEGACY',1,'TEST LEGACY','TRYOUT',%s) RETURNING id",(policy,))
         c.execute("INSERT INTO assessment_attempts(student_id,package_id,assessment_type) VALUES(%s,%s,'TRYOUT')",(u,p))
         c.execute("INSERT INTO tryout_batches(package_id,starts_at,closes_at,cutoff_at,result_due_at) VALUES(%s,now(),now()+interval '1 day',now()+interval '1 day',now()+interval '4 days')",(p,))
+        historical_ids=Jsonb([str(uuid4()) for _ in range(30)])
+        c.execute("""INSERT INTO generator_packages(actor_user_id,operation_key,operation_fingerprint,
+            assessment_type,title,expected_count,mapping_ids,request_ids)
+            VALUES(%s,'test-legacy-generator','test-legacy-generator','TRYOUT','TEST ONLY',30,%s,%s)""",
+            (u,historical_ids,historical_ids))
 
 class Guards(unittest.TestCase):
     @classmethod
@@ -90,6 +95,9 @@ class Guards(unittest.TestCase):
             self.assertEqual(c.execute("SELECT count(*) AS n FROM assessment_attempts a JOIN assessment_packages p ON p.id=a.package_id WHERE p.family_code='TEST LEGACY'").fetchone()['n'],1)
             self.assertEqual(c.execute('SELECT count(*) AS n FROM tryout_batch_packages').fetchone()['n'],1)
             self.assertEqual(c.execute("SELECT count(*) AS n FROM xp_ledger").fetchone()['n'],0)
+            self.assertEqual(c.execute("""SELECT expected_count,source_package_id,drill_manifest FROM generator_packages
+                WHERE operation_key='test-legacy-generator'""").fetchone(),
+                {'expected_count':30,'source_package_id':None,'drill_manifest':None})
 
     def test_02_provisional_without_compare(self):
         with db() as c:

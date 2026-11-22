@@ -27,6 +27,7 @@ import {
   contentImportIdentities,
   contentImportVersions,
   getDatabase,
+  generatorPackages,
   levels,
   packageItems,
   questions,
@@ -40,7 +41,12 @@ import {
   type ImportQuestion,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
-import { decodeAssessmentContent, databaseTime } from '@tka/assessment-engine';
+import {
+  decodeAssessmentContent,
+  databaseTime,
+  decodeRuntimeQuestion,
+  validateRubricCoverage,
+} from '@tka/assessment-engine';
 import { decodeSingleChoiceVersion } from '../learning/drill.policy';
 import { lockTryoutBatchSchedule } from '../learning/tryout-batches.service';
 import { ContentImportService } from './content-import.service';
@@ -67,6 +73,15 @@ import type {
   PrepareLegacyPretestDto,
 } from './content-packages.dto';
 import type { ExcelQuestionDto } from './excel-import.dto';
+import type { DrillVariantManifest } from './drill-variant-sources';
+
+async function generatedDrillManifest(tx: AdminTransaction, id: string) {
+  const [group] = await tx
+    .select({ manifest: generatorPackages.drillManifest })
+    .from(generatorPackages)
+    .where(eq(generatorPackages.canonicalPackageId, id));
+  return (group?.manifest ?? null) as DrillVariantManifest | null;
+}
 
 @Injectable()
 export class ContentPackagesService {
@@ -507,6 +522,7 @@ export class ContentPackagesService {
           : (q as unknown as ExcelQuestionDto),
       };
     });
+    const drillVariant = p.assessmentType === 'DRILL' ? await generatedDrillManifest(tx, id) : null;
     const structurallyValid = items.every((i) => i.question !== null);
     const checked =
       items.length && structurallyValid && p.source
@@ -543,7 +559,8 @@ export class ContentPackagesService {
         passed:
           !!p.source &&
           items.every((i) => !!i.question && placementErrors(i.question, p).length === 0) &&
-          rows.every((r) => r.identity?.sourceNamespace === p.source?.sourceNamespace),
+          (!!drillVariant ||
+            rows.every((r) => r.identity?.sourceNamespace === p.source?.sourceNamespace)),
         detail: 'Lengkapi sumber, klasifikasi dan konteks paket.',
       },
       {
@@ -617,8 +634,15 @@ export class ContentPackagesService {
       : [];
     const approved =
       blueprint?.status === 'SEALED' &&
-      (stored?.curriculumApproval?.compositionDigest ??
-        stored?.curriculumApproval?.manifestDigest) === this.manifest(p, items);
+      (stored?.curriculumApproval?.reviewDigest ??
+        stored?.curriculumApproval?.compositionDigest ??
+        stored?.curriculumApproval?.manifestDigest) === this.manifest(p, items) &&
+      (!drillVariant ||
+        (stored?.curriculumApproval?.generationManifestDigest === drillVariant.manifestDigest &&
+          stored.curriculumApproval.contextId === drillVariant.contextId &&
+          stored.curriculumApproval.contextRevision === drillVariant.contextRevision &&
+          !!stored.curriculumApproval.approvedByUserId &&
+          !stored.curriculumApproval.revokedAt));
     checks.push({
       code: 'BLUEPRINT',
       passed: approved,
@@ -628,10 +652,26 @@ export class ContentPackagesService {
     });
     const runtimeIssues = new Map<string, string[]>();
     const scoringRepairs = new Set<string>();
+    const drillRubrics = drillVariant
+      ? await tx
+          .select()
+          .from(scoringRubricVersions)
+          .where(
+            inArray(
+              scoringRubricVersions.id,
+              drillVariant.items.map((item) => item.rubricVersionId),
+            ),
+          )
+      : [];
     for (const r of rows) {
       const issues: string[] = [];
       try {
-        if (p.assessmentType === 'DRILL') decodeSingleChoiceVersion(r.version);
+        if (drillVariant)
+          validateRubricCoverage(
+            decodeRuntimeQuestion(r.version),
+            drillRubrics.find((rubric) => rubric.id === r.item.rubricVersionId),
+          );
+        else if (p.assessmentType === 'DRILL') decodeSingleChoiceVersion(r.version);
         else if (['TRYOUT', 'PRETEST'].includes(p.assessmentType)) {
           const content = decodeAssessmentContent(r.version);
           if (
@@ -801,6 +841,7 @@ export class ContentPackagesService {
   ) {
     const p = await packageContext(tx, id, true);
     assertDraftRevision(p, body.expectedRevision);
+    const drillVariant = p.assessmentType === 'DRILL' ? await generatedDrillManifest(tx, id) : null;
     const detail = await this.detailWithin(tx, id);
     const invalid = detail.readiness.checks.filter(
       (c) => !c.passed && !['BLUEPRINT', 'RUNTIME'].includes(c.code),
@@ -811,6 +852,25 @@ export class ContentPackagesService {
         detail: 'Lengkapi soal dan tinjau seluruh versi sebelum mencatat persetujuan.',
       });
     const manifestDigest = this.manifest(p, detail.items);
+    if (drillVariant) {
+      await tx
+        .update(assessmentPackages)
+        .set({
+          blueprintVersionId: drillVariant.blueprintVersionId,
+          curriculumApproval: {
+            reference: body.reference.trim(),
+            approvedAt: new Date().toISOString(),
+            approvedByUserId: actor,
+            manifestDigest,
+            reviewDigest: manifestDigest,
+            contextId: drillVariant.contextId,
+            contextRevision: drillVariant.contextRevision,
+            generationManifestDigest: drillVariant.manifestDigest,
+          },
+        })
+        .where(eq(assessmentPackages.id, id));
+      return { id };
+    }
     const definition = {
       assessmentType: p.assessmentType,
       ...(p.assessmentType === 'PRETEST' ? { questionCount: 20 } : {}),
@@ -870,7 +930,9 @@ export class ContentPackagesService {
         throw new BadRequestException({ code: 'SYNTHETIC_CONTENT_FORBIDDEN' });
       if (p.status === 'PUBLISHED') return { id };
       assertDraftRevision(p, body.expectedRevision);
-      if (p.assessmentType === 'DRILL')
+      const drillVariant =
+        p.assessmentType === 'DRILL' ? await generatedDrillManifest(tx, id) : null;
+      if (p.assessmentType === 'DRILL' && !drillVariant)
         await tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`drill-publish:${p.levelId}`}))`,
         );
@@ -890,7 +952,7 @@ export class ContentPackagesService {
         .where(eq(packageItems.packageId, id))
         .orderBy(asc(questions.id))
         .for('update', { of: questions });
-      if (body.confirmed === true || p.assessmentType === 'PRETEST') {
+      if (!drillVariant && (body.confirmed === true || p.assessmentType === 'PRETEST')) {
         const current = await this.detailWithin(tx, id);
         if (
           current.readiness.checks.some(
@@ -939,6 +1001,10 @@ export class ContentPackagesService {
           detail: 'Paket belum lengkap, ditinjau, atau disetujui; periksa checklist.',
           blockers: detail.readiness.blockers,
         });
+      if (drillVariant) {
+        await this.publishDrillVariant(tx, id, drillVariant, detail);
+        return { id };
+      }
       const policyCode =
         p.assessmentType === 'DRILL'
           ? 'DRILL_PRD_V06'
@@ -1075,6 +1141,90 @@ export class ContentPackagesService {
         .where(eq(assessmentPackages.id, id));
       return { id };
     });
+  }
+  private async publishDrillVariant(
+    tx: AdminTransaction,
+    id: string,
+    manifest: DrillVariantManifest,
+    detail: ContentPackageDetailDto,
+  ) {
+    const [arm] = await tx.execute<{ id: string }>(sql`
+      SELECT id FROM assessment_arms WHERE id=${manifest.variantArmId} AND kind='VARIANT' FOR UPDATE`);
+    const [source] = await tx.execute<{ id: string }>(sql`
+      SELECT p.id FROM assessment_packages p
+      JOIN assessment_arms original ON original.id=p.distribution_arm_id AND original.kind='ORIGINAL'
+      JOIN assessment_arm_sets aset ON aset.id=original.set_id
+      JOIN assessment_arms variant ON variant.set_id=aset.id AND variant.id=${manifest.variantArmId}
+      JOIN measurement_contexts ctx ON ctx.id=aset.context_id
+      JOIN scoring_policy_versions policy ON policy.id=p.scoring_policy_version_id
+      WHERE p.id=${manifest.sourcePackageId} AND p.status='PUBLISHED'
+        AND p.package_version=${manifest.sourcePackageVersion} AND p.curriculum_approval->>'revokedAt' IS NULL
+        AND original.current_revision_id=${manifest.originalRevisionId} AND original.status='ACTIVE'
+        AND aset.status IN ('DRAFT','OPEN') AND aset.blueprint_version_id=${manifest.blueprintVersionId}
+        AND ctx.id=${manifest.contextId} AND ctx.revision=${manifest.contextRevision}
+        AND policy.id=${manifest.policyVersionId} AND policy.status='PUBLISHED'
+      FOR SHARE OF p,original,aset,policy`);
+    const focal = manifest.items
+      .filter((item) => item.role === 'FOCAL')
+      .map((item) => item.mapping!);
+    const pins = await tx.execute<{ id: string; digest: string }>(sql`
+      SELECT a.id,a.approved_digest AS digest FROM configuration_approvals a
+      JOIN irt_compute.generator_configs g ON g.id=a.generator_config_id AND g.status='SEALED'
+        AND a.approved_digest=g.digest AND g.digest=irt_compute.payload_digest(g.parameters)
+      WHERE a.id IN (${sql.join(
+        focal.map((item) => sql`${item.approvalId}::uuid`),
+        sql`, `,
+      )})
+        AND a.revoked_at IS NULL AND a.scope->>'contextId'=${manifest.contextId} AND a.scope->>'ecosystem'='DRILL'
+        AND g.context_id=${manifest.contextId}::uuid
+      ORDER BY a.id FOR SHARE OF a`);
+    if (
+      !arm ||
+      !source ||
+      detail.scoringPolicyVersionId !== manifest.policyVersionId ||
+      focal.some(
+        (pin) =>
+          !pins.some(
+            (actual) => actual.id === pin.approvalId && actual.digest === pin.configDigest,
+          ),
+      )
+    )
+      throw new ConflictException({ code: 'DRILL_VARIANT_PUBLICATION_PINS_CHANGED' });
+    const versions = detail.items.map((item) => item.questionVersionId);
+    await tx
+      .update(questionVersions)
+      .set({ contentStatus: 'READY' })
+      .where(
+        inArray(
+          questionVersions.id,
+          versions.filter(
+            (version) =>
+              !manifest.items.some(
+                (item) => item.role === 'ANCHOR' && item.questionVersionId === version,
+              ),
+          ),
+        ),
+      );
+    const composition = sql`irt_compute.payload_digest(jsonb_build_object('packageId',${id}::uuid,
+      'items',(SELECT jsonb_agg(to_jsonb(i) ORDER BY i.display_order,i.id) FROM package_items i WHERE i.package_id=${id}::uuid)))`;
+    await tx
+      .update(assessmentPackages)
+      .set({
+        status: 'PUBLISHED',
+        distributionArmId: arm.id,
+        releaseAt: await databaseTime(tx),
+        manifestDigest: composition,
+        curriculumApproval: sql`jsonb_set(${assessmentPackages.curriculumApproval},'{compositionDigest}',to_jsonb(${composition}))`,
+      })
+      .where(eq(assessmentPackages.id, id));
+    const anchors = manifest.items.filter((item) => item.role === 'ANCHOR');
+    await tx.execute(sql`INSERT INTO assessment_arm_revisions(arm_id,package_id,revision,anchor_question_version_ids,manifest_digest)
+      SELECT ${arm.id},${id},coalesce(max(revision),0)+1,
+        ARRAY[${sql.join(
+          anchors.map((item) => sql`${item.questionVersionId}::uuid`),
+          sql`, `,
+        )}],''
+      FROM assessment_arm_revisions WHERE arm_id=${arm.id}`);
   }
   archive(actor: string, id: string, revision: number) {
     this.importer.enabled();

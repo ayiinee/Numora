@@ -288,6 +288,8 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 
 ## Generator paket — keputusan pemilik 7 Oktober 2026
 
+**ENGINEERING DECISION - Varian Drill Admin.** Jalur khusus mengikat paket original ke manifest 3 anchor dan 7 focal, mengirim tujuh focal lewat generator-service-v2, dan mengimpor satu DRAFT canonical. Review dan persetujuan Curriculum mendahului Publish eksplisit. Aktivasi arm dan IRT mengikuti kebijakan yang telah disetujui. [Implementasi dan verifikasi](../development/DRILL_VARIANT_ADMIN.md)
+
 **ENGINEERING DECISION — permintaan pemilik:** Admin memilih Tryout/Drill/Pretest dan generate satu paket sesuai jumlah existing (30/10/20). Hasil memiliki halaman/navbar tersendiri, dapat dilihat atau diunduh JSON, kemudian diimpor melalui halaman impor dengan preview dan validasi yang sama. Generate/export belum membuat canonical DRAFT atau publication. Generator service v1 tetap satu kandidat per request; pusat mengelompokkan request durable secara atomik. Source, rubric, context dan approval tetap dipin; jumlah dan scope paket mengikuti validasi impor existing. Kandidat tetap VARIANT dengan lineage, bukan ORIGINAL baru. Dependency akademik tidak diselesaikan oleh perubahan UX ini.
 
 **ENGINEERING DECISION — owner request:** combine package generation and results in one menu; completion opens /admin/content/imports directly at Preview & tujuan (step 2). Reuse import validation and guarded publication; generated lineage stays immutable.

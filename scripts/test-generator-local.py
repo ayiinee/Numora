@@ -28,7 +28,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='numora-generator-') as folder:
         target=Path(folder); cluster=target/'cluster'; pgport=port(); serviceport=port()
         pgctl=str(BIN/('pg_ctl'+suffix))
-        run([str(BIN/('initdb'+suffix)),'-D',str(cluster),'-U','fixture','-A','trust','--no-locale','-E','UTF8'])
+        run([str(BIN/('initdb'+suffix)),'-D',str(cluster),'-U','fixture','-A','trust','--no-locale','--no-sync','-E','UTF8'])
         run([pgctl,'-D',str(cluster),'-l',str(target/'postgres.log'),'-o',f'-h 127.0.0.1 -p {pgport}','-w','start'])
         service=None
         try:
@@ -40,6 +40,7 @@ def main():
             env={**os.environ,'NODE_ENV':'test','ALLOW_SYNTHETIC_CONTENT':'false','TEST_COMPUTE_OWNER_URL':url,'NUMORA_REPO_PATH':str(ROOT)}
             run(['node',str(SERVICE/'tests/service/migrate_local.mjs')],env,SERVICE)
             v2=os.environ.get('GENERATOR_V2_TEST')=='true'
+            drill_variant=v2 and os.environ.get('GENERATOR_DRILL_VARIANT_TEST')=='true'
             spec=importlib.util.spec_from_file_location('generator_fixture',ROOT/('scripts/generator-v2-local-fixture.py' if v2 else 'scripts/generator-local-fixture.py'))
             module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
             fixtures=module.Fixtures(url)
@@ -47,7 +48,7 @@ def main():
             if v2:
                 selected=os.environ.get('GENERATOR_V2_IDS')
                 qids=selected.split(',') if selected else [qid for qid in fixtures.bank.ids() if qid.startswith('tryout-1-')] if os.environ.get('GENERATOR_DEMO')=='true' else None
-                items=fixtures.all(qids)
+                items=fixtures.all(qids,drill_variant=drill_variant)
                 print(f'TEST ONLY: {len(items)} v2 sources/registrations; shared DB untouched',flush=True)
             elif os.environ.get('GENERATOR_DEMO')=='true' or os.environ.get('GENERATOR_PACKAGE_TEST')=='true':
                 items=[]
@@ -59,11 +60,17 @@ def main():
             else:
                 items=[fixtures.fixture(qid,dispatch=False) for qid in qids]
             data={'actor':str(fixtures.actor),'items':items}
+            if drill_variant:
+                data['drillVariant']=fixtures.drill_variant_package(items)
             if os.environ.get('GENERATOR_DEMO')=='true' and os.environ.get('GENERATOR_REAL_QA_EMAIL'):
                 result=subprocess.run(['node','--env-file='+str(ROOT/'.env'),'apps/api/scripts/read-generator-qa-profile.mjs'],cwd=ROOT,env=env,capture_output=True,text=True,check=True)
                 data['realQa']=json.loads(result.stdout)
             file=target/'fixture.json';file.write_text(json.dumps(data,default=str))
             serviceenv={**env,'NUMORA_GENERATOR_ENABLED':'true','NUMORA_GENERATOR_V2_ENABLED':'true' if v2 else 'false','NUMORA_GENERATOR_TOKEN':fixtures.settings.token,'COMPUTE_DATABASE_URL':fixtures.compute_url,'COMPUTE_SERVICE_PRINCIPAL_ID':str(fixtures.principal)}
+            if drill_variant:
+                serviceenv.update(NUMORA_DRILL_VARIANT_GENERATION_ENABLED='true',
+                                  NUMORA_DRILL_VARIANT_RUNTIME_PROFILE='test-only-loopback',
+                                  NUMORA_DRILL_VARIANT_IMAGE_DIGEST='sha256:'+'c'*64)
             log=(target/'service.log').open('w',encoding='utf8')
             service=subprocess.Popen([sys.executable,'-B','-m','numora_service','--port',str(serviceport)],cwd=SERVICE,env=serviceenv,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
             import httpx
@@ -79,7 +86,7 @@ def main():
                 run(['node','apps/api/scripts/serve-generator-local.mjs'],env)
             elif v2:
                 try:
-                    run(['node','apps/api/scripts/test-generator-v2.mjs'],env)
+                    run(['node','apps/api/scripts/test-drill-variant-admin.mjs' if drill_variant else 'apps/api/scripts/test-generator-v2.mjs'],env)
                 except Exception:
                     log.flush()
                     print((target/'service.log').read_text(encoding='utf8')[-12000:])
