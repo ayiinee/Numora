@@ -81,7 +81,6 @@ export function importPackage(mixed = true): ContentPackageDetailDto {
       packageId,
       contentRevision: 0,
       itemCount: 0,
-      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: !mixed,
       expectedCount: 30,

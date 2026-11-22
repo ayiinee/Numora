@@ -16952,7 +16952,11 @@
           "contentRevision": {
             "type": "number"
           },
-          "itemCount": {
+                    "lastModifiedAt": {
+            "type": "string",
+            "nullable": true
+          },
+"itemCount": {
             "type": "number"
           },
           "expectedItemCount": {

@@ -44,7 +44,6 @@ function directedPackage(
       packageId: id(950),
       contentRevision: 0,
       itemCount: 0,
-      expectedItemCount: 0,
       canSaveDraft: false,
       canPublish: false,
       actualCount: 0,
