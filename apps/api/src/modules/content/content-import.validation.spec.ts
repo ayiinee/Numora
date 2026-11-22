@@ -47,4 +47,39 @@ describe('question import contract semantics', () => {
     );
     expect(() => normalizeAnswer(q.type, { optionIds: ['FOREIGN'] }, ['A'], [])).toThrow();
   });
+
+  it('accepts asset IDs and durable object keys in rich content references', async () => {
+    const q = JSON.parse(
+      await readFile(
+        resolve('../../docs/data/samples/2026-10-03/questions/CURR-IND20-L01-Q07.draft.json'),
+        'utf8',
+      ),
+    ) as ImportQuestion;
+    const asset = {
+      externalId: q.externalId,
+      assetId: 'diagram-1',
+      textMarker: '[[asset:diagram-1]]',
+      placement: 'STEM' as const,
+      itemId: null,
+      assetOrder: 1,
+      altText: 'Diagram',
+      objectKey: 'question-media/GEN-image/v1/diagram-1.png',
+      sha256: 'a'.repeat(64),
+      contentType: 'image/png' as const,
+      byteLength: 1,
+      bucket: 'numora-prod',
+    };
+    const withAsset = {
+      ...q,
+      stem: { ...q.stem, text: `${q.stem.text}\n[[asset:diagram-1]]` },
+      metadata: { ...q.metadata, assetManifest: [asset] },
+    };
+    expect(structuralErrors(withAsset)).toEqual([]);
+    expect(
+      structuralErrors({
+        ...withAsset,
+        stem: { ...withAsset.stem, assetKeys: [asset.objectKey] },
+      }),
+    ).toEqual([]);
+  });
 });
