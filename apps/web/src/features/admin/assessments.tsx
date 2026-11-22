@@ -383,7 +383,7 @@ function AssessmentTable({
                           ]
                             .filter(Boolean)
                             .join(' · ') ||
-                            (usage === 'TRYOUT' ? 'Lintas bab' : 'Belum ditentukan')}
+                            'Belum ditentukan'}
                         </td>}
                         <td>
                           <strong>{pack.itemCount}/{pack.expectedItemCount}</strong>
