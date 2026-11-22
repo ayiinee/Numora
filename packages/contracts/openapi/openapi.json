@@ -19508,6 +19508,41 @@
             "items": {
               "type": "string"
             }
+          },
+          "requestStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "executionStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "executionFailureCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryBlocker": {
+            "type": "string",
+            "nullable": true
+          },
+          "respondentCount": {
+            "type": "number"
+          },
+          "scoredCount": {
+            "type": "number"
+          },
+          "insufficientCount": {
+            "type": "number"
+          },
+          "notComparableCount": {
+            "type": "number"
+          },
+          "unscorableCount": {
+            "type": "number"
+          },
+          "executionAgeSeconds": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
@@ -19525,7 +19560,17 @@
           "publicationVersion",
           "publishedAt",
           "prepareBlockers",
-          "publicationBlockers"
+          "publicationBlockers",
+          "requestStatus",
+          "executionStatus",
+          "executionFailureCode",
+          "deliveryBlocker",
+          "respondentCount",
+          "scoredCount",
+          "insufficientCount",
+          "notComparableCount",
+          "unscorableCount",
+          "executionAgeSeconds"
         ]
       },
       "IrtBatchHealthListDto": {
@@ -19536,10 +19581,14 @@
             "items": {
               "$ref": "#/components/schemas/IrtBatchHealthDto"
             }
+          },
+          "flags": {
+            "type": "object"
           }
         },
         "required": [
-          "items"
+          "items",
+          "flags"
         ]
       },
       "IrtConfigurationPinDto": {

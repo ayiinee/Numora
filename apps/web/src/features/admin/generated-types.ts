@@ -271,11 +271,11 @@ export type AdminAnalyticsDto = { "generatedAt": string; "source": "POSTGRESQL";
 
 export type IrtApprovedConfigurationDto = { "approvalId": string; "digest": string; "code": string; "version": number; "kind": string; "contextId": string | null; "approvedAt": string; };
 
-export type IrtBatchHealthDto = { "id": string; "packageId": string; "title": string; "status": string; "contextId": string | null; "closesAt": string; "dueAt": string; "overdue": boolean; "activeAttemptCount": number; "finalizedAttemptCount": number; "publicationMode": string | null; "publicationVersion": number | null; "publishedAt": string | null; "prepareBlockers": (string)[]; "publicationBlockers": (string)[]; };
+export type IrtBatchHealthDto = { "id": string; "packageId": string; "title": string; "status": string; "contextId": string | null; "closesAt": string; "dueAt": string; "overdue": boolean; "activeAttemptCount": number; "finalizedAttemptCount": number; "publicationMode": string | null; "publicationVersion": number | null; "publishedAt": string | null; "prepareBlockers": (string)[]; "publicationBlockers": (string)[]; "requestStatus": string | null; "executionStatus": string | null; "executionFailureCode": string | null; "deliveryBlocker": string | null; "respondentCount": number; "scoredCount": number; "insufficientCount": number; "notComparableCount": number; "unscorableCount": number; "executionAgeSeconds": number | null; };
 
 export type IrtOperationalOptionsDto = { "enabled": boolean; "configurations": (IrtApprovedConfigurationDto)[]; };
 
-export type IrtBatchHealthListDto = { "items": (IrtBatchHealthDto)[]; };
+export type IrtBatchHealthListDto = { "items": (IrtBatchHealthDto)[]; "flags": Record<string, unknown>; };
 
 export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersionId": string; "modelVersion": string; "batchStatus": string; "sampleSize": number; "dataStatus": string; "difficultyB": string | null; "discriminationA": string | null; "guessingC": string | null; };
 

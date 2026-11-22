@@ -52,6 +52,7 @@ import {
   placementErrors,
 } from './content-package.rules';
 import { structuralErrors, digest } from './content-import.validation';
+import { contentExternalId } from './content-external-id';
 import { R2MediaStorage } from './r2-media.storage';
 import type {
   ClassifyQuestionDto,
@@ -453,8 +454,16 @@ export class ContentPackagesService {
             categories?: ImportQuestion['metadata']['categories'];
           }
         | ImportQuestion['options'];
+      const media = (r.version.media ?? []) as NonNullable<
+        ImportQuestion['metadata']['assetManifest']
+      >;
       const q = {
-        externalId: r.identity?.externalId ?? r.question.sourceRef ?? r.question.id,
+        externalId: contentExternalId(
+          r.identity?.externalId,
+          r.question.sourceRef,
+          r.question.id,
+          media,
+        ),
         type: r.version.questionType,
         chapterCode: r.chapter?.code ?? null,
         subchapterCode: r.subchapter?.code ?? null,
@@ -471,7 +480,7 @@ export class ContentPackagesService {
           sourceOrder: r.item.displayOrder,
           sourceSheet: typeof meta.sourceSheet === 'string' ? meta.sourceSheet : 'ADMIN',
           sourceRowNumber: typeof meta.sourceRowNumber === 'number' ? meta.sourceRowNumber : 0,
-          assetManifest: r.version.media ?? [],
+          assetManifest: media,
           ...(Array.isArray(content) || !content?.categories?.length
             ? {}
             : { categories: content.categories }),
@@ -1213,13 +1222,13 @@ export class ContentPackagesService {
             source: contentImportVersions.importId,
           })
           .from(questionVersions)
-          .innerJoin(
+          .leftJoin(
             contentImportVersions,
             eq(contentImportVersions.questionVersionId, questionVersions.id),
           )
           .where(eq(questionVersions.id, id));
         if (!row) throw new NotFoundException({ code: 'IMPORTED_VERSION_NOT_FOUND' });
-        const meta = row.provenance as Record<string, unknown>;
+        const meta = (row.provenance ?? {}) as Record<string, unknown>;
         const p = await packageContext(tx, body.packageId, true);
         await tx
           .select({ id: questionVersions.id })
@@ -1257,7 +1266,7 @@ export class ContentPackagesService {
             chapters,
             eq(chapters.id, sql`coalesce(${questions.chapterId},${subchapters.chapterId})`),
           )
-          .innerJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
+          .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
           .where(eq(questionVersions.id, row.version.id));
         if (!scope || !p.source) throw new ConflictException({ code: 'REVIEW_CONTEXT_INVALID' });
         const options = row.version.optionsOrStatements as {
@@ -1265,7 +1274,12 @@ export class ContentPackagesService {
           categories?: ImportQuestion['metadata']['categories'];
         };
         const input = {
-          externalId: scope.identity.externalId,
+          externalId: contentExternalId(
+            scope.identity?.externalId,
+            scope.family.sourceRef,
+            scope.family.id,
+            (row.version.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>,
+          ),
           type: row.version.questionType,
           chapterCode: scope.chapter?.code ?? null,
           subchapterCode: scope.subchapter?.code ?? null,

@@ -36,6 +36,16 @@ export async function setupIrt(
     publicationVersion: index === 2 ? 1 : null,
     prepareBlockers: index === 3 ? ['BATCH_NOT_CLOSED', 'ATTEMPTS_NOT_FINALIZED'] : [],
     publicationBlockers: index === 2 ? [] : ['RESPONDENT_CONTRACT_NOT_APPROVED'],
+    requestStatus: index === 2 ? 'COMPLETED' : null,
+    executionStatus: index === 2 ? 'SUCCEEDED' : null,
+    executionFailureCode: null,
+    deliveryBlocker: null,
+    respondentCount: 80 + index,
+    scoredCount: index === 2 ? 80 + index : 0,
+    insufficientCount: 0,
+    notComparableCount: 0,
+    unscorableCount: 0,
+    executionAgeSeconds: null,
   }));
   const requests: IrtRequestDto[] = Array.from({ length: 12 }, (_, index) => ({
     id: id(400 + index),

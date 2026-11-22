@@ -150,6 +150,87 @@ it('allows a valid Pretest draft to publish without manual review or approval in
   );
   expect(screen.queryByRole('button', { name: 'Publikasikan paket' })).toBeNull();
 });
+
+it('enables Tryout PDF only when every package item is hydrated', async () => {
+  const question = {
+    externalId: 'TRYOUT-Q1',
+    type: 'SINGLE_CHOICE' as const,
+    chapterCode: null,
+    subchapterCode: null,
+    competencyCode: null,
+    difficulty: null,
+    stem: { text: 'Soal' },
+    options: [
+      { id: 'A', content: { text: 'Benar' } },
+      { id: 'B', content: { text: 'Salah' } },
+    ],
+    answer: { optionId: 'A' },
+    explanation: { text: 'Penjelasan' },
+    metadata: { sourceLevelNumber: null, assetManifest: [] },
+  };
+  const pack = {
+    id: 'tryout-pdf',
+    name: 'Tryout PDF',
+    familyCode: 'TRYOUT-PDF',
+    packageVersion: 1,
+    contentRevision: 1,
+    assessmentType: 'TRYOUT' as const,
+    status: 'DRAFT' as const,
+    isDemo: false,
+    source: { sourceNamespace: 'TEST', sourceName: 'TEST', sourceReference: 'TEST' },
+    chapterId: null,
+    levelId: null,
+    chapterCode: null,
+    chapterName: null,
+    subchapterCode: null,
+    subchapterName: null,
+    levelNumber: null,
+    distribution: [],
+    readiness: {
+      packageId: 'tryout-pdf',
+      contentRevision: 1,
+      canSaveDraft: true,
+      canPublish: false,
+      actualCount: 1,
+      expectedCount: 1,
+      checks: [],
+      blockers: [],
+      removedVersionIds: [],
+    },
+    items: [
+      {
+        questionVersionId: 'tryout-q1',
+        questionId: 'tryout-q1',
+        displayOrder: 1,
+        usageType: 'TRYOUT' as const,
+        contentStatus: 'DRAFT',
+        reviewedAt: null,
+        reviewedByUserId: null,
+        question,
+      },
+    ],
+  } as unknown as ContentPackageDetailDto;
+  vi.mocked(getContentPackage).mockResolvedValue(pack);
+  render(
+    <ContentPackageWorkspace
+      token="TEST"
+      disabled={false}
+      onSelect={vi.fn()}
+      refreshKey={0}
+      mode="detail"
+      packageId={pack.id}
+      initialUsage="TRYOUT"
+    />,
+  );
+  const exportButton = (await screen.findByRole('button', {
+    name: 'Export PDF',
+  })) as HTMLButtonElement;
+  expect(exportButton.disabled).toBe(false);
+  expect(screen.getByRole('button', { name: 'Export PDF' }).getAttribute('title')).toContain(
+    'Cetak soal',
+  );
+});
+
 it('loads package choices five at a time and disables next on the final full page', async () => {
   const pack = {
     id: 'TEST',

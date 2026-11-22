@@ -41,7 +41,13 @@ export function validateComputeNotification(
 export function validateCalibrationPayload(
   value: unknown,
 ): asserts value is CalibrationArtifactPayloadV3 {
-  if (!object(value) || !keys(value, ['items']) || !Array.isArray(value.items))
+  if (
+    !object(value) ||
+    !keys(value, ['items', 'packages', 'respondents']) ||
+    !Array.isArray(value.items) ||
+    !Array.isArray(value.packages) ||
+    !Array.isArray(value.respondents)
+  )
     fail('IRT_ARTIFACT_INVALID');
   const seen = new Set<string>();
   for (const item of value.items) {
@@ -106,5 +112,89 @@ export function validateCalibrationPayload(
       )
         fail('IRT_ARTIFACT_INVALID');
     }
+  }
+  const packageIds = new Set<string>();
+  for (const pkg of value.packages) {
+    if (
+      !object(pkg) ||
+      !keys(pkg, ['packageId', 'packageVersion', 'armId', 'armKind', 'manifestDigest']) ||
+      !uuid(pkg.packageId) ||
+      !count(pkg.packageVersion) ||
+      pkg.packageVersion < 1 ||
+      !uuid(pkg.armId) ||
+      !['ORIGINAL', 'VARIANT'].includes(String(pkg.armKind)) ||
+      typeof pkg.manifestDigest !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(pkg.manifestDigest) ||
+      packageIds.has(pkg.armId)
+    )
+      fail('IRT_ARTIFACT_INVALID');
+    packageIds.add(pkg.armId);
+  }
+  const attemptIds = new Set<string>();
+  const respondentIds = new Set<string>();
+  for (const respondent of value.respondents) {
+    if (
+      !object(respondent) ||
+      !keys(respondent, [
+        'respondentId',
+        'attemptId',
+        'packageId',
+        'packageVersion',
+        'assignedArmId',
+        'deliveredArmId',
+        'status',
+        'theta',
+        'standardError',
+        'score',
+        'scoreMapping',
+        'referencePackage',
+        'usedQuestionVersionIds',
+        'reasonCodes',
+      ]) ||
+      typeof respondent.respondentId !== 'string' ||
+      respondent.respondentId.length === 0 ||
+      !uuid(respondent.attemptId) ||
+      !uuid(respondent.packageId) ||
+      !count(respondent.packageVersion) ||
+      respondent.packageVersion < 1 ||
+      !uuid(respondent.assignedArmId) ||
+      !uuid(respondent.deliveredArmId) ||
+      !['SCORED', 'INSUFFICIENT', 'NOT_COMPARABLE', 'UNSCORABLE', 'NOT_EVALUATED'].includes(
+        String(respondent.status),
+      ) ||
+      !parameter(respondent.theta) ||
+      !parameter(respondent.standardError) ||
+      !parameter(respondent.score) ||
+      (respondent.standardError !== null && respondent.standardError < 0) ||
+      (respondent.score !== null && (respondent.score < 0 || respondent.score > 100)) ||
+      (respondent.scoreMapping !== null && !object(respondent.scoreMapping)) ||
+      (respondent.referencePackage !== null && !object(respondent.referencePackage)) ||
+      !Array.isArray(respondent.usedQuestionVersionIds) ||
+      respondent.usedQuestionVersionIds.some((id: unknown) => !uuid(id)) ||
+      new Set(respondent.usedQuestionVersionIds).size !== respondent.usedQuestionVersionIds.length ||
+      !Array.isArray(respondent.reasonCodes) ||
+      respondent.reasonCodes.some((reason: unknown) => typeof reason !== 'string') ||
+      attemptIds.has(respondent.attemptId) ||
+      respondentIds.has(respondent.respondentId)
+    )
+      fail('IRT_ARTIFACT_INVALID');
+    if (respondent.status === 'SCORED') {
+      if (
+        respondent.theta === null ||
+        respondent.standardError === null ||
+        respondent.score === null ||
+        !respondent.usedQuestionVersionIds.length ||
+        respondent.reasonCodes.length
+      )
+        fail('IRT_ARTIFACT_INVALID');
+    } else if (
+      respondent.theta !== null ||
+      respondent.standardError !== null ||
+      respondent.score !== null ||
+      respondent.status === 'NOT_EVALUATED' && !respondent.reasonCodes.length
+    )
+      fail('IRT_ARTIFACT_INVALID');
+    attemptIds.add(respondent.attemptId);
+    respondentIds.add(respondent.respondentId);
   }
 }

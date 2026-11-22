@@ -89,9 +89,33 @@ export interface TryoutRespondentResult {
   mappingApprovalId: string;
 }
 
-/** Foundation adopts item evidence only; respondent grades require a later contract. */
+export interface CalibrationPackageLineage {
+  packageId: string;
+  packageVersion: number;
+  armId: string;
+  armKind: 'ORIGINAL' | 'VARIANT';
+  manifestDigest: string;
+}
+export interface CalibrationRespondentResult {
+  respondentId: string;
+  attemptId: string;
+  packageId: string;
+  packageVersion: number;
+  assignedArmId: string;
+  deliveredArmId: string;
+  status: 'SCORED' | 'INSUFFICIENT' | 'NOT_COMPARABLE' | 'UNSCORABLE' | 'NOT_EVALUATED';
+  theta: number | null;
+  standardError: number | null;
+  score: number | null;
+  scoreMapping: Record<string, unknown> | null;
+  referencePackage: Record<string, unknown> | null;
+  usedQuestionVersionIds: string[];
+  reasonCodes: string[];
+}
 export interface CalibrationArtifactPayloadV3 {
   items: CalibrationItem[];
+  packages: CalibrationPackageLineage[];
+  respondents: CalibrationRespondentResult[];
 }
 export interface ComputeNotificationV3 {
   contractVersion: 3;
