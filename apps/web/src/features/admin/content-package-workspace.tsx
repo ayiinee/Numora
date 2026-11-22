@@ -102,6 +102,7 @@ export function ContentPackageWorkspace({
   const [inspectingId, setInspectingId] = useState<string | null>(null);
   const [reviewStep, setReviewStep] = useState<1 | 2 | 3 | 4>(1);
   const [compositionOpen, setCompositionOpen] = useState(false);
+  const [settingsName, setSettingsName] = useState('');
   const [approvalReference, setApprovalReference] = useState('');
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [publishConfirmed, setPublishConfirmed] = useState(false);
@@ -715,6 +716,9 @@ export function ContentPackageWorkspace({
                 <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
                   Komposisi paket
                 </Button>
+                <Button variant="secondary" onClick={() => { setSettingsName(detail.name); setCompositionOpen(true); }}>
+                  Pengaturan
+                </Button>
                 <Button onClick={() => setPublicationOpen(true)}>
                   {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
                 </Button>
@@ -809,6 +813,8 @@ export function ContentPackageWorkspace({
             className="admin-management-dialog assessment-settings-dialog"
           >
             <div className="assessment-detail-workspace assessment-detail-settings-body">
+              <label>Nama paket<input aria-label="Nama paket" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></label>
+              <Button variant="secondary" onClick={() => void run(async () => { await updateContentPackage(token, detail.id, { name: settingsName }); await choose(detail.id); })}>Simpan nama</Button>
               <p>
                 {[
                   detail.chapterName,
