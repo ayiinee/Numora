@@ -55,6 +55,8 @@ export function importPackage(mixed = true): ContentPackageDetailDto {
     name: 'Tryout TEST ONLY',
     assessmentType: 'TRYOUT',
     contentRevision: 0,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT',
     isDemo: true,
     source: null,
@@ -78,6 +80,8 @@ export function importPackage(mixed = true): ContentPackageDetailDto {
     readiness: {
       packageId,
       contentRevision: 0,
+      itemCount: 0,
+      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: !mixed,
       expectedCount: 30,

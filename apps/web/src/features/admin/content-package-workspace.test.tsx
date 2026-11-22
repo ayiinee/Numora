@@ -63,6 +63,8 @@ it('allows a valid Pretest draft to publish without manual review or approval in
     familyCode: 'TEST',
     packageVersion: 1,
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     assessmentType: 'PRETEST',
     status: 'DRAFT',
     isDemo: true,
@@ -79,6 +81,8 @@ it('allows a valid Pretest draft to publish without manual review or approval in
     readiness: {
       packageId: 'pretest-test',
       contentRevision: 1,
+      itemCount: 0,
+      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: true,
       actualCount: 20,
@@ -176,6 +180,8 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     familyCode: 'TRYOUT-PDF',
     packageVersion: 1,
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     assessmentType: 'TRYOUT' as const,
     status: 'DRAFT' as const,
     isDemo: false,
@@ -191,6 +197,8 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     readiness: {
       packageId: 'tryout-pdf',
       contentRevision: 1,
+      itemCount: 0,
+      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: false,
       actualCount: 1,
@@ -241,6 +249,8 @@ it('loads package choices five at a time and disables next on the final full pag
     name: 'TEST',
     assessmentType: 'DRILL' as const,
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT' as const,
     isDemo: true,
     source: { sourceNamespace: 'TEST', sourceName: 'TEST', sourceReference: 'TEST' },
@@ -316,6 +326,8 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     name: 'TEST ONLY',
     assessmentType: 'DRILL',
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT',
     isDemo: true,
     source: { sourceNamespace: 'TEST', sourceName: 'TEST ONLY', sourceReference: 'TEST ONLY' },
@@ -330,6 +342,8 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     readiness: {
       packageId: id,
       contentRevision: 1,
+      itemCount: 0,
+      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: false,
       expectedCount: 10,
@@ -419,6 +433,8 @@ it('prepares scoring with revision, shows progress and refreshes validation', as
     familyCode: 'TEST',
     packageVersion: 1,
     contentRevision: 7,
+    itemCount: 0,
+    expectedItemCount: 0,
     assessmentType: 'PRETEST',
     status: 'DRAFT',
     isDemo: true,
@@ -464,6 +480,8 @@ it('prepares scoring with revision, shows progress and refreshes validation', as
   expect(screen.getByText(/Memproses paket/)).toBeTruthy();
   expect(screen.queryByRole('link', { name: 'Perbaiki' })).toBeNull();
   vi.mocked(getContentPackage).mockResolvedValue({ ...pack, contentRevision: 8, items: [] });
+  itemCount: 0,
+  expectedItemCount: 0,
   finish();
   await screen.findByText(/Penilaian otomatis siap/);
   expect(screen.queryByText(/Memproses paket/)).toBeNull();

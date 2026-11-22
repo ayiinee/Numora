@@ -14448,6 +14448,10 @@
           "contentRevision": {
             "type": "number"
           },
+          "lastModifiedAt": {
+            "type": "string",
+            "nullable": true
+          },
           "itemCount": {
             "type": "number"
           },

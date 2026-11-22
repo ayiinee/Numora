@@ -16,6 +16,8 @@ export async function setupAssessments(
     name: `Pretest TEST ${index + 1}`,
     assessmentType: 'PRETEST',
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT',
     isDemo: false,
     source: {
@@ -46,6 +48,8 @@ export async function setupAssessments(
     readiness: {
       packageId: id(9000 + index),
       contentRevision: 1,
+      itemCount: 0,
+      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: true,
       expectedCount: 20,
@@ -148,6 +152,8 @@ export async function setupAssessments(
           ...body,
           id: id(9900 + packs.length),
           contentRevision: 0,
+          itemCount: 0,
+          expectedItemCount: 0,
           items: [],
           readiness: { ...packs[0]!.readiness, actualCount: 0 },
         } as ContentPackageDetailDto;
