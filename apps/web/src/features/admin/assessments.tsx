@@ -26,12 +26,12 @@ type Props = {
   packageId?: string;
   archived?: boolean;
 };
-const formatAdminDate = (value: string) =>
+const formatAdminDate = (value: unknown) =>
   new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta',
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value));
+  }).format(new Date(typeof value === 'string' ? value : ''));
 
 export const AdminAssessmentsScreen = withAdminWorkspace(Assessments, 'content');
 function Assessments({ usage, mode = 'list', packageId, archived = false }: Props) {
@@ -489,3 +489,4 @@ function AssessmentTable({
     </Card>
   );
 }
+
