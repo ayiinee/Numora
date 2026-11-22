@@ -81,7 +81,6 @@ it('allows a valid Pretest draft to publish without manual review or approval in
     readiness: {
       packageId: 'pretest-test',
       contentRevision: 1,
-      itemCount: 0,
       canSaveDraft: true,
       canPublish: true,
       actualCount: 20,
@@ -196,7 +195,6 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     readiness: {
       packageId: 'tryout-pdf',
       contentRevision: 1,
-      itemCount: 0,
       canSaveDraft: true,
       canPublish: false,
       actualCount: 1,
@@ -340,7 +338,6 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     readiness: {
       packageId: id,
       contentRevision: 1,
-      itemCount: 0,
       canSaveDraft: true,
       canPublish: false,
       expectedCount: 10,
