@@ -66,6 +66,61 @@ it('keeps HTML in table cells inert and retains malformed rows after the table',
   expect(container.textContent).toContain('extra | cells | here');
 });
 
+it('scopes repeated asset IDs to preview instance', () => {
+  render(
+    <>
+      <ContentRichText
+        text="[[asset:diagram-1]]"
+        instanceId="first"
+        media={[
+          {
+            instanceId: 'first',
+            assetId: 'diagram-1',
+            altText: 'First diagram',
+            url: 'https://example.invalid/first.png',
+            expiresAt: '2099-01-01T00:00:00Z',
+          },
+          {
+            instanceId: 'second',
+            assetId: 'diagram-1',
+            altText: 'Second diagram',
+            url: 'https://example.invalid/second.png',
+            expiresAt: '2099-01-01T00:00:00Z',
+          },
+        ]}
+        retry={vi.fn()}
+      />
+      <ContentRichText
+        text="[[asset:diagram-1]]"
+        instanceId="second"
+        media={[
+          {
+            instanceId: 'first',
+            assetId: 'diagram-1',
+            altText: 'First diagram',
+            url: 'https://example.invalid/first.png',
+            expiresAt: '2099-01-01T00:00:00Z',
+          },
+          {
+            instanceId: 'second',
+            assetId: 'diagram-1',
+            altText: 'Second diagram',
+            url: 'https://example.invalid/second.png',
+            expiresAt: '2099-01-01T00:00:00Z',
+          },
+        ]}
+        retry={vi.fn()}
+      />
+    </>,
+  );
+  expect(screen.getByAltText('First diagram').getAttribute('src')).toBe(
+    'https://example.invalid/first.png',
+  );
+  expect(screen.getByAltText('Second diagram').getAttribute('src')).toBe(
+    'https://example.invalid/second.png',
+  );
+});
+
 it('renders imported academic tables without a separator row', () => {
   content(
     'Tabel jarak.\n\nWaktu (jam) | 1 | 2 | 3 | 4\nJarak (km) | 45 | 90 | 135 | 180\n\nPilih pernyataan.',

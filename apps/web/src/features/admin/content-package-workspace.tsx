@@ -108,6 +108,9 @@ export function ContentPackageWorkspace({
   const [publicationOpen, setPublicationOpen] = useState(false);
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
+  const [previewInstanceByVersion, setPreviewInstanceByVersion] = useState<Record<string, string>>(
+    {},
+  );
   const running = useRef(false);
   const selectionRequest = useRef(0);
   const selectionContext = useRef('');
@@ -232,6 +235,7 @@ export function ContentPackageWorkspace({
     setApprovalConfirmed(false);
     setPublishConfirmed(false);
     setMedia([]);
+    setPreviewInstanceByVersion({});
   }, [detail?.id, detail?.contentRevision, detail?.status]);
   async function run(action: () => Promise<void>) {
     if (running.current || disabled) return;
@@ -287,6 +291,7 @@ export function ContentPackageWorkspace({
     setNotes('');
     setArchiveConfirmed(false);
     setMedia([]);
+    setPreviewInstanceByVersion({});
   };
   const clear = () => {
     selectionRequest.current++;
@@ -294,17 +299,25 @@ export function ContentPackageWorkspace({
     onSelect(null);
     setOffset(0);
     setMedia([]);
+    setPreviewInstanceByVersion({});
   };
-  const requiredMediaIds = () =>
-    new Set(
-      detail?.items.flatMap((item) =>
-        item.question?.metadata.assetManifest.map((asset) => asset.assetId) ?? [],
-      ) ?? [],
-    );
+  const mediaForItem = (questionVersionId: string) => {
+    const instanceId = previewInstanceByVersion[questionVersionId];
+    return instanceId ? media.filter((item) => item.instanceId === instanceId) : [];
+  };
   const loadMedia = async () => {
-    const required = requiredMediaIds();
-    if (!detail?.items.length || [...required].every((id) => media.some((m) => m.assetId === id)))
-      return true;
+    const hasAllMedia = detail?.items.every((item) => {
+      const assetIds = item.question?.metadata.assetManifest.map((asset) => asset.assetId) ?? [];
+      if (!assetIds.length) return true;
+      const instanceId = previewInstanceByVersion[item.questionVersionId];
+      return (
+        !!instanceId &&
+        assetIds.every((assetId) =>
+          media.some((link) => link.instanceId === instanceId && link.assetId === assetId),
+        )
+      );
+    });
+    if (!detail?.items.length || hasAllMedia) return true;
     let loaded = false;
     await run(async () => {
       const preview = await createPreview(
@@ -315,15 +328,28 @@ export function ContentPackageWorkspace({
       // Review includes explanation media; WORK media intentionally hides it.
       const review = await submitPreview(token, preview.id, crypto.randomUUID());
       setMedia(review.media);
-      loaded = [...required].every((id) => review.media.some((m) => m.assetId === id));
+      const instances = Object.fromEntries(
+        review.items.map((item) => [item.questionVersionId, item.instanceId]),
+      );
+      setPreviewInstanceByVersion(instances);
+      loaded = detail.items.every((item) => {
+        const assetIds = item.question?.metadata.assetManifest.map((asset) => asset.assetId) ?? [];
+        if (!assetIds.length) return true;
+        const instanceId = instances[item.questionVersionId];
+        return (
+          !!instanceId &&
+          assetIds.every((assetId) =>
+            review.media.some((link) => link.instanceId === instanceId && link.assetId === assetId),
+          )
+        );
+      });
     });
     return loaded;
   };
   useEffect(() => {
-    if (!inspectingId || !detail) return;
-    const item = detail.items.find((entry) => entry.questionVersionId === inspectingId);
-    if (item?.question?.metadata.assetManifest.length) void loadMedia();
-  }, [inspectingId, detail?.id]);
+    if (detail?.items.some((item) => item.question?.metadata.assetManifest.length))
+      void loadMedia();
+  }, [detail?.id, detail?.contentRevision]);
   const locked = busy || disabled || detailLoading;
   const printableTryout =
     detail?.assessmentType === 'TRYOUT' &&
@@ -1116,22 +1142,6 @@ export function ContentPackageWorkspace({
                       Berikutnya
                     </Button>
                   </div>
-                  {detail.items.some(
-                    (item) => {
-                      const question = item.question;
-                      return Boolean(
-                        item.questionVersionId === inspectingId &&
-                          question &&
-                          (question.metadata.assetManifest.length ||
-                            question.stem.text.includes('[[asset:') ||
-                            question.explanation.text.includes('[[asset:')),
-                      );
-                    },
-                  ) && (
-                    <Button variant="secondary" onClick={loadMedia} disabled={locked}>
-                      Tampilkan gambar soal
-                    </Button>
-                  )}
                   <ul className="monitoring-list assessment-detail-question-list">
                     {detail.items
                       .filter((item) => item.questionVersionId === inspectingId)
@@ -1156,7 +1166,8 @@ export function ContentPackageWorkspace({
                             <>
                               <ContentRichText
                                 text={item.question.stem.text}
-                                media={media}
+                                media={mediaForItem(item.questionVersionId)}
+                                instanceId={previewInstanceByVersion[item.questionVersionId]}
                                 retry={loadMedia}
                                 renderBareMath
                               />
@@ -1166,7 +1177,8 @@ export function ContentPackageWorkspace({
                                     <strong>{o.id}.</strong>{' '}
                                     <ContentRichText
                                       text={o.content.text}
-                                      media={media}
+                                      media={mediaForItem(item.questionVersionId)}
+                                      instanceId={previewInstanceByVersion[item.questionVersionId]}
                                       retry={loadMedia}
                                       renderBareMath
                                     />
@@ -1196,7 +1208,8 @@ export function ContentPackageWorkspace({
                                   </p>
                                   <ContentRichText
                                     text={item.question.explanation.text}
-                                    media={media}
+                                    media={mediaForItem(item.questionVersionId)}
+                                    instanceId={previewInstanceByVersion[item.questionVersionId]}
                                     retry={loadMedia}
                                     renderBareMath
                                   />
@@ -1675,7 +1688,8 @@ export function ContentPackageWorkspace({
                 <h2>{index + 1}. Soal</h2>
                 <ContentRichText
                   text={item.question.stem.text}
-                  media={media}
+                  media={mediaForItem(item.questionVersionId)}
+                  instanceId={previewInstanceByVersion[item.questionVersionId]}
                   retry={loadMedia}
                   renderBareMath
                 />
@@ -1685,7 +1699,8 @@ export function ContentPackageWorkspace({
                       <strong>{option.id}.</strong>{' '}
                       <ContentRichText
                         text={option.content.text}
-                        media={media}
+                        media={mediaForItem(item.questionVersionId)}
+                        instanceId={previewInstanceByVersion[item.questionVersionId]}
                         retry={loadMedia}
                         renderBareMath
                       />

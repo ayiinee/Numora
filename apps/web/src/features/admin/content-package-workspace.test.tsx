@@ -229,12 +229,25 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     ],
   } as unknown as ContentPackageDetailDto;
   vi.mocked(getContentPackage).mockResolvedValue(pack);
+  const previewItem = {
+    instanceId: 'preview-item',
+    questionVersionId: 'tryout-q1',
+    externalId: 'TRYOUT-Q1',
+    type: 'SINGLE_CHOICE' as const,
+    stem: { text: '' },
+    options: [],
+    categories: [],
+    answer: null,
+    revision: 0,
+    serverSavedAt: '2099-01-01T00:00:00Z',
+    score: null,
+  };
   vi.mocked(createPreview).mockResolvedValue({
     id: 'preview',
     state: 'IN_PROGRESS',
     scoringStatus: 'NOT_SCORED',
     score: null,
-    items: [],
+    items: [previewItem],
     media: [],
   });
   vi.mocked(submitPreview).mockResolvedValue({
@@ -242,7 +255,7 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     state: 'SUBMITTED',
     scoringStatus: 'NOT_SCORED',
     score: null,
-    items: [],
+    items: [previewItem],
     media: [
       {
         instanceId: 'preview-item',
@@ -423,7 +436,21 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     state: 'IN_PROGRESS',
     scoringStatus: 'NOT_SCORED',
     score: null,
-    items: [],
+    items: [
+      {
+        instanceId: id,
+        questionVersionId: id,
+        externalId: 'TEST',
+        type: 'SINGLE_CHOICE',
+        stem: { text: '' },
+        options: [],
+        categories: [],
+        answer: null,
+        revision: 0,
+        serverSavedAt: '2099-01-01T00:00:00Z',
+        score: null,
+      },
+    ],
     media: [media[0]!],
   };
   vi.mocked(createPreview).mockResolvedValue(preview);
