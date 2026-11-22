@@ -68,7 +68,7 @@ function Review({ id }: { id: string }) {
         if (active) {
           setDetail(d);
           void getContentVersionMedia(token, d.id).then(
-            (links) => active && setMedia(links.items),
+            (links) => active && setMedia(links?.items ?? []),
             () => active && setMedia([]),
           );
           setJson(JSON.stringify(d.payload, null, 2));
@@ -444,7 +444,7 @@ function Review({ id }: { id: string }) {
                     media={media}
                     retryMedia={() =>
                       void getContentVersionMedia(token, detail.id).then((links) =>
-                        setMedia(links.items),
+                        setMedia(links?.items ?? []),
                       )
                     }
                   />
