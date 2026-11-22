@@ -7,8 +7,10 @@ const auth = 'https://' + ref + '.supabase.co';
 const stagingWeb = 'https://web.staging.example.test';
 const stagingApi = 'https://api.staging.example.test';
 const database = (role) =>
-  'postgresql://' + role + ':fixture@db.' + ref + '.supabase.co:5432/postgres?sslmode=require';
+  'postgresql://' + role + ':fixture@db.' + ref + '.supabase.co:5432/postgres?sslmode=verify-full';
 const staging = {
+  NODE_ENV: 'production',
+  NUMORA_DEPLOYMENT_PROFILE: 'staging-supabase',
   STAGING_WEB_ORIGIN: stagingWeb,
   STAGING_API_ORIGIN: stagingApi,
   CORS_ORIGINS: stagingWeb,
@@ -22,6 +24,10 @@ const staging = {
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
   SUPABASE_SECRET_KEY: 'sb_secret_fixture',
   DATABASE_URL: database('runtime'),
+  DATABASE_EXPECTED_HOST: 'db.' + ref + '.supabase.co',
+  DATABASE_EXPECTED_PORT: '5432',
+  DATABASE_EXPECTED_NAME: 'postgres',
+  DATABASE_EXPECTED_USER: 'runtime',
   DATABASE_MIGRATION_URL: database('migration'),
   QA_CAPACITY_EVIDENCE_URL: database('evidence'),
   STAGING_REDIS_HOST: 'redis.staging.example.test',
@@ -61,4 +67,14 @@ test('rejects a missing project and an evidence connection that reuses the runti
   assert.ok(issues.some((issue) => issue.includes('dedicated staging project')));
   assert.ok(issues.some((issue) => issue.includes('distinct PostgreSQL roles')));
   assert.ok(issues.every((issue) => !issue.includes('fixture')));
+});
+
+test('rejects missing deployment profile, unverified TLS and mismatched runtime pins', () => {
+  for (const change of [
+    { NUMORA_DEPLOYMENT_PROFILE: '' },
+    { DATABASE_EXPECTED_USER: 'other' },
+    { DATABASE_URL: staging.DATABASE_URL.replace('verify-full', 'require') },
+    { DATABASE_URL: staging.DATABASE_URL + '&user=postgres' },
+  ])
+    assert.ok(stagingProblems({ ...staging, ...change }).length > 0);
 });

@@ -11,6 +11,8 @@
 
 ## Runner
 
+**ENGINEERING DECISION — integration compatibility, 20 November 2026:** dedicated Supabase staging uses `NODE_ENV=production` and explicit `NUMORA_DEPLOYMENT_PROFILE=staging-supabase`, verified TLS and the separate runtime target pins in `.env.staging.example`. Keep `numora:staging:` queues and separate projects/roles. The private combined operator inventory used by `check-staging-env.mjs` contains migration/evidence URLs, but those credentials must be excluded from the environment injected into API/worker. Never use `NODE_ENV=development` to bypass built-runtime startup validation.
+
 Jalankan dari root. Salin contoh konfigurasi ke `qa/.local/capacity-config.json`, isi SHA nyata, URL dan parameter yang sesuai, lalu lihat bentuk workload tanpa trafik.
 
 ```powershell

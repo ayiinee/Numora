@@ -9,6 +9,8 @@ const databaseVariables = ['DATABASE_URL', 'DATABASE_MIGRATION_URL', 'QA_CAPACIT
 
 export function stagingProblems(env) {
   const problems = [];
+  if (env.NODE_ENV !== 'production' || env.NUMORA_DEPLOYMENT_PROFILE !== 'staging-supabase')
+    problems.push('Staging must use NODE_ENV=production and the explicit staging-supabase profile');
   const readUrl = (name) => {
     try {
       return new URL(env[name]);
@@ -63,12 +65,22 @@ export function stagingProblems(env) {
     const pooled = url.hostname.endsWith('.pooler.supabase.com') && user.endsWith('.' + ref);
     if (
       !['postgres:', 'postgresql:'].includes(url.protocol) ||
-      !['require', 'verify-full'].includes(url.searchParams.get('sslmode')) ||
+      url.searchParams.getAll('sslmode').length !== 1 ||
+      url.searchParams.get('sslmode') !== 'verify-full' ||
+      [...url.searchParams.keys()].some((key) => key !== 'sslmode') ||
       (!direct && !pooled) ||
       (url.port && url.port !== '5432') ||
       !url.password
     )
       problems.push(name + ' must use TLS on the staging Supabase direct or session endpoint');
+    if (
+      name === 'DATABASE_URL' &&
+      (url.hostname !== env.DATABASE_EXPECTED_HOST ||
+        (url.port || '5432') !== env.DATABASE_EXPECTED_PORT ||
+        decodeURIComponent(url.pathname.slice(1)) !== env.DATABASE_EXPECTED_NAME ||
+        decodeURIComponent(url.username) !== env.DATABASE_EXPECTED_USER)
+    )
+      problems.push('DATABASE_URL must match the separately pinned staging runtime target');
     dbIdentities.add(direct ? user : user.slice(0, -ref.length - 1));
   }
   if (dbIdentities.size !== databaseVariables.length)

@@ -11,6 +11,8 @@ Budget should be minimized, but real-user deployment should avoid making one VPS
 
 ## Decision
 
+**ENGINEERING DECISION — owner, 15 November 2026:** [ADR-012](ADR-012-development-supabase-production-postgres.md) amends the Production database target: prepare PostgreSQL on the existing VPS while Development remains Supabase. This is a deployment direction, not evidence that the database was moved or the VPS is ready. Authentication remains a separate migration.
+
 Deploy Next.js/NestJS/worker on VPS; use managed PostgreSQL + Supabase Auth and Redis cloud; use Cloudflare R2 for object storage. Development also uses cloud Supabase and Redis rather than local instances. Use an isolated development Supabase branch/project because staging contains real-user data. Docker is not required for development; the deployment artifact/container decision is separate.
 
 ## Consequences
