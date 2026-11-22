@@ -396,10 +396,13 @@ export class ContentPackagesService {
         chapters,
         eq(chapters.id, sql`coalesce(${questions.chapterId},${subchapters.chapterId})`),
       )
-      .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
       .leftJoin(
         contentImportVersions,
         eq(contentImportVersions.questionVersionId, questionVersions.id),
+      )
+      .leftJoin(
+        contentImportIdentities,
+        eq(contentImportIdentities.id, contentImportVersions.identityId),
       )
       .where(eq(packageItems.packageId, id))
       .orderBy(asc(packageItems.displayOrder))
@@ -1266,7 +1269,14 @@ export class ContentPackagesService {
             chapters,
             eq(chapters.id, sql`coalesce(${questions.chapterId},${subchapters.chapterId})`),
           )
-          .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
+          .leftJoin(
+            contentImportVersions,
+            eq(contentImportVersions.questionVersionId, questionVersions.id),
+          )
+          .leftJoin(
+            contentImportIdentities,
+            eq(contentImportIdentities.id, contentImportVersions.identityId),
+          )
           .where(eq(questionVersions.id, row.version.id));
         if (!scope || !p.source) throw new ConflictException({ code: 'REVIEW_CONTEXT_INVALID' });
         const options = row.version.optionsOrStatements as {
