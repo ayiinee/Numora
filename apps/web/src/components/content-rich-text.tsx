@@ -143,6 +143,11 @@ export function ContentRichText({
   renderBareMath?: boolean;
   renderMedia?: boolean;
 }) {
+  const normalizedText = media.length
+    ? text.replace(/\[Gambar ([A-Za-z0-9_-]+) [^\]]+\]/g, (whole, assetId: string) =>
+        media.some((item) => item.assetId === assetId) ? `[[asset:${assetId}]]` : whole,
+      )
+    : text;
   const inline = (value: string) =>
     Array.from(contentParts(value, renderBareMath), (part, i) => {
       if (part.asset && renderMedia) {
@@ -163,7 +168,7 @@ export function ContentRichText({
     });
   return (
     <span className="content-rich-text">
-      {contentBlocks(text).map((block, index) =>
+      {contentBlocks(normalizedText).map((block, index) =>
         block.type === 'text' ? (
           <span key={index}>{inline(block.text)}</span>
         ) : (

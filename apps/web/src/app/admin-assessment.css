@@ -1164,6 +1164,26 @@
 .assessment-directory-toolbar {
   margin-bottom: 16px;
 }
+.assessment-inline-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.assessment-inline-status-filter select {
+  min-width: 154px;
+  min-height: 44px;
+  padding: 10px 36px 10px 14px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #252334);
+  font: inherit;
+}
+.assessment-inline-status-filter select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary, #6200d9) 24%, transparent);
+  outline-offset: 1px;
+}
 .assessment-directory-search {
   flex: 1 1 320px;
   align-items: center;
@@ -1247,7 +1267,7 @@
 }
 .assessment-directory-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 900px;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -1263,9 +1283,29 @@
   font-weight: 600;
 }
 .assessment-directory-table td:first-child {
-  min-width: 180px;
-  max-width: 300px;
+  width: 56px;
+  min-width: 56px;
+  white-space: nowrap;
+}
+.assessment-directory-table .assessment-package-name {
+  min-width: 280px;
+  max-width: 420px;
   overflow-wrap: anywhere;
+}
+.assessment-directory-table td:nth-child(3),
+.assessment-directory-table td:nth-child(4),
+.assessment-directory-table td:nth-child(5),
+.assessment-directory-table td:nth-child(6) {
+  min-width: 120px;
+  white-space: nowrap;
+}
+.assessment-directory-table .assessment-scope-legacy {
+  display: none;
+}
+.assessment-directory-table td:last-child,
+.assessment-directory-table th:last-child {
+  min-width: 190px;
+  width: 210px;
 }
 .assessment-directory-table small {
   display: block;
@@ -1286,6 +1326,15 @@
   font-size: 14px;
   line-height: 20px;
   text-decoration: none;
+}
+.assessment-directory-table .assessment-row-actions {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  border-top: 0;
+  margin-top: 0;
 }
 .assessment-back-link {
   display: inline-flex;
@@ -2323,6 +2372,77 @@
   font-weight: 600;
   color: #544366;
 }
+.assessment-review-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.assessment-review-steps button {
+  min-height: 44px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.assessment-review-steps button.is-active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.assessment-review-step-panel {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+}
+.assessment-review-step-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.assessment-media-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.assessment-media-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+}
+.assessment-media-list small {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+.assessment-media-status {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-left: 3px solid #d7a64e;
+  border-radius: 0 8px 8px 0;
+  background: #fff8ed;
+}
+.assessment-media-status p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .assessment-review-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .assessment-review-navigation button {
   min-height: 36px;
   padding: 6px 12px;
@@ -2375,6 +2495,37 @@
 }
 
 /* Batch Tryout shares compact assessment surfaces. */
+.tryout-variant-wizard {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+}
+.tryout-variant-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid var(--numora-border, #e4e1dc);
+  padding-bottom: 16px;
+}
+.tryout-variant-steps span[aria-current='step'] {
+  font-weight: 700;
+  color: var(--numora-primary, #4f46a5);
+}
+.tryout-variant-question-list {
+  display: grid;
+  gap: 10px;
+  max-height: 520px;
+  overflow: auto;
+  padding: 4px;
+}
+.tryout-variant-question-list label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--numora-border, #e4e1dc);
+  border-radius: 10px;
+}
 .tryout-batch-workspace, .tryout-batch-form, .tryout-batch-form fieldset { display: grid; gap: 16px; min-width: 0; }
 .tryout-batch-form fieldset { border: 0; padding: 0; margin: 0; }
 .tryout-batch-workspace h2, .tryout-batch-workspace h3 { margin: 0; }

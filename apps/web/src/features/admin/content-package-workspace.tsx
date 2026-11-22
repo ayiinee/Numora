@@ -17,9 +17,8 @@ import {
   preparePretestScoring,
   reviewImportedQuestion,
   updateContentPackage,
-  prepareLegacyPretest,
 } from './content-package-api';
-import { createPreview, submitPreview } from './content-preview-api';
+import { getContentVersionMedia } from './content-lifecycle-api';
 import { ContentRichText } from './content-rich-text';
 import type {
   AdminCurriculumDto,
@@ -32,6 +31,7 @@ import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 import { adminOffset, useAdminUrl } from './admin-url';
 import { PackageAvailability } from './package-availability';
 import { assessmentPath, assessmentListQuery } from './assessment-routes';
+import { getTryoutVariantOptions } from './tryout-variant-api';
 import { formatTryoutAnswer } from './tryout-pdf';
 type Usage = CreateContentPackageDto['assessmentType'];
 const checklistActions: Record<string, string> = {
@@ -100,13 +100,15 @@ export function ContentPackageWorkspace({
   const [selectionRetry, setSelectionRetry] = useState(0);
   const [notes, setNotes] = useState('');
   const [inspectingId, setInspectingId] = useState<string | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reviewStep, setReviewStep] = useState<1 | 2 | 3 | 4>(1);
+  const [compositionOpen, setCompositionOpen] = useState(false);
   const [approvalReference, setApprovalReference] = useState('');
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [publishConfirmed, setPublishConfirmed] = useState(false);
   const [informationOpen, setInformationOpen] = useState<'access' | 'readiness' | null>(null);
   const [publicationOpen, setPublicationOpen] = useState(false);
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
+  const [variantAvailable, setVariantAvailable] = useState<boolean | null>(null);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
   const running = useRef(false);
   const selectionRequest = useRef(0);
@@ -183,6 +185,25 @@ export function ContentPackageWorkspace({
     };
     // Refresh only after a completed import, not every parent preview change.
   }, [refreshKey, token, requestedId]);
+  useEffect(() => {
+    if (
+      !detail ||
+      detail.assessmentType !== 'TRYOUT' ||
+      detail.status !== 'PUBLISHED' ||
+      detail.source?.sourceNamespace === 'TRYOUT_VARIANT_GENERATOR'
+    ) {
+      setVariantAvailable(null);
+      return;
+    }
+    let active = true;
+    setVariantAvailable(null);
+    getTryoutVariantOptions(token, detail.id)
+      .then((value) => active && setVariantAvailable(value.generatorAvailable))
+      .catch(() => active && setVariantAvailable(false));
+    return () => {
+      active = false;
+    };
+  }, [detail, token]);
   useEffect(() => {
     if (!urlContext && mode !== 'detail') return;
     let active = true;
@@ -298,15 +319,26 @@ export function ContentPackageWorkspace({
   const loadMedia = () =>
     void run(async () => {
       if (!detail?.items.length) return;
-      const preview = await createPreview(
-        token,
-        { questionVersionIds: detail.items.map((i) => i.questionVersionId) },
-        crypto.randomUUID(),
+      const links = await Promise.all(
+        detail.items.map(async (item) => {
+          const result = await getContentVersionMedia(token, item.questionVersionId);
+          return result.items
+            .filter((asset) => asset.status === 'READY' && asset.url && asset.expiresAt)
+            .map((asset) => ({
+              instanceId: item.questionVersionId,
+              assetId: asset.assetId,
+              altText: asset.altText,
+              url: asset.url!,
+              expiresAt: asset.expiresAt!,
+            }));
+        }),
       );
-      // Review includes explanation media; WORK media intentionally hides it.
-      const review = await submitPreview(token, preview.id, crypto.randomUUID());
-      setMedia(review.media);
+      setMedia(links.flat());
     });
+  useEffect(() => {
+    if (inspectingId && detail) void loadMedia();
+    // Reload links when reviewer changes question; signed links remain server-authorized.
+  }, [inspectingId, detail?.id]);
   const locked = busy || disabled || detailLoading;
   const printableTryout =
     detail?.assessmentType === 'TRYOUT' &&
@@ -641,8 +673,31 @@ export function ContentPackageWorkspace({
                   {detail.familyCode} · Versi {detail.packageVersion} · Revisi{' '}
                   {detail.contentRevision}
                 </p>
+                <Badge variant={detail.status === 'PUBLISHED' ? 'success' : 'default'}>
+                  {{
+                    DRAFT: 'Draf',
+                    PUBLISHED: 'Diterbitkan',
+                    CLOSED: 'Ditutup',
+                    ARCHIVED: 'Arsip',
+                  }[detail.status] ?? detail.status}
+                </Badge>
               </div>
               <div className="assessment-header-actions">
+                {detail.assessmentType === 'TRYOUT' &&
+                  detail.status === 'PUBLISHED' &&
+                  detail.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
+                  (variantAvailable === true ? (
+                    <Link
+                      className="button-link"
+                      href={`/admin/assessments/tryout/${encodeURIComponent(detail.id)}/variant/new`}
+                    >
+                      Generate varian paket
+                    </Link>
+                  ) : (
+                    <Button variant="secondary" disabled title="Mapping generator belum lengkap untuk 25 focal soal.">
+                      {variantAvailable === null ? 'Memeriksa generator…' : 'Generate varian paket'}
+                    </Button>
+                  ))}
                 {detail.assessmentType === 'TRYOUT' && (
                   <Button
                     variant="secondary"
@@ -657,21 +712,13 @@ export function ContentPackageWorkspace({
                     Export PDF
                   </Button>
                 )}
-                <Button variant="secondary" onClick={() => setSettingsOpen(true)}>
-                  <Icon name="settings" />
-                  Pengaturan
+                <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
+                  Komposisi paket
                 </Button>
                 <Button onClick={() => setPublicationOpen(true)}>
                   {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
                 </Button>
-                <Badge variant={detail.status === 'PUBLISHED' ? 'success' : 'default'}>
-                  {{
-                    DRAFT: 'Draf',
-                    PUBLISHED: 'Diterbitkan',
-                    CLOSED: 'Ditutup',
-                    ARCHIVED: 'Arsip',
-                  }[detail.status] ?? detail.status}
-                </Badge>
+
               </div>
             </header>
             <div className="assessment-detail-metrics">
@@ -713,9 +760,6 @@ export function ContentPackageWorkspace({
                 Paket lama yang sudah diterbitkan tetap terkunci agar histori siswa aman. Buat versi
                 perbaikan melalui sumber impor, lalu validasi, review, dan terbitkan versi baru.
               </p>
-              <Button variant="secondary" onClick={() => setSettingsOpen(true)} disabled={locked}>
-                Siapkan versi perbaikan
-              </Button>
             </div>
           )}
           {detail.assessmentType !== 'PRETEST' &&
@@ -758,10 +802,10 @@ export function ContentPackageWorkspace({
               </div>
             )}
           <Dialog
-            open={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
+            open={compositionOpen}
+            onClose={() => setCompositionOpen(false)}
             pending={locked}
-            title="Pengaturan paket"
+            title="Komposisi paket"
             className="admin-management-dialog assessment-settings-dialog"
           >
             <div className="assessment-detail-workspace assessment-detail-settings-body">
@@ -780,88 +824,6 @@ export function ContentPackageWorkspace({
                   ? `${detail.source.sourceName} · ${detail.source.sourceReference}`
                   : 'Sumber belum diisi.'}
               </p>
-              {mode === 'detail' && detail.status === 'DRAFT' && (
-                <form
-                  className="assessment-package-rename"
-                  key={`${detail.id}:${detail.contentRevision}`}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    const name = String(new FormData(event.currentTarget).get('name') ?? '').trim();
-                    void run(async () => {
-                      await updateContentPackage(token, detail.id, {
-                        name,
-                        expectedRevision: detail.contentRevision,
-                        questionVersionIds: detail.items.map((item) => item.questionVersionId),
-                      });
-                      await choose(detail.id);
-                    });
-                  }}
-                >
-                  <label>
-                    Nama paket
-                    <input
-                      name="name"
-                      required
-                      maxLength={160}
-                      defaultValue={detail.name}
-                      disabled={locked}
-                    />
-                  </label>
-                  <Button type="submit" variant="secondary" disabled={locked}>
-                    Simpan nama
-                  </Button>
-                </form>
-              )}
-              {detail.legacyPreparation && (
-                <form
-                  className="excel-question-editor"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    const data = new FormData(event.currentTarget);
-                    void run(async () => {
-                      const next = await prepareLegacyPretest(token, detail.id, {
-                        expectedRevision: detail.contentRevision,
-                        source: {
-                          sourceNamespace: String(data.get('sourceNamespace')),
-                          sourceName: String(data.get('sourceName')),
-                          sourceReference: String(data.get('sourceReference')),
-                        },
-                      });
-                      await choose(next.id);
-                      setReload((n) => n + 1);
-                    });
-                  }}
-                >
-                  <h3>Lanjutkan paket lama melalui impor</h3>
-                  <p>
-                    {detail.legacyPreparation === 'NEW_VERSION'
-                      ? 'Review atau histori lama dipertahankan. Buat versi baru, lalu impor file sumber dan review ulang.'
-                      : 'Lengkapi sumber sebenarnya, kemudian impor Excel/JSON. Soal lama tidak dianggap memiliki provenance impor.'}
-                  </p>
-                  <label>
-                    Kode sumber stabil
-                    <input
-                      name="sourceNamespace"
-                      pattern="[A-Za-z0-9_-]{1,128}"
-                      required
-                      disabled={locked}
-                    />
-                  </label>
-                  <label>
-                    Nama sumber
-                    <input name="sourceName" maxLength={240} required disabled={locked} />
-                  </label>
-                  <label>
-                    Referensi sumber
-                    <textarea name="sourceReference" maxLength={1000} required disabled={locked} />
-                  </label>
-                  <Button type="submit" disabled={locked}>
-                    {detail.legacyPreparation === 'NEW_VERSION'
-                      ? 'Buat versi baru untuk impor'
-                      : 'Siapkan draft untuk impor'}
-                  </Button>
-                </form>
-              )}
               <details className="assessment-distribution">
                 <summary>Komposisi soal</summary>
                 <p>
@@ -1034,6 +996,7 @@ export function ContentPackageWorkspace({
                                 onClick={() => {
                                   setInspectingId(item.questionVersionId);
                                   setNotes('');
+                                  setReviewStep(1);
                                 }}
                               >
                                 {detail.assessmentType === 'PRETEST' ? 'Lihat soal' : 'Tinjau'}
@@ -1068,6 +1031,7 @@ export function ContentPackageWorkspace({
                         );
                         setInspectingId(detail.items[index - 1]!.questionVersionId);
                         setNotes('');
+                        setReviewStep(1);
                       }}
                     >
                       Sebelumnya
@@ -1093,6 +1057,7 @@ export function ContentPackageWorkspace({
                         );
                         setInspectingId(detail.items[index + 1]!.questionVersionId);
                         setNotes('');
+                        setReviewStep(1);
                       }}
                     >
                       Berikutnya
@@ -1111,10 +1076,76 @@ export function ContentPackageWorkspace({
                     },
                   ) && (
                     <Button variant="secondary" onClick={loadMedia} disabled={locked}>
-                      Tampilkan gambar soal
+                      Muat gambar
                     </Button>
                   )}
-                  <ul className="monitoring-list assessment-detail-question-list">
+                  <nav className="assessment-review-steps" aria-label="Tahap pemeriksaan soal">
+                    {(['Isi soal', 'Media', 'Validasi', 'Keputusan'] as const).map((label, i) => (
+                      <button
+                        type="button"
+                        key={label}
+                        className={reviewStep === i + 1 ? 'is-active' : ''}
+                        aria-current={reviewStep === i + 1 ? 'step' : undefined}
+                        onClick={() => setReviewStep((i + 1) as 1 | 2 | 3 | 4)}
+                      >
+                        {i + 1}. {label}
+                      </button>
+                    ))}
+                  </nav>
+                  {reviewStep === 2 && (
+                    <section className="assessment-review-step-panel">
+                      <h3>Media soal</h3>
+                      {(() => {
+                        const selected = detail.items.find(
+                          (item) => item.questionVersionId === inspectingId,
+                        );
+                        const assets = selected?.question?.metadata.assetManifest ?? [];
+                        const ready = new Set(
+                          media
+                            .filter((asset) => asset.instanceId === inspectingId)
+                            .map((asset) => asset.assetId),
+                        );
+                        return assets.length ? (
+                          <ul className="assessment-media-list">
+                            {assets.map((asset) => (
+                              <li key={asset.assetId}>
+                                <strong>{asset.assetId}</strong>
+                                <span>{ready.has(asset.assetId) ? 'Siap' : 'Perlu diperbaiki'}</span>
+                                <small>{asset.altText}</small>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>Soal ini tidak memiliki gambar.</p>
+                        );
+                      })()}
+                      <Button variant="secondary" onClick={loadMedia} disabled={locked}>
+                        Validasi dan muat ulang media
+                      </Button>
+                    </section>
+                  )}
+                  {reviewStep === 3 && (
+                    <section className="assessment-review-step-panel">
+                      <h3>Validasi soal</h3>
+                      {(() => {
+                        const selected = detail.items.find(
+                          (item) => item.questionVersionId === inspectingId,
+                        );
+                        const issues = selected?.validationIssues ?? [];
+                        return issues.length ? (
+                          <ul className="content-blocker-list">
+                            {issues.map((issue) => <li key={issue}><small>{issue}</small></li>)}
+                          </ul>
+                        ) : (
+                          <p>Validasi isi soal lulus. Periksa kembali gambar, kunci, dan pembahasan.</p>
+                        );
+                      })()}
+                      <Button variant="secondary" onClick={() => void choose(detail.id)} disabled={locked}>
+                        Validasi ulang
+                      </Button>
+                    </section>
+                  )}
+                  {(reviewStep === 1 || reviewStep === 4) && <ul className="monitoring-list assessment-detail-question-list">
                     {detail.items
                       .filter((item) => item.questionVersionId === inspectingId)
                       .map((item) => (
@@ -1198,7 +1229,7 @@ export function ContentPackageWorkspace({
                                   variant="secondary"
                                   onClick={() => {
                                     setInspectingId(null);
-                                    setSettingsOpen(true);
+                                    setCompositionOpen(true);
                                   }}
                                 >
                                   Lengkapi sumber untuk impor perbaikan
@@ -1306,7 +1337,7 @@ export function ContentPackageWorkspace({
                           </div>
                         </li>
                       ))}
-                  </ul>
+                  </ul>}
                   {error && <p role="alert">{error}</p>}
                 </div>
               </Dialog>
@@ -1334,7 +1365,16 @@ export function ContentPackageWorkspace({
                 className="admin-management-dialog assessment-information-dialog"
               >
                 {informationOpen === 'access' ? (
-                  <PackageAvailability detail={detail} />
+                  <>
+                    <section className="assessment-status-explanation">
+                      <h3>Status paket</h3>
+                      <p>
+                        Status menunjukkan lifecycle admin: draf, diterbitkan, atau arsip. Ini
+                        berbeda dari ketersediaan siswa yang dipengaruhi jadwal dan aturan batch.
+                      </p>
+                    </section>
+                    <PackageAvailability detail={detail} />
+                  </>
                 ) : (
                   <section className="assessment-detail-checklist">
                     <p>

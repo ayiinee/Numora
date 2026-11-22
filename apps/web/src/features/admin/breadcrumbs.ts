@@ -40,13 +40,15 @@ export function adminBreadcrumbs(
           ? base === '/admin/tryout-batches'
             ? 'Tambah batch'
             : 'Tambah paket'
-          : base === '/admin/tryout-batches'
-            ? 'Detail batch'
-            : base.startsWith('/admin/assessments/')
-              ? 'Detail paket'
-              : title && title !== link.label
-                ? title
-                : 'Detail';
+          : tail === 'archived' && base === '/admin/assessments/tryout'
+            ? 'Bank arsip'
+            : base === '/admin/tryout-batches'
+              ? 'Detail batch'
+              : base.startsWith('/admin/assessments/')
+                ? 'Detail paket'
+                : title && title !== link.label
+                  ? title
+                  : 'Detail';
       crumbs.push({ label });
     }
   } else {

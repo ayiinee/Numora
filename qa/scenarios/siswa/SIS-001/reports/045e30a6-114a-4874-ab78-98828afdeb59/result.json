@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "id": "045e30a6-114a-4874-ab78-98828afdeb59",
+  "scenarioId": "SIS-001",
+  "role": "siswa",
+  "profile": "full",
+  "startedAt": "2026-11-15T14:54:29.027Z",
+  "finishedAt": "2026-11-15T14:54:36.071Z",
+  "parentRunId": null,
+  "identity": {
+    "sha": "3262d8cbfe2c7f711a6f6377834168d8b032bc59",
+    "dirty": true,
+    "codeHash": "4e20cdf87aa71049ff94561eee76eb5ecb6b83f56d342e9deefe60698ef5610e",
+    "rulesHash": "9899f95853d90b6264a52cf7d5550b59b223b71b6939c2f28673632e696efa85",
+    "configHash": "7fe606c8d7237b1993bee2312c415969495697b7ea1742f6a081c0ddafc55a52",
+    "environmentHash": "832967a38cada22651dc9dde8bdf2b0150525e5b6a9d9e978dd936bc8faa5f0a",
+    "manifestHash": "80f337cdb8ced050a40dabc915ddcb66356df1db167938a87a7ebd9f27ab9c9e"
+  },
+  "environment": {
+    "ready": false,
+    "platform": "win32",
+    "resources": {
+      "logicalCpuCount": 8,
+      "totalMemoryBytes": 12716056576,
+      "freeMemoryBytes": 1500590080
+    },
+    "localEnvironment": "operator-provided-local-services",
+    "build": {
+      "mode": "production",
+      "lowMemory": true
+    },
+    "profile": "full",
+    "checks": [
+      {
+        "id": "node",
+        "ready": false,
+        "message": "Node >=24.22.1 <25 required (patched bundled Undici)",
+        "version": "24.22.0"
+      },
+      {
+        "id": "pnpm",
+        "ready": true,
+        "message": "Use repository-pinned pnpm",
+        "version": "12.6.0"
+      },
+      {
+        "id": "dependencies",
+        "ready": true,
+        "message": "Run pnpm install --frozen-lockfile"
+      },
+      {
+        "id": "port-3500",
+        "ready": true,
+        "message": "Port 3500 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3501",
+        "ready": true,
+        "message": "Port 3501 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3502",
+        "ready": true,
+        "message": "Port 3502 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "test-environment",
+        "ready": true,
+        "message": "Dedicated test configuration accepted"
+      },
+      {
+        "id": "existing-test-guard",
+        "ready": true,
+        "message": "Existing guard accepted"
+      },
+      {
+        "id": "postgres",
+        "ready": false,
+        "message": "PostgreSQL unavailable: check localhost service, test database and credentials"
+      },
+      {
+        "id": "redis",
+        "ready": false,
+        "message": "Redis unavailable: check dedicated localhost service"
+      },
+      {
+        "id": "chromium",
+        "ready": true,
+        "message": "Install Chromium: pnpm --filter @tka/web exec playwright install chromium"
+      },
+      {
+        "id": "k6",
+        "ready": false,
+        "message": "Install k6 or set QA_K6_BIN in ignored .env.test.local"
+      },
+      {
+        "id": "axe",
+        "ready": true,
+        "message": "axe available"
+      },
+      {
+        "id": "pg_dump",
+        "ready": false,
+        "message": "PostgreSQL 16 client tools must be in PATH or QA_PG_BIN"
+      },
+      {
+        "id": "pg_restore",
+        "ready": false,
+        "message": "PostgreSQL 16 client tools must be in PATH or QA_PG_BIN"
+      }
+    ],
+    "staging": "NOT_CONFIGURED",
+    "drive": "FOLDER_CONFIGURED_CONNECTION_REQUIRES_CHECK"
+  },
+  "checks": [
+    {
+      "id": "quality",
+      "adapter": "quality",
+      "profile": "quick",
+      "evidence": "static",
+      "files": [
+        "package.json"
+      ],
+      "minimumTests": 4,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "rewards",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/unit/rewards.test.ts",
+        "packages/assessment-engine/src/rewards.spec.ts"
+      ],
+      "minimumTests": 12,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/core-learning/drill.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "apps/web/src/features/core-learning/question-choices.test.tsx"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/learning/drill-reward.integration.spec.ts"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "connected",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/drill.pw.ts"
+      ],
+      "minimumTests": 4,
+      "tags": [
+        "functional",
+        "security",
+        "regression"
+      ],
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY; REDIS_7_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "accessibility",
+      "adapter": "accessibility",
+      "profile": "full",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/accessibility.pw.ts"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY; REDIS_7_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "variety",
+      "adapter": "variety",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 9,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "recovery",
+      "adapter": "recovery",
+      "profile": "full",
+      "evidence": "real-database",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 6,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY; REDIS_7_NOT_READY; POSTGRES_BACKUP_TOOLS_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "velocity",
+      "adapter": "velocity",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 5,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "volume",
+      "adapter": "volume",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "load",
+      "adapter": "k6",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/performance/drill.k6.js"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY; REDIS_7_NOT_READY; K6_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "dependencies",
+      "adapter": "audit",
+      "profile": "full",
+      "evidence": "static",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "manual-keyboard",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/manual/CHECKLIST.md"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "HUMAN_KEYBOARD_AND_USABILITY_REVIEW_REQUIRED",
+      "durationMs": 1
+    }
+  ],
+  "verdict": "BLOCKED",
+  "limitations": [
+    "Synthetic PG content and email auth fixtures; not Google login, academic content approval or staging acceptance.",
+    "Local performance is a baseline with no approved production SLO; generator and application share one machine.",
+    "Manual keyboard/UAT evidence is separate; automated accessibility is not a complete accessibility certification.",
+    "Variety invalid-envelope rejection is contract/generator evidence; connected tests cover API input rejection.",
+    "Recovery is local database/worker/transport rehearsal, not cloud failover, R2 recovery or production RTO/RPO."
+  ],
+  "preparation": {
+    "ready": false,
+    "reason": "LOCAL_TEST_SERVICES_NOT_READY"
+  },
+  "executionStartedAt": "2026-11-15T14:54:32.475Z"
+}

@@ -63,11 +63,11 @@ export type PackageApprovalDto = { "reference": string; "approvedAt": string; };
 
 export type UpdateContentPackageDto = { "expectedRevision": number; "name": string; "questionVersionIds": (string)[]; };
 
-export type ContentPackageDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
+export type ContentPackageDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "itemCount": number; "expectedItemCount": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
 
 export type ContentPackagesDto = { "items": (ContentPackageDto)[]; "total": number; };
 
-export type ContentPackageDetailDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
+export type ContentPackageDetailDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "itemCount": number; "expectedItemCount": number; "lastModifiedAt"?: string | null; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
 
 export type ContentPackageItemDto = { "scoringRepairRequired"?: boolean; "validationIssues"?: (string)[]; "questionVersionId": string; "questionId": string; "displayOrder": number; "usageType": "DRILL" | "PRETEST" | "TRYOUT" | null; "contentStatus": string; "reviewedAt": string | null; "reviewedByUserId": string | null; "question": ExcelQuestionDto | null; };
 
@@ -142,6 +142,10 @@ export type ContentReadinessDto = { "canReviewReady": boolean; "contentBlockers"
 export type ContentReviewEventDto = { "id": string; "actorId": string | null; "at": string; "status": string; "reason": string; };
 
 export type ContentVersionDetailDto = { "usageType"?: "DRILL" | "PRETEST" | "TRYOUT" | null; "reviews": (ContentReviewEventDto)[]; "id": string; "questionId": string; "versionNumber": number; "status": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "revisedFromId": string | null; "sourceNamespace": string | null; "reviewedByUserId": string | null; "reviewedAt": string | null; "payload": Record<string, unknown>; "readiness": ContentReadinessDto; };
+
+export type ContentVersionMediaLinkDto = { "assetId": string; "altText": string; "placement": string; "url": string | null; "expiresAt": string | null; "status": "READY" | "INVALID" | "MISSING"; "reason": string | null; };
+
+export type ContentVersionMediaLinksDto = { "items": (ContentVersionMediaLinkDto)[]; };
 
 export type CreateMediaUploadDto = { "externalId": string; "assetId": string; "contentVersion"?: number; "contentType": "image/png" | "image/jpeg" | "image/webp"; "byteLength": number; "sha256": string; };
 
@@ -352,3 +356,17 @@ export type GeneratorPackageFileItemDto = { "requestId": string; "candidateId": 
 export type GeneratorPackageFileDto = { "contractVersion": "numora-generator-package-v1"; "generatorPackageId": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "title": string; "sourcePackageId": string | null; "expectedCount": number; "items": (GeneratorPackageFileItemDto)[]; };
 
 export type GeneratorJsonPreviewDto = { "file": GeneratorPackageFileDto; "report": ImportReportDto; };
+
+export type TryoutVariantAnchorDto = { "id": string; "displayOrder": number; "label": string; "externalId": string; };
+
+export type TryoutVariantGeneratorMappingDto = { "id": string; "label": string; "serviceContract": string; "mode": string; "originalHash": string; "originalVersion": number; "configVersion": number; };
+
+export type TryoutVariantFocalDto = TryoutVariantAnchorDto & { "mapping": TryoutVariantGeneratorMappingDto | null; "blockers": (string)[]; };
+
+export type TryoutVariantOptionsDto = { "packageId": string; "packageName": string; "packageVersion": number; "contentRevision": number; "status": string; "questions": (TryoutVariantAnchorDto)[]; "focalQuestions": (TryoutVariantFocalDto)[]; "blockers": (string)[]; "generatorBlockers": (string)[]; "generatorAvailable": boolean; "canGenerate": boolean; };
+
+export type CreateTryoutVariantDto = { "anchorQuestionVersionIds": (string)[]; "operationKey": string; "expectedRevision": number; };
+
+export type TryoutVariantRequestDto = { "id": string; "label": string; "executionStatus": string | null; "failureCode": string | null; };
+
+export type TryoutVariantProcessDto = { "id": string; "sourcePackageId": string; "sourcePackageVersion": number; "anchorQuestionVersionIds": (string)[]; "focalQuestionVersionIds": (string)[]; "status": "GENERATING" | "FAILED" | "READY" | "IMPORTED"; "generatedPackageId": string | null; "requests": (TryoutVariantRequestDto)[]; "createdAt": string; };

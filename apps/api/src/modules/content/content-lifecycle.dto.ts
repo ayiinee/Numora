@@ -46,6 +46,21 @@ export class ContentVersionDetailDto {
   @ApiProperty({ type: ContentReadinessDto }) readiness!: ContentReadinessDto;
 }
 
+export class ContentVersionMediaLinkDto {
+  @ApiProperty() assetId!: string;
+  @ApiProperty() altText!: string;
+  @ApiProperty() placement!: string;
+  @ApiProperty({ type: String, nullable: true }) url!: string | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true }) expiresAt!: string | null;
+  @ApiProperty({ enum: ['READY', 'INVALID', 'MISSING'] })
+  status!: 'READY' | 'INVALID' | 'MISSING';
+  @ApiProperty({ type: String, nullable: true }) reason!: string | null;
+}
+
+export class ContentVersionMediaLinksDto {
+  @ApiProperty({ type: [ContentVersionMediaLinkDto] }) items!: ContentVersionMediaLinkDto[];
+}
+
 // One route supports two explicit review intents; mixed/unknown payloads fail validation.
 export function parseContentReview(input: unknown): ReviewContentDto | ReviewImportedQuestionDto {
   if (!input || typeof input !== 'object' || Array.isArray(input))

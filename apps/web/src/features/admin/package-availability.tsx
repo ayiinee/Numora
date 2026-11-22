@@ -58,10 +58,10 @@ export function PackageAvailability({ detail }: { detail: ContentPackageDto }) {
             : 'Ketersediaan belum dapat diperiksa. Muat ulang paket.'}
         </Badge>
       </p>
-      {detail.assessmentType !== 'TRYOUT' && detail.releaseAt && (
+      {detail.releaseAt && (
         <p>Rilis: {snapshotTime(detail.releaseAt)}</p>
       )}
-      {detail.assessmentType !== 'TRYOUT' && detail.closeAt && (
+      {detail.closeAt && (
         <p>Tutup: {snapshotTime(detail.closeAt)}</p>
       )}
       {!!detail.availability?.blockers.length && (

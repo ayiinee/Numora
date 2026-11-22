@@ -9,6 +9,8 @@ import { createPreview, importContent, validateImport } from './content-preview-
 import { ContentPayload } from './content-payload';
 import { contentStatusLabel } from './content-question-format';
 import { ContentBlockers } from './content-blockers';
+import { getContentVersionMedia } from './content-lifecycle-api';
+import { MediaUpload } from './media-upload';
 import { adminAccessDenied } from './operational-query';
 import { getContentPackage, preparePretestScoring } from './content-package-api';
 import type {
@@ -43,6 +45,7 @@ function Review({ id }: { id: string }) {
       ? state.session.access_token
       : null;
   const [detail, setDetail] = useState<ContentVersionDetailDto | null>(null),
+    [media, setMedia] = useState<import('./generated-types').ContentVersionMediaLinkDto[]>([]),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [revision, setRevision] = useState(0),
@@ -54,6 +57,7 @@ function Review({ id }: { id: string }) {
     if (!token) return;
     let active = true;
     setDetail(null);
+    setMedia([]);
     setError('');
     setLoading(true);
     apiRequest<ContentVersionDetailDto>(
@@ -63,6 +67,10 @@ function Review({ id }: { id: string }) {
       (d) => {
         if (active) {
           setDetail(d);
+          void getContentVersionMedia(token, d.id).then(
+            (links) => active && setMedia(links.items),
+            () => active && setMedia([]),
+          );
           setJson(JSON.stringify(d.payload, null, 2));
           setLoading(false);
         }
@@ -386,11 +394,60 @@ function Review({ id }: { id: string }) {
                   </div>
                   {detail.sourceNamespace && (
                     <p className="assessment-media-note">
-                      Soal memuat gambar? Gunakan <strong>Preview konten dan media</strong> pada
-                      panel peninjauan untuk membuka gambar privat.
+                      Gambar ditampilkan dari signed URL privat. Link kedaluwarsa dapat dimuat ulang.
                     </p>
                   )}
-                  <ContentPayload payload={previewPayload} />
+                  {media.some((asset) => asset.status !== 'READY') && (
+                    <div className="assessment-media-status" role="status">
+                      <strong>Media perlu diperbaiki</strong>
+                      {media
+                        .filter((asset) => asset.status !== 'READY')
+                        .map((asset) => (
+                          <p key={asset.assetId}>
+                            {asset.assetId}: {asset.reason ?? 'Upload belum siap.'}{' '}
+                            {detail.sourceNamespace && <a href="#perbaikan-soal">Ganti gambar</a>}
+                          </p>
+                        ))}
+                      {detail.sourceNamespace && media.some((asset) => asset.status !== 'READY') && (
+                        <MediaUpload
+                          token={token}
+                          initialExternalId={String(previewPayload.externalId ?? detail.id)}
+                          initialAssetId={media.find((asset) => asset.status !== 'READY')?.assetId ?? ''}
+                          onVerified={(receipt) => {
+                            const next = JSON.parse(JSON.stringify(previewPayload)) as Record<string, unknown>;
+                            const metadata = (next.metadata ?? {}) as Record<string, unknown>;
+                            const manifest = Array.isArray(metadata.assetManifest)
+                              ? metadata.assetManifest.map((asset) =>
+                                  asset && typeof asset === 'object' &&
+                                  (asset as Record<string, unknown>).assetId === receipt.assetId
+                                    ? { ...(asset as Record<string, unknown>), ...receipt }
+                                    : asset,
+                                )
+                              : [];
+                            next.metadata = { ...metadata, assetManifest: manifest };
+                            setJson(JSON.stringify(next, null, 2));
+                            setMedia((current) =>
+                              current.map((asset) =>
+                                asset.assetId === receipt.assetId
+                                  ? { ...asset, status: 'READY', url: null, reason: null }
+                                  : asset,
+                              ),
+                            );
+                            setNotice('Media terverifikasi. Simpan revisi untuk menerapkan asset baru.');
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+                  <ContentPayload
+                    payload={previewPayload}
+                    media={media}
+                    retryMedia={() =>
+                      void getContentVersionMedia(token, detail.id).then((links) =>
+                        setMedia(links.items),
+                      )
+                    }
+                  />
                   <details>
                     <summary>Identitas versi & riwayat review</summary>
                     <p>ID: {detail.id}</p>

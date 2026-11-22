@@ -4,6 +4,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
@@ -25,12 +26,17 @@ import {
   type ImportQuestion,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
-import { structuralErrors } from './content-import.validation';
-import { contentExternalId } from './content-external-id';
-import type { ContentVersionDetailDto, ReviewContentDto } from './content-lifecycle.dto';
+import { canonicalExternalId, structuralErrors } from './content-import.validation';
+import type {
+  ContentVersionDetailDto,
+  ContentVersionMediaLinksDto,
+  ReviewContentDto,
+} from './content-lifecycle.dto';
+import { R2MediaStorage } from './r2-media.storage';
 
 @Injectable()
 export class ContentLifecycleService {
+  constructor(@Optional() private readonly storage?: R2MediaStorage) {}
   async readiness(tx: AdminTransaction, id: string) {
     return (await this.detail(tx, id)).readiness;
   }
@@ -78,13 +84,9 @@ export class ContentLifecycleService {
       options?: ImportQuestion['options'];
       categories?: NonNullable<ImportQuestion['metadata']['categories']>;
     };
+    const assets = (v.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>;
     const payload: ImportQuestion = {
-      externalId: contentExternalId(
-        r.identity?.externalId,
-        r.question.sourceRef,
-        r.question.id,
-        (v.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>,
-      ),
+      externalId: canonicalExternalId(r.identity?.externalId, assets, r.question.sourceRef, v.id),
       type: v.questionType,
       chapterCode: r.chapter?.code ?? null,
       subchapterCode: r.subchapter?.code ?? null,
@@ -103,7 +105,7 @@ export class ContentLifecycleService {
           r.level?.levelNumber ??
           (['TRYOUT', 'PRETEST'].includes(r.question.usageType ?? '') ? null : 0),
         ...(data.categories?.length ? { categories: data.categories } : {}),
-        assetManifest: (v.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>,
+        assetManifest: assets,
       },
     };
     const tryout = r.question.usageType === 'TRYOUT';
@@ -130,7 +132,7 @@ export class ContentLifecycleService {
         .where(
           and(
             eq(contentMediaUploads.status, 'VERIFIED'),
-            eq(contentMediaUploads.externalId, payload.externalId),
+            eq(contentMediaUploads.externalId, a.externalId),
             eq(contentMediaUploads.assetId, a.assetId),
             eq(contentMediaUploads.bucket, a.bucket),
             eq(contentMediaUploads.objectKey, a.objectKey ?? ''),
@@ -207,6 +209,62 @@ export class ContentLifecycleService {
   }
   get(id: string) {
     return getDatabase().db.transaction((tx) => this.detail(tx, id));
+  }
+  async media(id: string): Promise<ContentVersionMediaLinksDto> {
+    const row = await getDatabase().db.transaction(async (tx) => {
+      const r = await this.load(tx, id);
+      return { assets: (r.version.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']> };
+    });
+    return {
+      items: await Promise.all(
+        row.assets.map(async (asset) => {
+          const [receipt] = await getDatabase().db
+            .select({ id: contentMediaUploads.id })
+            .from(contentMediaUploads)
+            .where(
+              and(
+                eq(contentMediaUploads.status, 'VERIFIED'),
+                eq(contentMediaUploads.externalId, asset.externalId),
+                eq(contentMediaUploads.assetId, asset.assetId),
+                eq(contentMediaUploads.bucket, asset.bucket),
+                eq(contentMediaUploads.objectKey, asset.objectKey ?? ''),
+                eq(contentMediaUploads.sha256, asset.sha256),
+                eq(contentMediaUploads.contentType, asset.contentType),
+                eq(contentMediaUploads.byteLength, asset.byteLength),
+              ),
+            )
+            .limit(1);
+          if (!receipt || !asset.objectKey) {
+            return {
+              assetId: asset.assetId,
+              altText: asset.altText,
+              placement: asset.placement,
+              url: null,
+              expiresAt: null,
+              status: asset.objectKey ? ('INVALID' as const) : ('MISSING' as const),
+              reason: asset.objectKey
+                ? 'Receipt upload tidak cocok dengan referensi asset.'
+                : 'Asset belum memiliki upload terverifikasi.',
+            };
+          }
+          try {
+            if (!this.storage) throw new Error('Media storage unavailable');
+            const link = await this.storage.readLink(asset.bucket, asset.objectKey);
+            return { ...asset, ...link, status: 'READY' as const, reason: null };
+          } catch {
+            return {
+              assetId: asset.assetId,
+              altText: asset.altText,
+              placement: asset.placement,
+              url: null,
+              expiresAt: null,
+              status: 'INVALID' as const,
+              reason: 'Media belum dapat dibaca dari penyimpanan.',
+            };
+          }
+        }),
+      ),
+    };
   }
   review(actor: string, id: string, body: ReviewContentDto) {
     return adminMutation(actor, 'content_reviewed', 'question_version', async (tx) => {

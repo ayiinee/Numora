@@ -6,8 +6,8 @@ import {
   listContentPackages,
   preparePretestScoring,
 } from './content-package-api';
-import { createPreview, submitPreview } from './content-preview-api';
-import type { ContentPackageDetailDto, PreviewSessionDto } from './generated-types';
+import { getContentVersionMedia } from './content-lifecycle-api';
+import type { ContentPackageDetailDto } from './generated-types';
 
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
@@ -46,7 +46,9 @@ vi.mock('./content-package-api', () => ({
   reviewImportedQuestion: vi.fn(),
   preparePretestScoring: vi.fn(),
 }));
-vi.mock('./content-preview-api', () => ({ createPreview: vi.fn(), submitPreview: vi.fn() }));
+vi.mock('./content-lifecycle-api', () => ({
+  getContentVersionMedia: vi.fn(async () => ({ items: [] })),
+}));
 afterEach(() => {
   cleanup();
   if (originalShow) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShow);
@@ -371,16 +373,17 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
   };
   vi.mocked(listContentPackages).mockResolvedValue({ items: [pack], total: 1 });
   vi.mocked(getContentPackage).mockResolvedValue(pack);
-  const preview: PreviewSessionDto = {
-    id,
-    state: 'IN_PROGRESS',
-    scoringStatus: 'NOT_SCORED',
-    score: null,
-    items: [],
-    media: [media[0]!],
-  };
-  vi.mocked(createPreview).mockResolvedValue(preview);
-  vi.mocked(submitPreview).mockResolvedValue({ ...preview, state: 'SUBMITTED', media });
+  vi.mocked(getContentVersionMedia).mockResolvedValue({
+    items: media.map((asset) => ({
+      assetId: asset.assetId,
+      altText: asset.altText,
+      placement: 'STEM',
+      url: asset.url,
+      expiresAt: asset.expiresAt,
+      status: 'READY' as const,
+      reason: null,
+    })),
+  });
   render(
     <ContentPackageWorkspace
       token="TEST ONLY"
@@ -404,7 +407,7 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
   fireEvent.click(retryButtons[0]!);
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   expect(screen.getByAltText('Diagram soal')).toBeTruthy();
-  expect(submitPreview).toHaveBeenCalledWith('TEST ONLY', id, expect.any(String));
+  expect(getContentVersionMedia).toHaveBeenCalled();
   expect(pack.items[0]!.reviewedAt).toBeNull();
   expect(pack.readiness.canPublish).toBe(false);
 });

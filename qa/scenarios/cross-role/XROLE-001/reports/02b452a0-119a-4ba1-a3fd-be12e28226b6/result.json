@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "id": "02b452a0-119a-4ba1-a3fd-be12e28226b6",
+  "scenarioId": "XROLE-001",
+  "role": "cross-role",
+  "profile": "standard",
+  "startedAt": "2026-11-10T12:03:55.178Z",
+  "finishedAt": "2026-11-10T12:03:57.855Z",
+  "parentRunId": "f21fb3d6-561f-40dc-a21c-d350723f63d0",
+  "identity": {
+    "sha": "a7a64c5641cccd6ad2dc6c94ee932e4e773d50da",
+    "dirty": true,
+    "codeHash": "8a83e88e568b7cb9c7d58a4a271fcab46f2ef9a8eee3276bcb2bd3fb5beae2ff",
+    "rulesHash": "2b6c7df9b02d949018154924614e07c69455d5e46393e49fb4397495fca1cde6",
+    "configHash": "7fe606c8d7237b1993bee2312c415969495697b7ea1742f6a081c0ddafc55a52",
+    "environmentHash": "4d6b712f990f2290466e917317bdad3ab93581be072343eda567fc2c119bfcbe",
+    "manifestHash": "09cf268d5ad3def4ac89353e0dc3b9e12e64d0e28df0ffe8224d63afbed13481"
+  },
+  "environment": {
+    "ready": false,
+    "platform": "win32",
+    "resources": {
+      "logicalCpuCount": 8,
+      "totalMemoryBytes": 12716056576,
+      "freeMemoryBytes": 2185752576
+    },
+    "localEnvironment": "operator-provided-local-services",
+    "build": {
+      "mode": "production",
+      "lowMemory": true
+    },
+    "profile": "standard",
+    "checks": [
+      {
+        "id": "node",
+        "ready": false,
+        "message": "Node >=24.22.1 <25 required (patched bundled Undici)",
+        "version": "24.22.0"
+      },
+      {
+        "id": "pnpm",
+        "ready": true,
+        "message": "Use repository-pinned pnpm",
+        "version": "12.6.0"
+      },
+      {
+        "id": "dependencies",
+        "ready": true,
+        "message": "Run pnpm install --frozen-lockfile"
+      },
+      {
+        "id": "port-3500",
+        "ready": true,
+        "message": "Port 3500 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3501",
+        "ready": true,
+        "message": "Port 3501 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3502",
+        "ready": true,
+        "message": "Port 3502 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "test-environment",
+        "ready": false,
+        "message": "NODE_ENV must be test; TEST_DATABASE_URL must point to a dedicated localhost test service; TEST_REDIS_URL must point to a dedicated localhost test service; BULLMQ_PREFIX must start with numora:test:"
+      },
+      {
+        "id": "chromium",
+        "ready": false,
+        "message": "Install Chromium: pnpm --filter @tka/web exec playwright install chromium"
+      }
+    ],
+    "staging": "NOT_CONFIGURED",
+    "drive": "FOLDER_CONFIGURED_CONNECTION_REQUIRES_CHECK"
+  },
+  "checks": [
+    {
+      "id": "scoring",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "packages/assessment-engine/src/pretest-partial.spec.ts"
+      ],
+      "minimumTests": 5,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/admin/content-package-workspace.test.tsx",
+        "apps/web/src/features/admin/content-review.test.tsx",
+        "apps/web/src/features/admin/pretest.test.tsx",
+        "apps/web/src/features/core-learning/pretest.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "qa/scenarios/cross-role/XROLE-001/component/pretest-media.test.tsx"
+      ],
+      "minimumTests": 10,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/content/content-preview.integration.spec.ts",
+        "apps/api/src/modules/learning/pretest-tryout.integration.spec.ts",
+        "apps/api/src/modules/content/pretest-rubric.spec.ts"
+      ],
+      "minimumTests": 37,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY",
+      "durationMs": 0
+    },
+    {
+      "id": "browser",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "component",
+      "files": [
+        "apps/web/e2e/pretest-tryout.spec.ts"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "BLOCKED",
+      "observedTests": 0,
+      "reason": "CORE_TOOLCHAIN_NOT_READY; LOCAL_TEST_SERVICES_NOT_READY; REDIS_7_NOT_READY; CHROMIUM_NOT_READY",
+      "durationMs": 0
+    }
+  ],
+  "verdict": "BLOCKED",
+  "limitations": [
+    "Synthetic PG content and email auth fixtures; not Google login, academic content approval or staging acceptance.",
+    "Local performance is a baseline with no approved production SLO; generator and application share one machine.",
+    "Manual keyboard/UAT evidence is separate; automated accessibility is not a complete accessibility certification.",
+    "Variety invalid-envelope rejection is contract/generator evidence; connected tests cover API input rejection.",
+    "Recovery is local database/worker/transport rehearsal, not cloud failover, R2 recovery or production RTO/RPO."
+  ],
+  "preparation": {
+    "ready": false,
+    "reason": "LOCAL_TEST_SERVICES_NOT_READY"
+  },
+  "executionStartedAt": "2026-11-10T12:03:55.909Z"
+}

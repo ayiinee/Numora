@@ -23,6 +23,7 @@ import type { AdminRequest } from '../identity/admin.guard';
 import { ContentMutationDto } from './content.dto';
 import {
   ContentVersionDetailDto,
+  ContentVersionMediaLinksDto,
   ReviewContentDto,
   parseContentReview,
 } from './content-lifecycle.dto';
@@ -42,6 +43,11 @@ export class ContentLifecycleController {
   @ApiOkResponse({ type: ContentVersionDetailDto })
   get(@Param('id', ParseUUIDPipe) id: string) {
     return this.lifecycle.get(id);
+  }
+  @Get(':id/media-links')
+  @ApiOkResponse({ type: ContentVersionMediaLinksDto })
+  media(@Param('id', ParseUUIDPipe) id: string) {
+    return this.lifecycle.media(id);
   }
   @ApiExtraModels(ReviewContentDto, ReviewImportedQuestionDto)
   @ApiBody({

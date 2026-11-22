@@ -1997,6 +1997,17 @@ describe.skipIf(!testUrl)(
       expect(
         (await ok<ContentPackageDetailDto>(`admin/content/packages/${draftTryout.id}`)).status,
       ).toBe('ARCHIVED');
+      expect(
+        (
+          await ok<{ total: number }>(
+            `admin/content/packages?usageType=TRYOUT&status=ACTIVE&search=TEST%20ONLY%20Tryout%20draft%20archive`,
+          )
+        ).total,
+      ).toBe(0);
+      await ok(`admin/content/packages/${draftTryout.id}/restore`, 'POST', { expectedRevision: 0 });
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${draftTryout.id}`)).status,
+      ).toBe('DRAFT');
       for (const token of ['operations', 'student'])
         expect(
           (

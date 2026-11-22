@@ -102,6 +102,14 @@ export function canonical(value: unknown): string {
 export function digest(value: unknown) {
   return createHash('sha256').update(canonical(value)).digest('hex');
 }
+export function canonicalExternalId(
+  identityExternalId: string | null | undefined,
+  assets: Array<{ externalId?: string | null }>,
+  sourceRef: string | null | undefined,
+  fallback: string,
+) {
+  return identityExternalId ?? assets.find((asset) => asset.externalId)?.externalId ?? sourceRef ?? fallback;
+}
 export function cleanAsset(a: ContentAsset): ContentAsset {
   return {
     externalId: a.externalId,
