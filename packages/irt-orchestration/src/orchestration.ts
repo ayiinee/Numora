@@ -53,6 +53,11 @@ export async function prepareTryoutAnalysis(
   input: PrepareTryoutAnalysis,
 ) {
   requireIrtEnabled();
+  // Production Tryout must use the delivery-binding adapter. This legacy
+  // entrypoint selects one package and cannot freeze multi-arm roster,
+  // assigned/delivered arms, or crossover evidence safely.
+  if (process.env.NUMORA_IRT_MODE === 'PRODUCTION')
+    fail('IRT_PRODUCTION_DELIVERY_BINDING_REQUIRED');
   if (
     !uuid(input.contextId) ||
     !Array.isArray(input.configurationPins) ||
@@ -353,9 +358,9 @@ export async function adoptTryoutArtifact(client: Sql, id: string, actorId?: str
         return { requestId: id, adopted: false };
       attemptedExecutionId = e.id;
       const outputs = await tx<
-        { id: string; payload: unknown; scientific_decision: string; valid: boolean }[]
+        { id: string; digest: string; payload: unknown; scientific_decision: string; valid: boolean }[]
       >`
-        SELECT o.id,o.payload,o.scientific_decision,(o.contract_version=3 AND o.kind='CALIBRATE_TRYOUT' AND o.sequence_number=1 AND o.input_digest=${r.input_digest} AND o.digest=irt_compute.payload_digest(o.payload) AND d.status='SEALED' AND d.snapshot_id=${r.snapshot_id} AND d.execution_id=${e.id}
+        SELECT o.id,o.digest,o.payload,o.scientific_decision,(o.contract_version=3 AND o.kind='CALIBRATE_TRYOUT' AND o.sequence_number=1 AND o.input_digest=${r.input_digest} AND o.digest=irt_compute.payload_digest(o.payload) AND d.status='SEALED' AND d.snapshot_id=${r.snapshot_id} AND d.execution_id=${e.id}
           AND EXISTS(SELECT 1 FROM configuration_approvals a JOIN irt_compute.technical_policy_versions p ON p.id=a.technical_policy_version_id WHERE a.id=ANY(${r.configuration_pins.map((p) => p.approvalId)}::uuid[]) AND p.id=d.selection_policy_id AND p.kind='QUALITY_GATE')) AS valid
         FROM irt_compute.compute_outputs o LEFT JOIN irt_compute.analysis_datasets d ON d.id=o.dataset_id WHERE o.execution_id=${e.id}`;
       const output = outputs[0];
@@ -385,11 +390,41 @@ export async function adoptTryoutArtifact(client: Sql, id: string, actorId?: str
         )
       )
         fail('IRT_ARTIFACT_ITEM_MISMATCH');
+      const snapshotPeople = await tx<
+        { attempt_id: string; respondent_id: string; package_id: string; package_version: number }[]
+      >`SELECT DISTINCT i.attempt_id::text,i.respondent_id,a.package_id::text,p.package_version
+        FROM response_snapshot_items i
+        JOIN assessment_attempts a ON a.id=i.attempt_id
+        JOIN assessment_packages p ON p.id=a.package_id
+        WHERE i.snapshot_id=${r.snapshot_id}`;
+      const expectedPeople = new Map(snapshotPeople.map((person) => [person.attempt_id, person]));
+      if (
+        output.payload.respondents.length !== expectedPeople.size ||
+        new Set(output.payload.respondents.map((person) => person.attemptId)).size !==
+          output.payload.respondents.length ||
+        output.payload.respondents.some((person) => {
+          const expected = expectedPeople.get(person.attemptId);
+          return (
+            !expected ||
+            expected.respondent_id !== person.respondentId ||
+            expected.package_id !== person.packageId ||
+            expected.package_version !== person.packageVersion
+          );
+        })
+      )
+        fail('IRT_RESPONDENT_COVERAGE_INVALID');
       const [model] = await tx<
         { code: string; version: number }[]
       >`SELECT t.code,t.version FROM configuration_approvals a JOIN irt_compute.technical_policy_versions t ON t.id=a.technical_policy_version_id WHERE a.id=ANY(${r.configuration_pins.map((p) => p.approvalId)}::uuid[]) AND t.kind='IRT_MODEL' ORDER BY a.id LIMIT 1`;
       if (!model) fail('IRT_ARTIFACT_PROVENANCE_INVALID');
       await tx`UPDATE analysis_requests SET accepted_execution_id=${e.id},status='COMPLETED' WHERE id=${id}`;
+      for (const pkg of output.payload.packages) {
+        const [source] = await tx<{ manifest_digest: string | null }[]>`
+          SELECT manifest_digest FROM assessment_packages
+          WHERE id=${pkg.packageId} AND package_version=${pkg.packageVersion}`;
+        if (!source?.manifest_digest || source.manifest_digest !== pkg.manifestDigest)
+          fail('IRT_PACKAGE_MANIFEST_MISMATCH');
+      }
       const [batch] = await tx<
         { id: string }[]
       >`INSERT INTO irt_batches(package_id,batch_kind,model_version,status,finished_at,context_id,response_snapshot_id,analysis_request_id,source_output_id,output_snapshot)

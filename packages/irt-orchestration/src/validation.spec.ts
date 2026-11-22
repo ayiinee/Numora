@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { validateCalibrationPayload, validateComputeNotification } from './validation.js';
 
 const id = '00000000-0000-4000-8000-000000000001';
+const packageId = '00000000-0000-4000-8000-000000000002';
+const armId = '00000000-0000-4000-8000-000000000003';
+const attemptId = '00000000-0000-4000-8000-000000000004';
+const respondentId = '00000000-0000-4000-8000-000000000005';
 const item = {
   questionVersionId: id,
   rubricVersionId: id,
@@ -14,6 +18,30 @@ const item = {
   steps: [],
   qualityEvidence: { fixture: true },
 };
+const lineage = {
+  packageId,
+  packageVersion: 1,
+  armId,
+  armKind: 'ORIGINAL',
+  manifestDigest: 'b'.repeat(64),
+};
+const respondent = {
+  respondentId,
+  attemptId,
+  packageId,
+  packageVersion: 1,
+  assignedArmId: armId,
+  deliveredArmId: armId,
+  status: 'SCORED',
+  theta: 0,
+  standardError: 0.2,
+  score: 50,
+  scoreMapping: {},
+  referencePackage: {},
+  usedQuestionVersionIds: [id],
+  reasonCodes: [],
+};
+const validPayload = { items: [item], packages: [lineage], respondents: [respondent] };
 describe('v3 boundary validation', () => {
   it('rejects unversioned/stale-shaped notifications and extra student payload', () => {
     const notification = {
@@ -35,7 +63,7 @@ describe('v3 boundary validation', () => {
       );
   });
   it('rejects nonfinite values, duplicates, invented insufficient parameters and invalid GPCM steps', () => {
-    expect(() => validateCalibrationPayload({ items: [item] })).not.toThrow();
+    expect(() => validateCalibrationPayload(validPayload)).not.toThrow();
     for (const patch of [
       { discriminationA: NaN },
       { difficultyB: Infinity },
@@ -44,13 +72,13 @@ describe('v3 boundary validation', () => {
       { guessingC: 0.25 },
       { modelFamily: 'GPCM', steps: [{ step: 2, value: 0, standardError: 0 }] },
     ])
-      expect(() => validateCalibrationPayload({ items: [{ ...item, ...patch }] })).toThrow(
+      expect(() => validateCalibrationPayload({ ...validPayload, items: [{ ...item, ...patch }] })).toThrow(
         'IRT_ARTIFACT_INVALID',
       );
-    expect(() => validateCalibrationPayload({ items: [item, item] })).toThrow(
+    expect(() => validateCalibrationPayload({ ...validPayload, items: [item, item] })).toThrow(
       'IRT_ARTIFACT_INVALID',
     );
-    expect(() => validateCalibrationPayload({ items: [item], respondents: [] })).toThrow(
+    expect(() => validateCalibrationPayload({ items: [item], packages: [lineage] })).toThrow(
       'IRT_ARTIFACT_INVALID',
     );
   });

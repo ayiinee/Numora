@@ -13,6 +13,8 @@ import {
   getDatabase,
   contentImportVersions,
   contentImportIdentities,
+  questions,
+  questionVariants,
   questionVersions,
   contentPreviewSessions,
   contentPreviewItems,
@@ -26,6 +28,7 @@ import {
 import type { AdminTransaction } from '../audit/admin-mutation';
 import { ContentImportService, operationKey, operationLock } from './content-import.service';
 import { canonical, digest, normalizeAnswer } from './content-import.validation';
+import { contentExternalId } from './content-external-id';
 import { R2MediaStorage } from './r2-media.storage';
 import type {
   CreatePreviewDto,
@@ -76,13 +79,20 @@ export class ContentPreviewService {
         return previous.id;
       }
       const rows = await tx
-        .select({ version: questionVersions, externalId: contentImportIdentities.externalId })
+        .select({
+          version: questionVersions,
+          externalId: contentImportIdentities.externalId,
+          sourceRef: questions.sourceRef,
+          questionId: questions.id,
+        })
         .from(questionVersions)
-        .innerJoin(
+        .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
+        .leftJoin(
           contentImportVersions,
           eq(contentImportVersions.questionVersionId, questionVersions.id),
         )
-        .innerJoin(
+        .leftJoin(
           contentImportIdentities,
           eq(contentImportIdentities.id, contentImportVersions.identityId),
         )
@@ -91,7 +101,8 @@ export class ContentPreviewService {
       if (rows.length !== body.questionVersionIds.length)
         throw new NotFoundException({ code: 'PREVIEW_VERSION_NOT_FOUND' });
       const snapshots = body.questionVersionIds.map((id) => {
-        const { version: v, externalId } = rows.find((r) => r.version.id === id)!;
+        const row = rows.find((r) => r.version.id === id)!;
+        const { version: v } = row;
         if (v.contentStatus === 'ARCHIVED')
           throw new ConflictException({ code: 'PREVIEW_VERSION_ARCHIVED' });
         const content = v.optionsOrStatements as {
@@ -99,6 +110,7 @@ export class ContentPreviewService {
           categories: ContentCategory[];
         };
         const assets = (v.media ?? []) as ContentAsset[];
+        const externalId = contentExternalId(row.externalId, row.sourceRef, row.questionId, assets);
         if (assets.some((a) => !a.objectKey))
           throw new ConflictException({ code: 'MEDIA_NOT_READY' });
         return {

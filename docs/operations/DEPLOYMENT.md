@@ -42,6 +42,43 @@ merge to main
 → health/smoke checks
 ```
 
+## VPS Next.js frontend deployment checklist
+
+Production `numora-web` reads `NUMORA_WEB_DIST_DIR` from
+`/etc/numora/production.env`. The build directory must match that value. The
+production env file is also the source of public Supabase/API values baked into
+the browser bundle. Never run a production build with an empty shell env or a
+developer `.env`.
+
+Run as `admin-numora` on VPS:
+
+```bash
+cd /opt/numora
+export PATH=/home/admin-numora/.nvm/versions/node/v24.22.1/bin:$PATH
+set -a
+. /etc/numora/production.env
+set +a
+test "$NUMORA_WEB_DIST_DIR" = ".next-db-switch"
+pnpm install --frozen-lockfile
+rm -rf "apps/web/$NUMORA_WEB_DIST_DIR"
+pnpm --filter @tka/web build
+sudo systemctl restart numora-web
+systemctl is-active numora-web
+```
+
+Before declaring success:
+
+1. Check `systemctl is-active numora-web numora-api`.
+2. Open an authenticated admin page in a fresh browser reload.
+3. Verify existing login/session, API identity loading, and one read-only admin page.
+4. Verify the changed UI behavior.
+5. Check `sudo journalctl -u numora-web -n 80 --no-pager` for startup or auth errors.
+
+If users suddenly appear logged out or passwords appear invalid after a web
+deploy, stop further changes. Do not reset passwords or touch Auth rows. First
+rebuild using the exact procedure above; a missing production Supabase public
+key can make the client reject otherwise valid sessions.
+
 ## Database migrations
 
 - run controlled migration before/with deployment;

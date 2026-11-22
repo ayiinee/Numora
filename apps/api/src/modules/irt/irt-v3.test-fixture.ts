@@ -51,13 +51,28 @@ export async function tryoutMeasurementFixture(
   const [policy] = await owner<
     { id: string }[]
   >`INSERT INTO scoring_policy_versions(policy_code,version,configuration) VALUES(${key},1,'{"fixture":true}') RETURNING id`;
+  const armId = randomUUID();
   const [pack] = await owner<
     { id: string }[]
-  >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id}) RETURNING id`;
+  >`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id,status) VALUES(${key},1,'TEST ONLY package','TRYOUT',${policy!.id},'DRAFT') RETURNING id`;
   const [pi] = await owner<
     { id: string }[]
   >`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
-  await owner`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id}`;
+  const [beforeFreeze] = await owner<
+    { status: string; manifest_digest: string | null; frozen_at: Date | null }[]
+  >`SELECT status,manifest_digest,frozen_at FROM assessment_packages WHERE id=${pack!.id}`;
+  if (
+    beforeFreeze?.status !== 'DRAFT' ||
+    beforeFreeze.manifest_digest !== null ||
+    beforeFreeze.frozen_at !== null
+  )
+    throw new Error(
+      `Fixture package unexpectedly pinned before freeze: ${JSON.stringify(beforeFreeze)}`,
+    );
+  const [frozen] = await owner<
+    { manifest_digest: string }[]
+  >`UPDATE assessment_packages SET frozen_at=now() WHERE id=${pack!.id} RETURNING manifest_digest`;
+  const manifestDigest = frozen!.manifest_digest;
   const [batch] = await main<
     { id: string }[]
   >`INSERT INTO tryout_batches(package_id,starts_at,closes_at,cutoff_at,result_due_at,status,release_policy,release_policy_digest)
@@ -110,6 +125,8 @@ export async function tryoutMeasurementFixture(
     principal: principal!.id,
     quality,
     pins,
+    armId,
+    manifestDigest,
     attemptId,
     itemId,
     partial,
