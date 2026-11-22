@@ -295,9 +295,18 @@ export function ContentPackageWorkspace({
     setOffset(0);
     setMedia([]);
   };
-  const loadMedia = () =>
-    void run(async () => {
-      if (!detail?.items.length) return;
+  const requiredMediaIds = () =>
+    new Set(
+      detail?.items.flatMap((item) =>
+        item.question?.metadata.assetManifest.map((asset) => asset.assetId) ?? [],
+      ) ?? [],
+    );
+  const loadMedia = async () => {
+    const required = requiredMediaIds();
+    if (!detail?.items.length || [...required].every((id) => media.some((m) => m.assetId === id)))
+      return true;
+    let loaded = false;
+    await run(async () => {
       const preview = await createPreview(
         token,
         { questionVersionIds: detail.items.map((i) => i.questionVersionId) },
@@ -306,15 +315,24 @@ export function ContentPackageWorkspace({
       // Review includes explanation media; WORK media intentionally hides it.
       const review = await submitPreview(token, preview.id, crypto.randomUUID());
       setMedia(review.media);
+      loaded = [...required].every((id) => review.media.some((m) => m.assetId === id));
     });
+    return loaded;
+  };
+  useEffect(() => {
+    if (!inspectingId || !detail) return;
+    const item = detail.items.find((entry) => entry.questionVersionId === inspectingId);
+    if (item?.question?.metadata.assetManifest.length) void loadMedia();
+  }, [inspectingId, detail?.id]);
   const locked = busy || disabled || detailLoading;
   const printableTryout =
     detail?.assessmentType === 'TRYOUT' &&
     detail.items.length > 0 &&
     detail.items.length === detail.readiness.expectedCount &&
     detail.items.every((item) => item.question);
-  const printTryout = () => {
+  const printTryout = async () => {
     if (!printableTryout) return;
+    if (!(await loadMedia())) return;
     const previousTitle = document.title;
     document.title = `${detail.name} - Soal`;
     const restore = () => {
@@ -646,8 +664,8 @@ export function ContentPackageWorkspace({
                 {detail.assessmentType === 'TRYOUT' && (
                   <Button
                     variant="secondary"
-                    disabled={!printableTryout}
-                    onClick={printTryout}
+                    disabled={locked || !printableTryout}
+                    onClick={() => void printTryout()}
                     title={
                       printableTryout
                         ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
