@@ -2855,6 +2855,41 @@
         ]
       }
     },
+    "/api/v1/admin/content/versions/{id}/media-links": {
+      "get": {
+        "operationId": "ContentLifecycleController_media",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentVersionMediaLinksDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
     "/api/v1/admin/content/versions/{id}/review": {
       "post": {
         "operationId": "ContentLifecycleController_review",
@@ -5846,6 +5881,51 @@
         ]
       }
     },
+    "/api/v1/admin/content/packages/{id}/restore": {
+      "post": {
+        "operationId": "ContentPackagesController_restore",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
     "/api/v1/admin/content/upload-template": {
       "get": {
         "operationId": "ContentUploadsController_template",
@@ -6133,6 +6213,169 @@
         ],
         "tags": [
           "admin-content-uploads"
+        ]
+      }
+    },
+    "/api/v1/admin/assessments/tryout/{packageId}/variant-options": {
+      "get": {
+        "operationId": "TryoutVariantGenerationController_options",
+        "parameters": [
+          {
+            "name": "packageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "anchors",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutVariantOptionsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-variants"
+        ]
+      }
+    },
+    "/api/v1/admin/assessments/tryout/{packageId}/variants": {
+      "post": {
+        "operationId": "TryoutVariantGenerationController_prepare",
+        "parameters": [
+          {
+            "name": "packageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTryoutVariantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutVariantProcessDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-variants"
+        ]
+      }
+    },
+    "/api/v1/admin/assessments/tryout/variant-processes/{id}": {
+      "get": {
+        "operationId": "TryoutVariantGenerationController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutVariantProcessDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-variants"
+        ]
+      }
+    },
+    "/api/v1/admin/assessments/tryout/variant-processes/{id}/materialize": {
+      "post": {
+        "operationId": "TryoutVariantGenerationController_materialize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-variants"
         ]
       }
     },
@@ -13483,6 +13726,64 @@
           "readiness"
         ]
       },
+      "ContentVersionMediaLinkDto": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "placement": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "INVALID",
+              "MISSING"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "assetId",
+          "altText",
+          "placement",
+          "url",
+          "expiresAt",
+          "status",
+          "reason"
+        ]
+      },
+      "ContentVersionMediaLinksDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentVersionMediaLinkDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "ReviewContentDto": {
         "type": "object",
         "properties": {
@@ -14338,6 +14639,17 @@
           "contentRevision": {
             "type": "number"
           },
+          "itemCount": {
+            "type": "number"
+          },
+          "expectedItemCount": {
+            "type": "number"
+          },
+          "lastModifiedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "type": "string"
           },
@@ -14404,6 +14716,8 @@
           "name",
           "assessmentType",
           "contentRevision",
+          "itemCount",
+          "expectedItemCount",
           "status",
           "isDemo",
           "source",
@@ -16825,6 +17139,17 @@
           "contentRevision": {
             "type": "number"
           },
+          "itemCount": {
+            "type": "number"
+          },
+          "expectedItemCount": {
+            "type": "number"
+          },
+          "lastModifiedAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "type": "string"
           },
@@ -16876,6 +17201,8 @@
           "name",
           "assessmentType",
           "contentRevision",
+          "itemCount",
+          "expectedItemCount",
           "status",
           "isDemo",
           "source",
@@ -17670,6 +17997,283 @@
           "expectedRevision",
           "title",
           "assessmentType"
+        ]
+      },
+      "TryoutVariantAnchorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayOrder",
+          "label",
+          "externalId"
+        ]
+      },
+      "TryoutVariantGeneratorMappingDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "serviceContract": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "originalHash": {
+            "type": "string"
+          },
+          "originalVersion": {
+            "type": "number"
+          },
+          "configVersion": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "serviceContract",
+          "mode",
+          "originalHash",
+          "originalVersion",
+          "configVersion"
+        ]
+      },
+      "TryoutVariantFocalDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "mapping": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TryoutVariantGeneratorMappingDto"
+              }
+            ]
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "displayOrder",
+          "label",
+          "externalId",
+          "mapping",
+          "blockers"
+        ]
+      },
+      "TryoutVariantOptionsDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageName": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "contentRevision": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutVariantAnchorDto"
+            }
+          },
+          "focalQuestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutVariantFocalDto"
+            }
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "generatorBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "generatorAvailable": {
+            "type": "boolean"
+          },
+          "canGenerate": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "packageId",
+          "packageName",
+          "packageVersion",
+          "contentRevision",
+          "status",
+          "questions",
+          "focalQuestions",
+          "blockers",
+          "generatorBlockers",
+          "generatorAvailable",
+          "canGenerate"
+        ]
+      },
+      "CreateTryoutVariantDto": {
+        "type": "object",
+        "properties": {
+          "anchorQuestionVersionIds": {
+            "minItems": 5,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "operationKey": {
+            "type": "string"
+          },
+          "expectedRevision": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "anchorQuestionVersionIds",
+          "operationKey",
+          "expectedRevision"
+        ]
+      },
+      "TryoutVariantRequestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "executionStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "executionStatus",
+          "failureCode"
+        ]
+      },
+      "TryoutVariantProcessDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourcePackageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourcePackageVersion": {
+            "type": "number"
+          },
+          "anchorQuestionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "focalQuestionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "GENERATING",
+              "FAILED",
+              "READY",
+              "IMPORTED"
+            ]
+          },
+          "generatedPackageId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutVariantRequestDto"
+            }
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sourcePackageId",
+          "sourcePackageVersion",
+          "anchorQuestionVersionIds",
+          "focalQuestionVersionIds",
+          "status",
+          "generatedPackageId",
+          "requests",
+          "createdAt"
         ]
       },
       "ClassDto": {

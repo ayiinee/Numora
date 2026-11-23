@@ -2,8 +2,22 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { contentImportSchema, type ImportQuestion } from '@tka/database';
-import { digest, snapshot, structuralErrors, normalizeAnswer } from './content-import.validation';
+import {
+  canonicalExternalId,
+  digest,
+  snapshot,
+  structuralErrors,
+  normalizeAnswer,
+} from './content-import.validation';
 describe('question import contract semantics', () => {
+  it('uses verified asset identity when generated versions have no import identity', () => {
+    expect(canonicalExternalId(null, [{ externalId: 'GEN-canonical' }], null, 'version-id')).toBe(
+      'GEN-canonical',
+    );
+    expect(canonicalExternalId('import-id', [{ externalId: 'asset-id' }], null, 'version-id')).toBe(
+      'import-id',
+    );
+  });
   it('allows Pretest without a Drill level while retaining required academic mapping', async () => {
     const q = JSON.parse(
       await readFile(

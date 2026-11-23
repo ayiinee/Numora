@@ -30,6 +30,8 @@ import { ContentPackagesController } from './content-packages.controller';
 import { ContentPackagesService } from './content-packages.service';
 import { ContentUploadsController, TrackedExcelInterceptor } from './content-uploads.controller';
 import { ContentUploadsService } from './content-uploads.service';
+import { TryoutVariantGenerationController } from './tryout-variant-generation.controller';
+import { TryoutVariantGenerationService } from './tryout-variant-generation.service';
 
 @Module({
   imports: [IdentityModule, ConfigModule],
@@ -46,6 +48,7 @@ import { ContentUploadsService } from './content-uploads.service';
     ExcelImportController,
     ContentPackagesController,
     ContentUploadsController,
+    TryoutVariantGenerationController,
   ],
   providers: [
     TryoutBatchesService,
@@ -66,6 +69,7 @@ import { ContentUploadsService } from './content-uploads.service';
     MediaUploadsService,
     MediaUploadsRepository,
     R2MediaStorage,
+    TryoutVariantGenerationService,
   ],
   exports: [
     TryoutBatchesService,

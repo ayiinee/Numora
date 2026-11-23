@@ -415,7 +415,7 @@ function Shell({
         </main>
         {!focus && (
           <footer className="app-footer">
-            NUMORA <span>Belajar matematika, selangkah lebih paham.</span>
+            NUMORA
           </footer>
         )}
       </div>

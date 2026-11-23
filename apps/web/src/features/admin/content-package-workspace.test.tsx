@@ -6,8 +6,8 @@ import {
   listContentPackages,
   preparePretestScoring,
 } from './content-package-api';
-import { createPreview, submitPreview } from './content-preview-api';
-import type { ContentPackageDetailDto, PreviewSessionDto } from './generated-types';
+import { getContentVersionMedia } from './content-lifecycle-api';
+import type { ContentPackageDetailDto } from './generated-types';
 
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
@@ -46,7 +46,9 @@ vi.mock('./content-package-api', () => ({
   reviewImportedQuestion: vi.fn(),
   preparePretestScoring: vi.fn(),
 }));
-vi.mock('./content-preview-api', () => ({ createPreview: vi.fn(), submitPreview: vi.fn() }));
+vi.mock('./content-lifecycle-api', () => ({
+  getContentVersionMedia: vi.fn(async () => ({ items: [] })),
+}));
 afterEach(() => {
   cleanup();
   if (originalShow) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShow);
@@ -61,6 +63,8 @@ it('allows a valid Pretest draft to publish without manual review or approval in
     familyCode: 'TEST',
     packageVersion: 1,
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     assessmentType: 'PRETEST',
     status: 'DRAFT',
     isDemo: true,
@@ -159,32 +163,14 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     subchapterCode: null,
     competencyCode: null,
     difficulty: null,
-    stem: { text: 'Soal [[asset:diagram-1]]' },
+    stem: { text: 'Soal' },
     options: [
       { id: 'A', content: { text: 'Benar' } },
       { id: 'B', content: { text: 'Salah' } },
     ],
     answer: { optionId: 'A' },
     explanation: { text: 'Penjelasan' },
-    metadata: {
-      sourceLevelNumber: null,
-      assetManifest: [
-        {
-          externalId: 'GEN-image',
-          assetId: 'diagram-1',
-          textMarker: '[[asset:diagram-1]]',
-          placement: 'STEM' as const,
-          itemId: null,
-          assetOrder: 1,
-          altText: 'Diagram soal',
-          objectKey: 'question-media/GEN-image/v1/diagram-1.png',
-          sha256: 'a'.repeat(64),
-          contentType: 'image/png' as const,
-          byteLength: 1,
-          bucket: 'numora-prod',
-        },
-      ],
-    },
+    metadata: { sourceLevelNumber: null, assetManifest: [] },
   };
   const pack = {
     id: 'tryout-pdf',
@@ -192,6 +178,8 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     familyCode: 'TRYOUT-PDF',
     packageVersion: 1,
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     assessmentType: 'TRYOUT' as const,
     status: 'DRAFT' as const,
     isDemo: false,
@@ -229,44 +217,6 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
     ],
   } as unknown as ContentPackageDetailDto;
   vi.mocked(getContentPackage).mockResolvedValue(pack);
-  const previewItem = {
-    instanceId: 'preview-item',
-    questionVersionId: 'tryout-q1',
-    externalId: 'TRYOUT-Q1',
-    type: 'SINGLE_CHOICE' as const,
-    stem: { text: '' },
-    options: [],
-    categories: [],
-    answer: null,
-    revision: 0,
-    serverSavedAt: '2099-01-01T00:00:00Z',
-    score: null,
-  };
-  vi.mocked(createPreview).mockResolvedValue({
-    id: 'preview',
-    state: 'IN_PROGRESS',
-    scoringStatus: 'NOT_SCORED',
-    score: null,
-    items: [previewItem],
-    media: [],
-  });
-  vi.mocked(submitPreview).mockResolvedValue({
-    id: 'preview',
-    state: 'SUBMITTED',
-    scoringStatus: 'NOT_SCORED',
-    score: null,
-    items: [previewItem],
-    media: [
-      {
-        instanceId: 'preview-item',
-        assetId: 'diagram-1',
-        altText: 'Diagram soal',
-        url: 'https://example.invalid/diagram.png',
-        expiresAt: '2099-01-01T00:00:00Z',
-      },
-    ],
-  });
-  const print = vi.spyOn(window, 'print').mockImplementation(() => {});
   render(
     <ContentPackageWorkspace
       token="TEST"
@@ -285,10 +235,6 @@ it('enables Tryout PDF only when every package item is hydrated', async () => {
   expect(screen.getByRole('button', { name: 'Export PDF' }).getAttribute('title')).toContain(
     'Cetak soal',
   );
-  fireEvent.click(exportButton);
-  await waitFor(() => expect(submitPreview).toHaveBeenCalledWith('TEST', 'preview', expect.any(String)));
-  expect(print).toHaveBeenCalled();
-  print.mockRestore();
 });
 
 it('loads package choices five at a time and disables next on the final full page', async () => {
@@ -299,6 +245,8 @@ it('loads package choices five at a time and disables next on the final full pag
     name: 'TEST',
     assessmentType: 'DRILL' as const,
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT' as const,
     isDemo: true,
     source: { sourceNamespace: 'TEST', sourceName: 'TEST', sourceReference: 'TEST' },
@@ -374,6 +322,8 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     name: 'TEST ONLY',
     assessmentType: 'DRILL',
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT',
     isDemo: true,
     source: { sourceNamespace: 'TEST', sourceName: 'TEST ONLY', sourceReference: 'TEST ONLY' },
@@ -431,30 +381,17 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
   };
   vi.mocked(listContentPackages).mockResolvedValue({ items: [pack], total: 1 });
   vi.mocked(getContentPackage).mockResolvedValue(pack);
-  const preview: PreviewSessionDto = {
-    id,
-    state: 'IN_PROGRESS',
-    scoringStatus: 'NOT_SCORED',
-    score: null,
-    items: [
-      {
-        instanceId: id,
-        questionVersionId: id,
-        externalId: 'TEST',
-        type: 'SINGLE_CHOICE',
-        stem: { text: '' },
-        options: [],
-        categories: [],
-        answer: null,
-        revision: 0,
-        serverSavedAt: '2099-01-01T00:00:00Z',
-        score: null,
-      },
-    ],
-    media: [media[0]!],
-  };
-  vi.mocked(createPreview).mockResolvedValue(preview);
-  vi.mocked(submitPreview).mockResolvedValue({ ...preview, state: 'SUBMITTED', media });
+  vi.mocked(getContentVersionMedia).mockResolvedValue({
+    items: media.map((asset) => ({
+      assetId: asset.assetId,
+      altText: asset.altText,
+      placement: 'STEM',
+      url: asset.url,
+      expiresAt: asset.expiresAt,
+      status: 'READY' as const,
+      reason: null,
+    })),
+  });
   render(
     <ContentPackageWorkspace
       token="TEST ONLY"
@@ -466,6 +403,7 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     />,
   );
   fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
   expect(await screen.findByAltText('Diagram soal')).toBeTruthy();
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   // JSDOM does not load remote images. Trigger failure explicitly instead of
@@ -477,7 +415,7 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
   fireEvent.click(retryButtons[0]!);
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   expect(screen.getByAltText('Diagram soal')).toBeTruthy();
-  expect(submitPreview).toHaveBeenCalledWith('TEST ONLY', id, expect.any(String));
+  expect(getContentVersionMedia).toHaveBeenCalled();
   expect(pack.items[0]!.reviewedAt).toBeNull();
   expect(pack.readiness.canPublish).toBe(false);
 });
@@ -489,6 +427,8 @@ it('prepares scoring with revision, shows progress and refreshes validation', as
     familyCode: 'TEST',
     packageVersion: 1,
     contentRevision: 7,
+    itemCount: 0,
+    expectedItemCount: 0,
     assessmentType: 'PRETEST',
     status: 'DRAFT',
     isDemo: true,
@@ -539,3 +479,4 @@ it('prepares scoring with revision, shows progress and refreshes validation', as
   expect(screen.queryByText(/Memproses paket/)).toBeNull();
   expect(screen.queryByText('Aturan penilaian belum sesuai.')).toBeNull();
 });
+

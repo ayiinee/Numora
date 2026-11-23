@@ -51,6 +51,11 @@ describe('admin breadcrumbs', () => {
       { label: 'Tinjau soal' },
     ]);
   });
+  it('labels Tryout archived bank separately from package detail', () => {
+    expect(adminBreadcrumbs('/admin/assessments/tryout/archived', '', groups).at(-1)).toEqual({
+      label: 'Bank arsip',
+    });
+  });
   it('keeps root current and does not expose capability-filtered menu parents', () => {
     expect(adminBreadcrumbs('/admin', '', groups)).toEqual([{ label: 'Ruang admin' }]);
     expect(adminBreadcrumbs('/admin/assessments/pretest/id', '', [], 'Akses ditolak')).toEqual([

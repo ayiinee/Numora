@@ -1986,7 +1986,7 @@ for (const width of [390, 1440]) {
         fixture.calls.find((call) => call.method === 'PATCH')?.body?.questionVersionIds,
       ).toEqual(versionIds);
       await page
-        .getByRole('dialog', { name: 'Pengaturan paket' })
+        .getByRole('dialog', { name: 'Komposisi paket' })
         .getByRole('button', { name: 'Tutup dialog' })
         .click();
       await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();

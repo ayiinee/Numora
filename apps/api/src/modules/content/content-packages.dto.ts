@@ -76,7 +76,7 @@ export class ContentPackageQueryDto {
   @ApiPropertyOptional({ enum: usages }) @IsOptional() @IsIn(usages) usageType?: QuestionUsage;
   @ApiPropertyOptional()
   @IsOptional()
-  @IsIn(['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'])
+  @IsIn(['ACTIVE', 'DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'])
   status?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(240) source?: string;
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() chapterId?: string;
@@ -137,6 +137,9 @@ export class ContentPackageDto {
   @ApiProperty() name!: string;
   @ApiProperty({ enum: usages }) assessmentType!: QuestionUsage;
   @ApiProperty() contentRevision!: number;
+  @ApiProperty() itemCount!: number;
+  @ApiProperty() expectedItemCount!: number;
+  @ApiPropertyOptional({ format: 'date-time', nullable: true }) lastModifiedAt!: string | null;
   @ApiProperty() status!: string;
   @ApiProperty() isDemo!: boolean;
   @ApiProperty({ type: PackageSourceDto, nullable: true }) source!: PackageSourceDto | null;

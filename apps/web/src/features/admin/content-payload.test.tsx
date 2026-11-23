@@ -46,6 +46,33 @@ it('handles legacy and incomplete content without unsafe HTML or fetching privat
   expect(document.querySelector('img')).toBeNull();
 });
 
+it('renders signed media inline when asset links are available', () => {
+  render(
+    <ContentPayload
+      payload={{
+        type: 'SINGLE_CHOICE',
+        stem: { text: 'Lihat [[asset:diagram-1]] lalu pilih jawaban.' },
+        options: [{ id: 'A', content: { text: 'Benar' } }],
+        answer: { optionId: 'A' },
+        explanation: { text: 'Pembahasan.' },
+      }}
+      media={[
+        {
+          assetId: 'diagram-1',
+          altText: 'Diagram soal',
+          placement: 'STEM',
+          url: 'https://example.invalid/diagram.png',
+          expiresAt: '2026-11-19T01:00:00Z',
+          status: 'READY',
+          reason: null,
+        },
+      ]}
+    />,
+  );
+  expect(screen.getByRole('img', { name: 'Diagram soal' })).toBeTruthy();
+  expect(screen.queryByText(/buka preview konten dan media/)).toBeNull();
+});
+
 it('maps long imported identifiers to the same statement numbers without changing mathematics or keys', () => {
   render(
     <ContentPayload

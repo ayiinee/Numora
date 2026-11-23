@@ -39,13 +39,19 @@ export function putMedia(
 export function MediaUpload({
   token,
   onAccessDenied,
+  initialExternalId = '',
+  initialAssetId = '',
+  onVerified,
 }: {
   token: string;
   onAccessDenied?: () => void;
+  initialExternalId?: string;
+  initialAssetId?: string;
+  onVerified?: (receipt: MediaUploadReceiptDto) => void;
 }) {
   const [file, setFile] = useState<File | null>(null),
-    [externalId, setExternalId] = useState(''),
-    [assetId, setAssetId] = useState(''),
+    [externalId, setExternalId] = useState(initialExternalId),
+    [assetId, setAssetId] = useState(initialAssetId),
     [version, setVersion] = useState(1),
     [progress, setProgress] = useState(0),
     [busy, setBusy] = useState(false),
@@ -102,6 +108,7 @@ export function MediaUpload({
       if (r.status === 'VERIFIED') {
         setReceipt(r);
         setProgress(100);
+        onVerified?.(r);
         return;
       }
       if (!uploaded.current) {
@@ -117,6 +124,7 @@ export function MediaUpload({
       if (verified.status !== 'VERIFIED') throw Error('Media belum terverifikasi.');
       setReceipt(verified);
       setProgress(100);
+      onVerified?.(verified);
     } catch (e) {
       if (e instanceof ApiProblem && [401, 403].includes(e.status)) {
         reset();

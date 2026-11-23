@@ -51,7 +51,7 @@ import {
   packageCounts,
   placementErrors,
 } from './content-package.rules';
-import { structuralErrors, digest } from './content-import.validation';
+import { canonicalExternalId, structuralErrors, digest } from './content-import.validation';
 import { contentExternalId } from './content-external-id';
 import { R2MediaStorage } from './r2-media.storage';
 import type {
@@ -252,7 +252,11 @@ export class ContentPackagesService {
           ? sql`(position(lower(${query.search.trim()}) in lower(${assessmentPackages.name})) > 0 or position(lower(${query.search.trim()}) in lower(${assessmentPackages.familyCode})) > 0)`
           : undefined,
         query.usageType ? eq(assessmentPackages.assessmentType, query.usageType) : undefined,
-        query.status ? sql`${assessmentPackages.status}::text = ${query.status}` : undefined,
+        query.status === 'ACTIVE'
+          ? sql`${assessmentPackages.status}::text <> 'ARCHIVED'`
+          : query.status
+            ? sql`${assessmentPackages.status}::text = ${query.status}`
+            : undefined,
         query.chapterId
           ? sql`(${assessmentPackages.chapterId} = ${query.chapterId} or ${assessmentPackages.levelId} in (select l.id from levels l join subchapters s on s.id=l.subchapter_id where s.chapter_id=${query.chapterId}))`
           : undefined,
@@ -457,15 +461,15 @@ export class ContentPackagesService {
             categories?: ImportQuestion['metadata']['categories'];
           }
         | ImportQuestion['options'];
-      const media = (r.version.media ?? []) as NonNullable<
+      const assets = (r.version.media ?? []) as NonNullable<
         ImportQuestion['metadata']['assetManifest']
       >;
       const q = {
-        externalId: contentExternalId(
+        externalId: canonicalExternalId(
           r.identity?.externalId,
+          assets,
           r.question.sourceRef,
           r.question.id,
-          media,
         ),
         type: r.version.questionType,
         chapterCode: r.chapter?.code ?? null,
@@ -483,7 +487,7 @@ export class ContentPackagesService {
           sourceOrder: r.item.displayOrder,
           sourceSheet: typeof meta.sourceSheet === 'string' ? meta.sourceSheet : 'ADMIN',
           sourceRowNumber: typeof meta.sourceRowNumber === 'number' ? meta.sourceRowNumber : 0,
-          assetManifest: media,
+          assetManifest: assets,
           ...(Array.isArray(content) || !content?.categories?.length
             ? {}
             : { categories: content.categories }),
@@ -1117,6 +1121,28 @@ export class ContentPackagesService {
       return { id };
     });
   }
+  restore(actor: string, id: string, revision: number) {
+    this.importer.enabled();
+    return adminMutation(actor, 'content_package_restored', 'assessment_package', async (tx) => {
+      await lockTryoutBatchSchedule(tx);
+      const p = await packageContext(tx, id, true);
+      if (p.status !== 'ARCHIVED')
+        throw new ConflictException({
+          code: 'PACKAGE_RESTORE_CONFLICT',
+          detail: 'Paket sudah aktif; muat ulang daftar paket.',
+        });
+      if (p.contentRevision !== revision)
+        throw new ConflictException({
+          code: 'PACKAGE_REVISION_CONFLICT',
+          detail: 'Muat ulang paket sebelum memulihkannya.',
+        });
+      await tx
+        .update(assessmentPackages)
+        .set({ status: 'DRAFT', contentRevision: p.contentRevision + 1 })
+        .where(eq(assessmentPackages.id, id));
+      return { id };
+    });
+  }
   update(actor: string, id: string, body: UpdateContentPackageDto) {
     this.importer.enabled();
     return adminMutation(actor, 'content_package_updated', 'assessment_package', async (tx) => {
@@ -1324,3 +1350,4 @@ export class ContentPackagesService {
     );
   }
 }
+

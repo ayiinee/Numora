@@ -1,13 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Button, Card, Icon } from '@tka/ui';
+import { Badge, Button, Card, Icon } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { apiRequest } from '@/lib/api';
 import { AdminFrame, AdminMessage } from './admin-presentation';
 import { withAdminWorkspace, useAdminAccessError } from './admin-workspace';
 import { ContentPackageWorkspace } from './content-package-workspace';
-import { listContentPackages } from './content-package-api';
+import { listContentPackages, restoreContentPackage } from './content-package-api';
 import { useAdminUrl, adminOffset } from './admin-url';
 import { AdminPagination } from './admin-pagination';
 import { ADMIN_PAGE_SIZE } from './pagination';
@@ -17,19 +17,35 @@ import {
   assessmentPath,
   type AssessmentUsage,
 } from './assessment-routes';
-import { packageAvailabilityLabel } from './package-availability';
+import { getTryoutVariantOptions } from './tryout-variant-api';
 import type { AdminCurriculumDto, ContentPackagesDto } from './generated-types';
 
-type Props = { usage: AssessmentUsage; mode?: 'list' | 'create' | 'detail'; packageId?: string };
+type Props = {
+  usage: AssessmentUsage;
+  mode?: 'list' | 'create' | 'detail';
+  packageId?: string;
+  archived?: boolean;
+};
+const formatAdminDate = (value: unknown) =>
+  new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(typeof value === 'string' ? value : ''));
+
 export const AdminAssessmentsScreen = withAdminWorkspace(Assessments, 'content');
-function Assessments({ usage, mode = 'list', packageId }: Props) {
+function Assessments({ usage, mode = 'list', packageId, archived = false }: Props) {
   const { state } = useAuth();
   const url = useAdminUrl();
   if (state.status !== 'ready') return null;
-  const back = assessmentPath(usage) + assessmentListQuery(url.params);
+  const fromArchive = usage === 'TRYOUT' && url.params.get('status') === 'ARCHIVED';
+  const back =
+    fromArchive || archived
+      ? assessmentPath(usage, 'archived')
+      : assessmentPath(usage) + assessmentListQuery(url.params);
   return (
     <AdminFrame
-      title={`${mode === 'create' ? 'Tambah paket ' : usage === 'TRYOUT' ? 'Bank paket ' : ''}${assessmentLabels[usage]}`}
+      title={`${mode === 'create' ? 'Tambah paket ' : archived ? 'Arsip bank paket ' : usage === 'TRYOUT' ? 'Bank paket ' : ''}${assessmentLabels[usage]}`}
       description=""
       icon="target"
       management
@@ -41,6 +57,7 @@ function Assessments({ usage, mode = 'list', packageId }: Props) {
           key={`${state.profile.id}:${usage}`}
           token={state.session.access_token}
           usage={usage}
+          archived={archived}
         />
       ) : (
         <>
@@ -63,7 +80,15 @@ function Assessments({ usage, mode = 'list', packageId }: Props) {
   );
 }
 
-function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsage }) {
+function AssessmentTable({
+  token,
+  usage,
+  archived = false,
+}: {
+  token: string;
+  usage: AssessmentUsage;
+  archived?: boolean;
+}) {
   const url = useAdminUrl();
   const reportAccessError = useAdminAccessError();
   const [data, setData] = useState<ContentPackagesDto | null>(null);
@@ -71,12 +96,26 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [variantAvailability, setVariantAvailability] = useState<Record<string, boolean>>({});
   const search = url.params.get('search') ?? '';
-  const status = url.params.get('status') ?? '';
+  const rawStatus = url.params.get('status') ?? '';
+  const status =
+    usage === 'TRYOUT' && !archived && !['', 'DRAFT', 'PUBLISHED'].includes(rawStatus)
+      ? ''
+      : rawStatus;
   const chapter = url.params.get('chapter') ?? '';
   const source = url.params.get('source') ?? '';
   const offset = adminOffset(url.params.get('offset'));
+  const effectiveStatus = archived
+    ? 'ARCHIVED'
+    : usage === 'TRYOUT'
+      ? ['DRAFT', 'PUBLISHED'].includes(status)
+        ? status
+        : 'ACTIVE'
+      : status;
   useEffect(() => {
+    if (usage === 'TRYOUT') return;
     let active = true;
     apiRequest<AdminCurriculumDto>('admin/content/curriculum', token)
       .then((value) => {
@@ -102,7 +141,12 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
       limit: String(ADMIN_PAGE_SIZE),
       offset: String(offset),
     });
-    for (const [key, value] of Object.entries({ search, status, chapterId: chapter, source }))
+    for (const [key, value] of Object.entries({
+      search,
+      status: effectiveStatus,
+      chapterId: chapter,
+      source,
+    }))
       if (value) query.set(key, value);
     listContentPackages(token, query.toString())
       .then((value) => {
@@ -120,7 +164,30 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
     return () => {
       active = false;
     };
-  }, [token, usage, search, status, chapter, source, offset, revision, reportAccessError]);
+  }, [token, usage, search, effectiveStatus, chapter, source, offset, revision, reportAccessError]);
+  useEffect(() => {
+    if (usage !== 'TRYOUT' || archived || !data) return;
+    let active = true;
+    const candidates = data.items.filter(
+      (pack) => pack.status === 'PUBLISHED' && pack.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR',
+    );
+    setVariantAvailability({});
+    void Promise.all(
+      candidates.map(async (pack) => {
+        try {
+          const value = await getTryoutVariantOptions(token, pack.id);
+          return [pack.id, value.generatorAvailable] as const;
+        } catch {
+          return [pack.id, false] as const;
+        }
+      }),
+    ).then((values) => {
+      if (active) setVariantAvailability(Object.fromEntries(values));
+    });
+    return () => {
+      active = false;
+    };
+  }, [data, token, usage, archived]);
   const context = assessmentListQuery(url.params);
   const statuses: Record<string, string> = {
     DRAFT: 'Draf',
@@ -166,6 +233,20 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
             Cari
           </Button>
         </form>
+        {usage === 'TRYOUT' && (
+          <div className="assessment-inline-status-filter">
+            <select
+              id="tryout-status-filter"
+              name="status"
+              defaultValue={status}
+              onChange={(event) => url.update({ status: event.target.value || null, offset: null })}
+            >
+              <option value="">Semua aktif</option>
+              <option value="DRAFT">Draf</option>
+              <option value="PUBLISHED">Diterbitkan</option>
+            </select>
+          </div>
+        )}
         <Button
           variant="secondary"
           disabled={loading}
@@ -173,9 +254,21 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
         >
           Muat ulang
         </Button>
-        <Link className="button-link" href={assessmentPath(usage, 'new') + context}>
-          Tambah paket
-        </Link>
+        {!archived && (
+          <Link className="button-link" href={assessmentPath(usage, 'new') + context}>
+            Tambah paket
+          </Link>
+        )}
+        {usage === 'TRYOUT' && !archived && (
+          <Link className="button-link" href={assessmentPath(usage, 'archived')}>
+            Bank arsip
+          </Link>
+        )}
+        {usage === 'TRYOUT' && archived && (
+          <Link className="button-link" href={assessmentPath(usage)}>
+            Bank aktif
+          </Link>
+        )}
       </div>
       {usage === 'DRILL' && (
         <details
@@ -200,15 +293,12 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
             <label>
               Status paket
               <select name="status" defaultValue={status}>
-                <option value="">Semua status</option>
-                {Object.entries(statuses).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+                <option value="">Semua aktif</option>
+                <option value="DRAFT">Draf</option>
+                <option value="PUBLISHED">Diterbitkan</option>
               </select>
             </label>
-            <label>
+            {usage === 'DRILL' && <label>
               Bab
               <select name="chapter" defaultValue={chapter}>
                 <option value="">Semua bab</option>
@@ -220,11 +310,11 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                     </option>
                   ))}
               </select>
-            </label>
-            <label>
+            </label>}
+            {usage === 'DRILL' && <label>
               Sumber
               <input name="source" defaultValue={source} maxLength={240} />
-            </label>
+            </label>}
             <Button type="submit" variant="secondary">
               Terapkan filter
             </Button>
@@ -264,16 +354,10 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                 <caption className="sr-only">Daftar paket {assessmentLabels[usage]}</caption>
                 <thead>
                   <tr>
-                    {[
-                      'No.',
-                      'Nama paket',
-                      'Bab/Cakupan',
-                      'Versi',
-                      'Status paket',
-                      'Ketersediaan siswa',
-
-                      'Aksi',
-                    ].map((title) => (
+                    {(usage === 'TRYOUT'
+                      ? ['No.', 'Paket', 'Komposisi', 'Status', 'Terakhir diubah', 'Aksi']
+                      : ['No.', 'Paket', 'Bab/Cakupan', 'Komposisi', 'Revisi', 'Status', 'Jadwal rilis', 'Aksi']
+                    ).map((title) => (
                       <th key={title} scope="col">
                         {title}
                       </th>
@@ -282,15 +366,16 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                 </thead>
                 <tbody>
                   {data.items.map((pack, index) => {
-                    const href = assessmentPath(usage, pack.id) + context;
+                    const href =
+                      assessmentPath(usage, pack.id) + (archived ? '?status=ARCHIVED' : context);
                     return (
                       <tr key={pack.id}>
                         <td className="assessment-row-number">{offset + index + 1}</td>
-                        <td>
+                        <td className="assessment-package-name">
                           <Link href={href}>{pack.name}</Link>
                           <small>{pack.familyCode}</small>
                         </td>
-                        <td>
+                        {usage !== 'TRYOUT' && <td>
                           {[
                             pack.chapterName,
                             pack.subchapterName,
@@ -298,24 +383,86 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                           ]
                             .filter(Boolean)
                             .join(' · ') ||
-                            (usage === 'TRYOUT' ? 'Lintas bab' : 'Belum ditentukan')}
-                        </td>
-                        <td>{pack.packageVersion}</td>
-                        <td>{statuses[pack.status] ?? pack.status}</td>
+                            'Belum ditentukan'}
+                        </td>}
                         <td>
-                          {pack.availability
-                            ? packageAvailabilityLabel(pack.availability.state)
-                            : 'Belum diperiksa'}
+                          <strong>{pack.itemCount}/{pack.expectedItemCount}</strong>
+                          <small>soal</small>
+                        </td>
+                        {usage !== 'TRYOUT' && <td>Revisi {pack.contentRevision}</td>}
+                        <td>
+                          <Badge variant={pack.status === 'PUBLISHED' ? 'success' : 'default'}>
+                            {statuses[pack.status] ?? pack.status}
+                          </Badge>
+                        </td>
+                        <td>
+                          {usage === 'TRYOUT' ? (
+                            <small>{pack.lastModifiedAt ? formatAdminDate(pack.lastModifiedAt) : 'Belum tersedia'}</small>
+                          ) : pack.releaseAt || pack.closeAt ? (
+                            <small>
+                              {pack.releaseAt ? formatAdminDate(pack.releaseAt) : 'Belum mulai'}
+                              {' — '}
+                              {pack.closeAt ? formatAdminDate(pack.closeAt) : 'Tanpa batas'}
+                            </small>
+                          ) : <small>Belum dijadwalkan</small>}
                         </td>
 
                         <td>
-                          <Link
-                            className="numora-button numora-button--secondary assessment-manage-button"
-                            href={href}
-                            aria-label={`Kelola ${pack.name}`}
-                          >
-                            Kelola
-                          </Link>
+                          <div className="assessment-row-actions">
+                            <Link
+                              className="numora-button numora-button--secondary assessment-manage-button"
+                              href={href}
+                              aria-label={`Lihat detail ${pack.name}`}
+                            >
+                              Detail
+                            </Link>
+                            {usage === 'TRYOUT' && !archived && pack.status === 'PUBLISHED' &&
+                              pack.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
+                              (variantAvailability[pack.id] ? (
+                                <Link
+                                  className="numora-button numora-button--secondary assessment-manage-button"
+                                  href={`/admin/assessments/tryout/${encodeURIComponent(pack.id)}/variant/new`}
+                                >
+                                  Generate varian paket
+                                </Link>
+                              ) : Object.hasOwn(variantAvailability, pack.id) ? (
+                                <Button variant="secondary" disabled title="Mapping generator belum lengkap untuk 25 focal soal.">
+                                  Generate varian paket
+                                </Button>
+                              ) : (
+                                <Button variant="secondary" disabled>
+                                  Memeriksa generator…
+                                </Button>
+                              ))}
+                            {archived && (
+                              <Button
+                                variant="secondary"
+                                disabled={loading || restoringId !== null}
+                                onClick={() => {
+                                  if (
+                                    !window.confirm(`Pulihkan paket “${pack.name}” sebagai DRAFT?`)
+                                  )
+                                    return;
+                                  setRestoringId(pack.id);
+                                  restoreContentPackage(token, pack.id, {
+                                    expectedRevision: pack.contentRevision,
+                                  })
+                                    .then(() => setRevision((value) => value + 1))
+                                    .catch((cause) => {
+                                      reportAccessError(cause);
+                                      setError(
+                                        cause instanceof Error
+                                          ? cause.message
+                                          : 'Paket gagal dipulihkan.',
+                                      );
+                                    })
+                                    .finally(() => setRestoringId(null));
+                                }}
+                              >
+                                {restoringId === pack.id ? 'Memulihkan…' : 'Pulihkan'}
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -342,3 +489,4 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
     </Card>
   );
 }
+

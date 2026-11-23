@@ -16,6 +16,8 @@ export async function setupAssessments(
     name: `Pretest TEST ${index + 1}`,
     assessmentType: 'PRETEST',
     contentRevision: 1,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT',
     isDemo: false,
     source: {
@@ -46,6 +48,8 @@ export async function setupAssessments(
     readiness: {
       packageId: id(9000 + index),
       contentRevision: 1,
+      itemCount: 0,
+      expectedItemCount: 0,
       canSaveDraft: true,
       canPublish: true,
       expectedCount: 20,
@@ -148,6 +152,8 @@ export async function setupAssessments(
           ...body,
           id: id(9900 + packs.length),
           contentRevision: 0,
+          itemCount: 0,
+          expectedItemCount: 0,
           items: [],
           readiness: { ...packs[0]!.readiness, actualCount: 0 },
         } as ContentPackageDetailDto;
@@ -155,8 +161,11 @@ export async function setupAssessments(
         return route.fulfill({ status: 201, json: { id: created.id } });
       }
       let items = packs.filter((p) => p.assessmentType === url.searchParams.get('usageType'));
-      if (url.searchParams.get('status'))
-        items = items.filter((p) => p.status === url.searchParams.get('status'));
+      const status = url.searchParams.get('status');
+      if (status)
+        items = items.filter((p) =>
+          status === 'ACTIVE' ? p.status !== 'ARCHIVED' : p.status === status,
+        );
       if (url.searchParams.get('search')) {
         const search = url.searchParams.get('search')!.toLowerCase();
         items = items.filter(

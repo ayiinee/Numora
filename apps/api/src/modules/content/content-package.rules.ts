@@ -1,8 +1,10 @@
 import { presentFixtureText } from '@tka/database';
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray, max } from 'drizzle-orm';
 import {
   assessmentPackages,
+  auditLogs,
+  packageItems,
   chapters,
   levels,
   questions,
@@ -41,6 +43,14 @@ export async function packageContext(
     !scope && p.chapterId
       ? await tx.select().from(chapters).where(eq(chapters.id, p.chapterId))
       : [];
+  const [{ itemCount = 0 } = {}] = await tx
+    .select({ itemCount: count() })
+    .from(packageItems)
+    .where(eq(packageItems.packageId, p.id));
+  const [{ lastModifiedAt = null } = {}] = await tx
+    .select({ lastModifiedAt: max(auditLogs.createdAt) })
+    .from(auditLogs)
+    .where(and(eq(auditLogs.entityType, 'assessment_package'), eq(auditLogs.entityId, p.id)));
   return {
     blueprintVersionId: p.blueprintVersionId,
     scoringPolicyVersionId: p.scoringPolicyVersionId,
@@ -56,6 +66,9 @@ export async function packageContext(
     name: presentFixtureText(p.id, 'name', p.name),
     assessmentType: p.assessmentType as QuestionUsage,
     contentRevision: p.contentRevision,
+    itemCount,
+    expectedItemCount: packageCounts[p.assessmentType as QuestionUsage],
+    lastModifiedAt: lastModifiedAt?.toISOString() ?? null,
     status: p.status,
     isDemo: p.isDemo,
     source: p.importSource,

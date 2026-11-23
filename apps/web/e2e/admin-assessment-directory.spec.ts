@@ -3,6 +3,25 @@ import AxeBuilder from '@axe-core/playwright';
 import { setupAssessments } from './fixtures/admin-assessments';
 import { id } from './fixtures/admin';
 
+test('Tryout ACTIVE includes drafts and published packages but excludes archives', async ({
+  page,
+}) => {
+  const { fixture } = await setupAssessments(page);
+  const draft = fixture.packs.find((pack) => pack.assessmentType === 'TRYOUT')!;
+  fixture.packs.push(
+    { ...structuredClone(draft), id: id(9300), name: 'Published TEST', status: 'PUBLISHED' },
+    { ...structuredClone(draft), id: id(9301), name: 'Archived TEST', status: 'ARCHIVED' },
+  );
+  await page.goto('/admin/assessments/tryout');
+  await expect(page.getByRole('link', { name: draft.name, exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Published TEST', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Archived TEST', exact: true })).toHaveCount(0);
+  await page.goto('/admin/assessments/tryout/archived');
+  await expect(page.getByRole('link', { name: 'Archived TEST', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: draft.name, exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Published TEST', exact: true })).toHaveCount(0);
+});
+
 test('Tryout uses the compact Pretest layout and delegates scheduling to batches', async ({
   page,
 }) => {
@@ -130,7 +149,13 @@ test('directory handles missing availability and is usable on narrow screens', a
   const { fixture, errors } = await setupAssessments(page);
   delete fixture.packs[0]!.availability;
   await page.goto('/admin/assessments/pretest');
-  await expect(page.getByText('Belum diperiksa', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Pretest TEST 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Ketersediaan untuk siswa' })).toContainText(
+    'Ketersediaan belum dapat diperiksa. Muat ulang paket.',
+  );
+  await page.getByRole('dialog').press('Escape');
+  await page.getByRole('link', { name: /Kembali ke daftar/ }).click();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 700 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -366,7 +391,11 @@ test('invalid legacy questions explain repair and cannot be reviewed', async ({ 
   );
   await expect(page.getByRole('columnheader', { name: 'Masalah', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
-  await expect(page.getByLabel('Kode sumber stabil', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Komposisi paket' })).toContainText(
+    'Sumber belum diisi.',
+  );
+  await page.getByRole('dialog').press('Escape');
+  await expect(page.getByRole('status')).toContainText('Buat versi perbaikan melalui sumber impor');
 });
 
 test('navbar breadcrumbs link back to the assessment directory with list context', async ({

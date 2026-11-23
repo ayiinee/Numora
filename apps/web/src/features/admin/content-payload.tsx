@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ContentRichText } from './content-rich-text';
 import { questionFormat } from './content-question-format';
+import type { ContentVersionMediaLinkDto } from './generated-types';
 
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' && !Array.isArray(value)
@@ -17,17 +18,41 @@ const text = (value: unknown): string =>
 
 // The detail endpoint deliberately supports both legacy and imported payloads.
 // Media is shown only through the existing signed preview, never a guessed public URL.
-export function ContentText({ value }: { value: string }) {
+export function ContentText({
+  value,
+  media,
+  retry,
+}: {
+  value: string;
+  media?: ContentVersionMediaLinkDto[];
+  retry?: (() => void) | undefined;
+}) {
   return (
     <ContentRichText
       text={value.replace(/\[\[asset:([^\]]+)\]\]/g, '[Gambar $1 — buka preview konten dan media]')}
-      media={[]}
-      retry={() => {}}
+      media={(media ?? [])
+        .filter((asset) => asset.status === 'READY' && asset.url && asset.expiresAt)
+        .map((asset) => ({
+          instanceId: 'content-version',
+          assetId: asset.assetId,
+          altText: asset.altText,
+          url: asset.url!,
+          expiresAt: asset.expiresAt!,
+        }))}
+      retry={retry ?? (() => {})}
     />
   );
 }
 
-export function ContentPayload({ payload }: { payload: Record<string, unknown> }) {
+export function ContentPayload({
+  payload,
+  media = [],
+  retryMedia,
+}: {
+  payload: Record<string, unknown>;
+  media?: ContentVersionMediaLinkDto[];
+  retryMedia?: () => void;
+}) {
   const [sourceOpen, setSourceOpen] = useState(false);
   const options = Array.isArray(payload.options) ? payload.options : [];
   const statements = Array.isArray(payload.statements) ? payload.statements : [];
@@ -73,7 +98,11 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
       <section>
         <h3>Isi soal</h3>
         <p className="content-question-stem">
-          <ContentText value={text(payload.stem) || 'Isi soal belum tersedia pada versi ini.'} />
+          <ContentText
+            value={text(payload.stem) || 'Isi soal belum tersedia pada versi ini.'}
+            media={media}
+            retry={retryMedia}
+          />
         </p>
       </section>
       <p className="assessment-question-instruction">{format.instruction}</p>
@@ -94,7 +123,11 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
                     {format.kind === 'single' ? String.fromCharCode(65 + index) : index + 1}
                   </span>
                   <div>
-                    <ContentText value={text(item.content ?? item.text ?? option)} />
+                    <ContentText
+                      value={text(item.content ?? item.text ?? option)}
+                      media={media}
+                      retry={retryMedia}
+                    />
                     {correct && <span className="assessment-answer-marker">Jawaban benar</span>}
                   </div>
                 </li>
@@ -135,7 +168,11 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
       <section>
         <h3>Pembahasan</h3>
         <p>
-          <ContentText value={text(payload.explanation) || 'Pembahasan belum tersedia.'} />
+          <ContentText
+            value={text(payload.explanation) || 'Pembahasan belum tersedia.'}
+            media={media}
+            retry={retryMedia}
+          />
         </p>
       </section>
       <details onToggle={(event) => setSourceOpen(event.currentTarget.open)}>

@@ -22,6 +22,8 @@ function directedPackage(
     name: `TEST ONLY ${usage}`,
     assessmentType: usage,
     contentRevision: 0,
+    itemCount: 0,
+    expectedItemCount: 0,
     status: 'DRAFT',
     isDemo: true,
     source: {
