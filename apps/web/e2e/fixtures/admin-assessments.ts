@@ -161,8 +161,11 @@ export async function setupAssessments(
         return route.fulfill({ status: 201, json: { id: created.id } });
       }
       let items = packs.filter((p) => p.assessmentType === url.searchParams.get('usageType'));
-      if (url.searchParams.get('status'))
-        items = items.filter((p) => p.status === url.searchParams.get('status'));
+      const status = url.searchParams.get('status');
+      if (status)
+        items = items.filter((p) =>
+          status === 'ACTIVE' ? p.status !== 'ARCHIVED' : p.status === status,
+        );
       if (url.searchParams.get('search')) {
         const search = url.searchParams.get('search')!.toLowerCase();
         items = items.filter(
