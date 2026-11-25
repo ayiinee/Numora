@@ -960,9 +960,9 @@ function UploadContent() {
                               </label>
                             )}
                             <small>
-                              Pilih Rilis sekarang atau isi jadwal rilis. Durasi 75 menit; batch
-                              tutup tujuh hari kurang satu menit setelah rilis. Paket baru yang
-                              dirilis dapat menggantikan paket aktif sebelumnya.
+                              Pilih Rilis sekarang atau isi jadwal rilis. Batch tutup tujuh hari
+                              kurang satu menit setelah rilis. Paket baru yang dirilis dapat
+                              menggantikan paket aktif sebelumnya.
                             </small>
                             {releaseDate && !releaseValid && (
                               <small role="alert">Isi tanggal dan jam yang valid.</small>

@@ -407,7 +407,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(resumed).toHaveURL(new RegExp('/student/drill/' + attempt.id + '/explanation$'));
     await expect(resumed.getByRole('navigation', { name: 'Navigasi pembahasan' })).toBeVisible();
     await expect(resumed.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
-    await expect(option(resumed, 'A')).toBeDisabled();
+    await resumed.getByText('Rincian jawaban', { exact: true }).click();
+    const review = resumed.getByRole('list', { name: 'Pilihan jawaban' });
+    const reviewedAnswer = review.getByRole('listitem').filter({ hasText: 'Jawabanmu' });
+    await expect(reviewedAnswer.getByText('B', { exact: true })).toBeVisible();
+    await expect(reviewedAnswer.getByText('Kunci', { exact: true })).toBeVisible();
+    await expect(resumed.locator('.question-review-details input')).toHaveCount(0);
     await resumed.getByRole('link', { name: 'Kembali ke hasil', exact: true }).click();
     const duplicates = await Promise.all(
       [1, 2].map(() =>
@@ -957,6 +962,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       new RegExp('/student/tryout/' + independent.id + '/explanation$'),
     );
     await expect(mandiri.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
+    await mandiri.getByText('Rincian jawaban', { exact: true }).click();
     const reviewOptions = mandiri.getByRole('list', { name: 'Pilihan jawaban' });
     await expect(reviewOptions.getByRole('listitem').filter({ hasText: /^B/ }))
       .toContainText('Jawabanmu');

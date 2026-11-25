@@ -378,6 +378,11 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
       },
     );
     expect(publish.status, await publish.text()).toBe(201);
+    const [publishedTryout] = await db
+      .select({ durationSeconds: assessmentPackages.durationSeconds })
+      .from(assessmentPackages)
+      .where(eq(assessmentPackages.id, draft.id));
+    expect(publishedTryout?.durationSeconds).toBe(1800);
     // Synthetic runtime package deliberately past close, without mutating the publisher's immutable batch.
     const [p] = await db
       .insert(assessmentPackages)

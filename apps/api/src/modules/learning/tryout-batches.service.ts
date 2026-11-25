@@ -371,8 +371,7 @@ export class TryoutBatchesService {
           p.assessmentType !== 'TRYOUT' ||
           p.status !== 'PUBLISHED' ||
           p.isDemo ||
-          !eligible ||
-          p.durationSeconds !== TRYOUT_DURATION_SECONDS,
+          !eligible,
       )
     )
       throw new BadRequestException(

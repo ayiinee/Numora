@@ -13,7 +13,7 @@ import {
 } from './schema/index.js';
 import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 
-export const TRYOUT_DURATION_SECONDS = 75 * 60;
+export const TRYOUT_DURATION_SECONDS = 30 * 60;
 /** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
@@ -155,16 +155,11 @@ export async function currentTryoutPackage(db: AssessmentReader = getDatabase().
     )
     .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
     .limit(1);
-  if (
-    !row ||
-    !row.releaseAt ||
-    (!row.isDemo &&
-      (row.durationSeconds !== TRYOUT_DURATION_SECONDS ||
-        row.closeAt?.getTime() !== tryoutBatchCloseAt(row.releaseAt).getTime())) ||
-    (row.closeAt ?? tryoutBatchCloseAt(row.releaseAt)) <= now
-  )
-    return null;
-  return row;
+  if (!row?.releaseAt) return null;
+  const legacyCloseAt = tryoutBatchCloseAt(row.releaseAt);
+  if (!row.isDemo && row.closeAt?.getTime() !== legacyCloseAt.getTime()) return null;
+  const closeAt = row.closeAt ?? legacyCloseAt;
+  return closeAt > now ? { ...row, closeAt } : null;
 }
 
 /** Published immutable academic results only. No release, mapping or fallback decisions here. */

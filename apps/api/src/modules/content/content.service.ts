@@ -967,7 +967,6 @@ export class ContentService {
       if (row.status === 'PUBLISHED') {
         if (
           (body.releaseAt && row.releaseAt?.getTime() !== requested.getTime() && requested > now) ||
-          row.durationSeconds !== TRYOUT_DURATION_SECONDS ||
           row.scoringPolicyVersionId !== body.scoringPolicyVersionId
         )
           throw new ConflictException({ code: 'TRYOUT_PUBLICATION_CONFLICT' });

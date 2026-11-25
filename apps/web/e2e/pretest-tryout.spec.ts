@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -51,7 +52,9 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
   let tryoutStarted = false;
   let tryoutSubmitted = alreadySubmitted;
   const rawTryoutAnswers = new Map<string, unknown>();
-  const tryoutDeadline = new Date(Date.now() + 600_000).toISOString();
+  const durationSeconds = 30 * 60;
+  const closesAt = new Date(Date.now() + 2 * 60 * 60_000).toISOString();
+  let tryoutDeadline = new Date(Date.now() + durationSeconds * 1000).toISOString();
   const tryoutQuestions = () =>
     Array.from({ length: 30 }, (_, index) => ({
       questionInstanceId: `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
@@ -190,7 +193,8 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
             periodState: 'ongoing',
             eligible: !tryoutSubmitted && !tryoutStarted,
             title: 'Tryout PGK',
-            closeAt: tryoutDeadline,
+            closeAt: closesAt,
+            durationSeconds,
             resultDueAt: null,
             attemptId: tryoutSubmitted || tryoutStarted ? attempt : null,
           }
@@ -198,14 +202,17 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
     else if (path === 'tryout/packages') json = { packages: [packageData], nextCursor: null };
     else if (path === `tryout/packages/${past}`) json = packageData;
     else if (path === 'tryout/attempts' || path === `tryout/attempts/${attempt}`) {
-      if (path === 'tryout/attempts' && method === 'POST') tryoutStarted = true;
+      if (path === 'tryout/attempts' && method === 'POST' && !tryoutStarted) {
+        tryoutStarted = true;
+        tryoutDeadline = new Date(Date.now() + durationSeconds * 1000).toISOString();
+      }
       json = {
         id: attempt,
         packageId: past,
         packageTitle: 'Tryout PGK',
         isDemo: true,
         resultPendingReason: 'SCORING_PENDING',
-        closeAt: tryoutDeadline,
+        closeAt: closesAt,
         resultDueAt: null,
         xp: null,
         xpPolicyVersion: null,
@@ -538,6 +545,9 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
   await page.getByRole('button', { name: 'Mulai pengerjaan', exact: true }).click();
   await expect(page.getByText('Soal 1 dari 30', { exact: true })).toBeVisible();
+  await expect(page.getByRole('timer', { name: 'Sisa waktu Tryout' })).toHaveText(
+    /^(?:30:00|29:[0-5]\d)$/,
+  );
   await expect(page.locator('.practice-stem .katex-html')).toBeVisible();
   await expect(page.locator('.practice-stem math msqrt')).toHaveText('16');
   await expect(page.locator('.practice-option__text math mfrac')).toHaveCount(1);
@@ -563,6 +573,7 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
     page.getByRole('group', { name: 'Dua', exact: true }).getByRole('radio', { name: 'Genap' }),
   ).toBeChecked();
   await screenshot(page, 'tryout-pgk-category-390');
+  await expectWorkspaceAccessible(page);
   const allQuestions = page.getByRole('button', { name: 'Semua Soal', exact: true });
   await allQuestions.click();
   const map = page.getByRole('dialog', { name: 'Semua Soal' });
@@ -584,7 +595,7 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await expect(map).toBeVisible();
   await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
   await page.getByRole('button', { name: 'Ke soal belum lengkap' }).click();
-  await expect(page.locator('.practice-stem')).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Soal 2 dari 30' })).toBeFocused();
   await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
   await allQuestions.click();
   await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
@@ -675,6 +686,8 @@ test('Tryout keeps a failed answer visible across questions and confirms exit af
   await page.getByRole('button', { name: 'Berikutnya' }).click();
   await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Coba simpan lagi' })).toBeInViewport();
+  await page.getByRole('button', { name: 'Ke soal 1' }).click();
+  await expect(page.getByRole('heading', { name: 'Soal 1 dari 30' })).toBeFocused();
   await page.getByRole('button', { name: 'Coba simpan lagi' }).click();
   await expect(progress).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
   await page.getByRole('link', { name: 'Kembali ke Tryout' }).click();
@@ -711,12 +724,20 @@ test('Pretest keeps failed saves reachable above the mobile controls and recover
 });
 
 async function screenshot(page: Page, name: string) {
-  const folder = resolve('../../.tmp/pretest-tryout-evidence');
+  const folder = resolve(process.env.NUMORA_TRYOUT_EVIDENCE_DIR ?? '../../.tmp/pretest-tryout-evidence');
   await mkdir(folder, { recursive: true });
   await page.screenshot({ path: resolve(folder, name + '.png'), fullPage: true });
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true);
+}
+
+async function expectWorkspaceAccessible(page: Page) {
+  const { violations } = await new AxeBuilder({ page })
+    .include('.assessment-workspace')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze();
+  expect(violations.map(({ id, nodes }) => ({ id, targets: nodes.map(({ target }) => target) }))).toEqual([]);
 }
 
 test('Tryout Jadwal groups upcoming batches and moves a batch after refreshing', async ({ page }) => {
@@ -826,6 +847,28 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     await screenshot(page, `p2-hasil-${width}`);
     await entry.click();
     await expect(page.getByRole('heading', { name: 'Pembahasan TryOut' })).toBeVisible();
+    const details = page.locator('.assessment-review-disclosure');
+    await expect(details).toHaveJSProperty('open', false);
+    await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Pilihan jawaban' })).toHaveCount(0);
+    await expect(page.getByRole('img', { name: 'Gambar sintetis' })).toBeVisible();
+    await expect(page.locator('.drill-review__explanation math msqrt')).toHaveText('4');
+    const readableCopy = page.locator('.drill-review__explanation .assessment-copy');
+    expect(await readableCopy.evaluate((copy) => copy.scrollWidth <= copy.clientWidth + 1)).toBe(true);
+    if (width <= 390) {
+      const formula = page.getByRole('region', { name: 'Rumus', exact: true })
+        .and(page.locator('.assessment-formula-scroll'));
+      await expect(formula).toHaveAttribute('tabindex', '0');
+      await expect(page.locator('.assessment-formula-inline').first()).not.toHaveAttribute('tabindex', '0');
+      await expect(page.getByText('Geser untuk melihat selengkapnya')).toBeVisible();
+      await formula.focus();
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => formula.evaluate((region) => region.scrollLeft)).toBeGreaterThan(0);
+      await formula.evaluate((region) => { region.scrollLeft = 0; });
+    }
+    await screenshot(page, 'p2-solusi-' + width);
+    if (width === 390) await expectWorkspaceAccessible(page);
+    await page.getByText('Rincian jawaban', { exact: true }).click();
     const options = page.getByRole('list', { name: 'Pilihan jawaban' }).getByRole('listitem');
     await expect(options.nth(0)).toContainText(/Jawabanmu.*Kunci/);
     await expect(options.nth(1)).toContainText('Kunci');
@@ -876,14 +919,19 @@ for (const width of [320, 390, 768, 1280, 1440]) {
     }
     await target.focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('heading', { name: 'Kategori bilangan' })).toBeFocused();
-    await expect(page.getByText('Jawabanmu:', { exact: true })).toHaveCount(2);
-    await expect(page.getByText('Kunci:', { exact: true })).toHaveCount(2);
-    await expect(page.locator('.category-review-list section').nth(1)).toContainText('Jawabanmu: Kosong');
+    await expect(page.getByRole('heading', { name: 'Soal 2 dari 30' })).toBeFocused();
+    await expect(page.getByText('Kategori bilangan', { exact: true })).toBeVisible();
+    await expect(details).toHaveJSProperty('open', false);
+    await expect(page.getByText('1 dari 2 pernyataan dijawab')).toBeVisible();
+    await screenshot(page, 'p2-kategori-ringkas-' + width);
+    await page.getByText('Rincian jawaban', { exact: true }).click();
+    await expect(page.getByText('Jawabanmu', { exact: true })).toHaveCount(2);
+    await expect(page.getByText('Kunci', { exact: true })).toHaveCount(2);
+    await expect(page.locator('.category-review-list li').nth(1).locator('dd').first()).toHaveText('Kosong');
     await screenshot(page, `p2-pembahasan-${width}`);
     if (width < 960) await open.click();
     await map.getByRole('button', { name: /^Pembahasan soal 30,/ }).click();
-    await expect(page.getByRole('heading', { name: 'Soal tinjauan 30' })).toBeFocused();
+    await expect(page.getByRole('heading', { name: 'Soal 30 dari 30' })).toBeFocused();
     await expect(page.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
     if (width === 1280) {
       // A 1280px browser at 200% zoom lays out 640 CSS px.
@@ -901,14 +949,14 @@ for (const width of [320, 390, 768, 1280, 1440]) {
         window.dispatchEvent(new Event('online'));
       });
       await expect(page.getByText('Pembahasan belum dapat diperbarui.')).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Soal tinjauan 30' })).toBeVisible();
+      await expect(page.getByText('Soal tinjauan 30', { exact: true })).toBeVisible();
       await page.unroute(resultPath);
       await page.route(resultPath, (route) => route.fulfill({
         json: { attemptId: attempt, packageTitle: title, score: 87.5, xp: 0, correctCount: 12, questionCount: 30, explanation },
       }));
       await page.getByRole('button', { name: 'Coba lagi' }).click();
       await expect(page.getByText('Pembahasan belum dapat diperbarui.')).toBeHidden();
-      await expect(page.getByRole('heading', { name: 'Soal tinjauan 30' })).toBeVisible();
+      await expect(page.getByText('Soal tinjauan 30', { exact: true })).toBeVisible();
     }
     await page.getByRole('link', { name: 'Kembali ke hasil' }).click();
     await expect(page).toHaveURL(`/student/tryout/${attempt}/result`);

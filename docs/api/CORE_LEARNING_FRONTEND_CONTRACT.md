@@ -24,7 +24,7 @@ TryOut `resultMethod` is IRT/STANDARD only for published canonical attempt resul
 | `GET /tryout/packages?cursor={packageId}` | Up to 20 released package metadata entries and next cursor; no questions/keys. |
 | `GET /tryout/packages/{packageId}` | Own attempt plus ongoing/past status. Past Start remains locked. |
 
-Tryout package/attempt metadata includes `closeAt`, `resultDueAt` and `isDemo`. New production packages require 30 items, 600 seconds and Sunday 23:59:00 WIB close; effective deadline is capped by close. DEMO PGK submit stores raw answers, remains `SUBMITTED`, and exposes no numeric grade/XP or result publication. Generated OpenAPI DTOs remain the response source of truth.
+Tryout metadata includes `closeAt`, `resultDueAt` and `isDemo`. A new 30-item attempt has a nominal duration of 1,800 seconds. The server pins its `deadlineAt` at creation, capped by the configured close. The client uses `deadlineAt` and `serverTime` to show time remaining on start and resume. DEMO PGK submit stores raw answers, remains `SUBMITTED`, and exposes no numeric grade/XP or result publication. Generated OpenAPI DTOs remain the response source of truth. [Tryout runtime controls](../development/TRYOUT_RUNTIME_CONTROLS_2026-11-17.md)
 
 ## JOB-11 TryOut — owner correction, 5 October 2026
 

@@ -581,9 +581,9 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                                 <input type="datetime-local" name="releaseAt" />
                               </Field>
                               <p>
-                                Kosong berarti rilis sekarang. Durasi pengerjaan 75 menit; batch
-                                berjalan 7 hari dikurangi 1 menit. Deadline mengikuti batas terawal
-                                durasi dan batch close.
+                                Kosong berarti rilis sekarang. Batch berjalan tujuh hari kurang
+                                satu menit. Batas waktu pengerjaan mengikuti durasi Tryout dan
+                                waktu tutup batch.
                               </p>
                               <Button
                                 type="submit"

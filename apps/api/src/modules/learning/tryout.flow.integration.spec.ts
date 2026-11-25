@@ -15,6 +15,7 @@ import {
   closeDatabaseConnection,
   competencies,
   getDatabase,
+  tryoutBatchCloseAt,
   irtBatches,
   irtItemResults,
   packageItems,
@@ -202,7 +203,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
         chapterId: chapter!.id,
         releaseAt,
         status: 'PUBLISHED',
-        durationSeconds: 3600,
+        durationSeconds: 600,
         scoringPolicyVersionId: policy!.id,
         isDemo: true,
       })
@@ -396,6 +397,9 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .select()
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, a.id));
+    expect(beforeClockSkew!.deadlineAt?.getTime()).toBe(
+      Math.min(beforeClockSkew!.startedAt.getTime() + 1_800_000, tryoutBatchCloseAt(releaseAt).getTime()),
+    );
     const wallTime = Date.now();
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2000-01-01T00:00:00Z'));
@@ -407,7 +411,10 @@ integration('Tryout lifecycle against PostgreSQL', () => {
           ?.startedAt,
       ).toEqual(beforeClockSkew!.startedAt);
       expect(resumed.deadlineAt).toBe(a.deadlineAt);
-      expect(await tryout.current('student')).toMatchObject({ state: 'inProgress' });
+      expect(await tryout.current('student')).toMatchObject({
+        state: 'inProgress',
+        durationSeconds: 1800,
+      });
     } finally {
       vi.useRealTimers();
     }

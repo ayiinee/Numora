@@ -1697,7 +1697,7 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   await page.setViewportSize({ width: 634, height: 668 });
   await resume.click();
   await expect(page.getByLabel('Waktu berjalan')).toBeVisible();
-  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '15px');
+  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '16px');
   await expect(page.locator('.practice-stem .katex-html')).toBeVisible();
   await expect(page.locator('.practice-stem math msqrt')).toHaveText('16');
   await expect(page.locator('.practice-option__text math mfrac')).toHaveCount(1);
@@ -1710,6 +1710,17 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   await expect(page.locator('.practice-save-notice')).toHaveCount(0);
   await page.setViewportSize({ width: 320, height: 668 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  const tableRegion = page.getByRole('region', { name: 'Tabel pada soal' });
+  await expect(tableRegion).toHaveAttribute('tabindex', '0');
+  await expect(page.getByText('Geser untuk melihat selengkapnya')).toBeVisible();
+  await tableRegion.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => tableRegion.evaluate((table) => table.scrollLeft)).toBeGreaterThan(0);
+  const clearAnswer = page.getByRole('button', { name: 'Kosongkan jawaban' });
+  await clearAnswer.scrollIntoViewIfNeeded();
+  const clearBox = (await clearAnswer.boundingBox())!;
+  const toolbarBox = (await page.locator('.assessment-workspace .practice-toolbar').boundingBox())!;
+  expect(clearBox.y + clearBox.height).toBeLessThanOrEqual(toolbarBox.y);
   await page.screenshot({ path: testInfo.outputPath('drill-table-320.png'), fullPage: true });
   await page.evaluate(() => window.history.back());
   const exitDialog = page.getByRole('dialog', { name: 'Jeda latihan dulu?' });
@@ -1722,7 +1733,7 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   await expect(page).toHaveURL(url);
   expect(pauseCount).toBe(0);
   await page.setViewportSize({ width: 1280, height: 900 });
-  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17px');
+  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17.92px');
   await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
   await expect(exitDialog).toBeVisible();
   await page.keyboard.press('Escape');
@@ -2403,11 +2414,14 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     if (width === 320) await page.setViewportSize({ width, height: 940 });
     await capture('level-map');
     await page.goto(`/student/drill/${attemptId}`);
-    await page.getByRole('button', { name: 'Soal 3, terjawab', exact: true }).click();
+    const allQuestions = page.getByRole('button', { name: 'Semua Soal' });
+    if (width < 960) await allQuestions.click();
+    await page.getByRole('button', { name: 'Soal 3, tersimpan', exact: true }).click();
     await expect(page.getByRole('radio').first()).toBeChecked();
     await capture('drill');
     await page.getByLabel('Tandai Ragu-ragu').check();
-    await page.getByRole('button', { name: 'Soal 10, terjawab', exact: true }).click();
+    if (width < 960) await allQuestions.click();
+    await page.getByRole('button', { name: 'Soal 10, tersimpan', exact: true }).click();
     await page.getByRole('button', { name: 'Kirim Drill' }).click();
     const dialog = page.getByRole('dialog', { name: 'Kumpulkan Latihan Sekarang?' });
     await expect(dialog).toBeVisible();
@@ -2420,6 +2434,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
     await expect(page).toHaveURL(`/student/drill/${attemptId}/explanation`);
+    if (width < 960) await allQuestions.click();
     await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
     await expect(page.getByText('Soal 3 dari 10', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('region', { name: 'Rekomendasi video' })).toHaveCount(0);
@@ -2797,12 +2812,16 @@ for (const width of [320, 768, 1280]) {
         });
       });
       await page.goto('/student/drill/' + attemptId);
+      const allQuestions = page.getByRole('button', { name: 'Semua Soal' });
       await page.getByRole('radio', { name: /^A\s*\./ }).check();
       await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      if (width < 960) await allQuestions.click();
       await page.getByRole('button', { name: /^Soal 2,/ }).click();
+      await expect(page.getByRole('heading', { name: 'Soal 2 dari 3' })).toBeFocused();
       await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
       await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
       await page.reload();
+      if (width < 960) await allQuestions.click();
       await page.getByRole('button', { name: /^Soal 2,/ }).click();
       await expect(page.getByRole('checkbox', { name: /^A\s*\./ })).toBeChecked();
       await page.getByRole('button', { name: 'Kosongkan jawaban' }).click();
@@ -2810,6 +2829,7 @@ for (const width of [320, 768, 1280]) {
       await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
       await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
       await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      if (width < 960) await allQuestions.click();
       await page.getByRole('button', { name: /^Soal 3,/ }).click();
       await page
         .getByRole('group', { name: 'Satu', exact: true })
@@ -2839,9 +2859,14 @@ for (const width of [320, 768, 1280]) {
       await report.click();
       await page.keyboard.press('Escape');
       await expect(report).toBeFocused();
+      if (width < 960) await allQuestions.click();
       await page.getByRole('button', { name: /^Pembahasan soal 2,/ }).click();
-      await expect(page.getByText('Sebagian benar', { exact: true })).toBeVisible();
-      await expect(page.getByRole('checkbox').first()).toBeDisabled();
+      await expect(page.locator('.question-review-status')).toContainText('Sebagian benar');
+      await expect(page.getByRole('checkbox')).toHaveCount(0);
+      await expect(page.locator('.assessment-review-disclosure')).toHaveJSProperty('open', false);
+      await page.getByText('Rincian jawaban', { exact: true }).click();
+      await expect(page.getByRole('list', { name: 'Pilihan jawaban' })).toBeVisible();
+      if (width < 960) await allQuestions.click();
       await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
       await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
@@ -2850,7 +2875,8 @@ for (const width of [320, 768, 1280]) {
       await page.screenshot({ path: info.outputPath('pgk-explanation.png'), fullPage: true });
       await page.getByRole('button', { name: 'Sebelumnya' }).focus();
       await page.keyboard.press('Enter');
-      await expect(page.getByRole('heading', { name: 'TEST ONLY MCMA' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Soal 2 dari 3' })).toBeFocused();
+      await expect(page.getByText('TEST ONLY MCMA', { exact: true })).toBeVisible();
     },
   );
 }

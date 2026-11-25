@@ -34,6 +34,8 @@ Lingkungan memerlukan migrasi `0055_tryout_batch_delegations.sql`, lalu build/re
 
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
+Durasi untuk sesi baru mengikuti [keputusan 25 November 2026](TRYOUT_RUNTIME_CONTROLS_2026-11-17.md), yaitu maksimal 30 menit hingga waktu tutup batch.
+
 **ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal batch boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 75 menit (4.500 detik) dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.
 
 

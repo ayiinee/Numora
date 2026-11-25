@@ -49,6 +49,7 @@ export function AssessmentHeader({
   progress,
   progressLabel = 'Posisi soal',
   progressText,
+  showProfile = true,
   exitDisabled = false,
   exitHref = '/student/learn',
   exitLabel = exitHref.endsWith('/result')
@@ -58,11 +59,12 @@ export function AssessmentHeader({
       : 'Kembali ke latihan',
 }: {
   title?: string;
-  status: ReactNode;
+  status?: ReactNode;
   timer?: ReactNode;
   progress?: number;
   progressLabel?: string;
   progressText?: string | undefined;
+  showProfile?: boolean;
   exitDisabled?: boolean;
   exitHref?: string;
   exitLabel?: string;
@@ -85,24 +87,26 @@ export function AssessmentHeader({
           {status}
         </div>
         <div className="practice-timer">{timer}</div>
-        {!exitDisabled && (
+        {showProfile && !exitDisabled && (
           <Link className="practice-profile" href="/student/profile" aria-label="Buka profil siswa">
             <Icon name="user" width={20} height={20} />
           </Link>
         )}
       </div>
       {progressText && <p className="tryout-session-progress">{progressText}</p>}
-      {progress !== undefined && <div
-        className="practice-header__track"
-        role="progressbar"
-        aria-label={progressLabel}
-        aria-valuenow={progress}
-        aria-valuetext={progressText}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <span style={{ width: `${progress}%` }} />
-      </div>}
+      {progress !== undefined && (
+        <div
+          className="practice-header__track"
+          role="progressbar"
+          aria-label={progressLabel}
+          aria-valuenow={progress}
+          aria-valuetext={progressText}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <span style={{ width: `${progress}%` }} />
+        </div>
+      )}
     </header>
   );
 }

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { getDatabase } from './client.js';
 import { allowSyntheticContent } from './package-runtime.js';
-import { tryoutBatchCloseAt } from './tryout-visibility.js';
+import { TRYOUT_DURATION_SECONDS, tryoutBatchCloseAt } from './tryout-visibility.js';
 import {
   assessmentPackages,
   chapters,
@@ -143,7 +143,7 @@ export async function seedLifecycleDemo(
         chapterId: chapter!.id,
         isDemo: true,
         scoringPolicyVersionId: reward.id,
-        durationSeconds: 600,
+        durationSeconds: TRYOUT_DURATION_SECONDS,
         releaseAt,
         closeAt: tryoutBatchCloseAt(releaseAt),
         status: alreadyOngoing ? 'CLOSED' : 'PUBLISHED',

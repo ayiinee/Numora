@@ -1190,7 +1190,10 @@ function BatchExtensionForm({
             onChange={(e) => setClosesAt(e.target.value)}
           />
         </label>
-        <p>Durasi pengerjaan tetap 75 menit. Deadline siswa yang sudah mulai tidak berubah.</p>
+        <p>
+          Perpanjangan berlaku untuk jadwal batch. Sesi yang sudah dimulai tetap memakai batas
+          waktu awal.
+        </p>
         <p>Batas penerbitan hasil mengikuti waktu tutup baru +72 jam.</p>
         {error && <p role="alert">{error}</p>}
         <div className="admin-content-actions">
