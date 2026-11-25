@@ -186,7 +186,7 @@ export function ContentRichText({
           if (layout !== 'default')
             return (
               <ScrollContent
-                key={i}
+                key={i + ':' + part.text}
                 className={part.display ? 'assessment-formula-scroll' : 'assessment-formula-inline'}
                 label="Rumus"
                 showHint={part.display ?? false}

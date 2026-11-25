@@ -137,7 +137,7 @@ it('scopes repeated asset IDs to preview instance', () => {
         retry={vi.fn()}
       />
       <ContentRichText
-        text="[[asset:diagram-1]]"
+        text="[Gambar diagram-1 Diagram kedua]"
         instanceId="second"
         media={[
           {

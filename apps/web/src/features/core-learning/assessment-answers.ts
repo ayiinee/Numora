@@ -38,7 +38,8 @@ export function incompleteCategory(question: DrillQuestionDto, answer: Assessmen
     !emptyAnswer(answer) &&
     answer !== null &&
     'categoryByStatementId' in answer &&
-    Object.keys(answer.categoryByStatementId).length < question.options.length
+    Object.keys(answer.categoryByStatementId).length <
+      (question.options.length || question.richOptions?.length || 0)
   );
 }
 function stable(value: unknown): string {
