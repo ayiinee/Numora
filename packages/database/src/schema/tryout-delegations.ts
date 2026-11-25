@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   check,
   foreignKey,
+  index,
   pgTable,
   primaryKey,
   text,
@@ -66,10 +67,7 @@ export const tryoutBatchStudentAllocations = pgTable(
       columns: [t.batchId, t.packageId],
       foreignColumns: [tryoutBatchPackages.batchId, tryoutBatchPackages.packageId],
     }),
-    check(
-      'tryout_batch_student_allocations_mode_ck',
-      sql`${t.allocationMode} = 'BALANCED_50_50'`,
-    ),
+    check('tryout_batch_student_allocations_mode_ck', sql`${t.allocationMode} = 'BALANCED_50_50'`),
   ],
 ).enableRLS();
 
@@ -91,6 +89,7 @@ export const tryoutStudentAssignments = pgTable(
     assignedAt: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    index('tryout_assignments_batch_school_package_idx').on(t.batchId, t.schoolId, t.packageId),
     uniqueIndex('tryout_student_assignments_batch_student_uq').on(t.batchId, t.studentId),
     foreignKey({
       columns: [t.batchId, t.packageId],

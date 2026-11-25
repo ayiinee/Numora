@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
@@ -94,27 +95,22 @@ export function waveClaimBlocksSchool(claimSchoolId: string | null, schoolId: st
   return schoolId === null || claimSchoolId === null || claimSchoolId === schoolId;
 }
 
-export function balancedOriginalCount(rosterSize: number) {
-  return Math.ceil(rosterSize / 2);
-}
-
-export function balancedPackageForIndex(
-  index: number,
-  rosterSize: number,
-  originalPackageId: string,
-  variantPackageId: string,
+export function balancedPackageForCounts(
+  original: number,
+  variant: number,
+  originalId: string,
+  variantId: string,
 ) {
   if (
-    !Number.isInteger(index) ||
-    !Number.isInteger(rosterSize) ||
-    index < 0 ||
-    index >= rosterSize ||
-    !originalPackageId ||
-    !variantPackageId ||
-    originalPackageId === variantPackageId
+    ![original, variant].every((n) => Number.isSafeInteger(n) && n >= 0) ||
+    !originalId ||
+    !variantId ||
+    originalId === variantId
   )
-    throw new BadRequestException('Roster atau paket balanced tidak valid.');
-  return index < balancedOriginalCount(rosterSize) ? originalPackageId : variantPackageId;
+    throw new BadRequestException('Jumlah assignment atau paket balanced tidak valid.');
+  return original < variant || (original === variant && randomInt(2) === 0)
+    ? originalId
+    : variantId;
 }
 
 export function batchEditable(
@@ -368,10 +364,7 @@ export class TryoutBatchesService {
       rows.length !== ids.length ||
       rows.some(
         ({ p, eligible }) =>
-          p.assessmentType !== 'TRYOUT' ||
-          p.status !== 'PUBLISHED' ||
-          p.isDemo ||
-          !eligible,
+          p.assessmentType !== 'TRYOUT' || p.status !== 'PUBLISHED' || p.isDemo || !eligible,
       )
     )
       throw new BadRequestException(
@@ -642,52 +635,6 @@ export class TryoutBatchesService {
       throw new BadRequestException('Sekolah delegasi tidak aktif atau tidak ditemukan.');
   }
 
-  private async snapshotBalancedAllocations(
-    tx: AdminTransaction,
-    batchId: string,
-    delegated: SaveTryoutBatchDto['schools'],
-  ) {
-    for (const school of delegated) {
-      if ((school.allocationMode ?? 'SINGLE_PACKAGE') !== 'BALANCED_50_50') continue;
-      const students = await tx
-        .select({ studentId: classMemberships.studentUserId })
-        .from(classMemberships)
-        .innerJoin(classes, eq(classes.id, classMemberships.classId))
-        .leftJoin(
-          classStudentBans,
-          and(
-            eq(classStudentBans.classId, classMemberships.classId),
-            eq(classStudentBans.studentUserId, classMemberships.studentUserId),
-            isNull(classStudentBans.unbannedAt),
-          ),
-        )
-        .where(
-          and(
-            eq(classes.schoolId, school.schoolId),
-            isNull(classMemberships.leftAt),
-            isNull(classes.archivedAt),
-            isNull(classStudentBans.id),
-          ),
-        )
-        .groupBy(classMemberships.studentUserId)
-        .orderBy(sql`md5(${batchId}::text || ${classMemberships.studentUserId}::text)`);
-      if (!students.length) continue;
-      await tx.insert(tryoutBatchStudentAllocations).values(
-        students.map((student, index) => ({
-          batchId,
-          studentId: student.studentId,
-          schoolId: school.schoolId,
-          packageId: balancedPackageForIndex(
-            index,
-            students.length,
-            school.packageId,
-            school.variantPackageId!,
-          ),
-          allocationMode: 'BALANCED_50_50' as const,
-        })),
-      );
-    }
-  }
   private async mutable(
     tx: AdminTransaction,
     b: typeof tryoutBatches.$inferSelect,
@@ -726,7 +673,6 @@ export class TryoutBatchesService {
         mandiriPackageId: b.mandiriPackageId,
         schools: delegationInput,
       });
-      await this.snapshotBalancedAllocations(tx, id, delegationInput);
       await tx
         .update(tryoutBatches)
         .set({ adminPublishedAt: sql`clock_timestamp()`, configRevision: b.configRevision + 1 })
@@ -858,23 +804,12 @@ export class TryoutBatchesService {
       const byBatch = new Map(attempts.map((attempt) => [attempt.batchId, attempt]));
       const { ready } = await releases.studentPublications(attempts, now, tx);
       const waveBatchIds = batches.filter((b) => b.waveId).map((b) => b.id);
-      const [recipients, roster, claims] = await Promise.all([
+      const [recipients, claims] = await Promise.all([
         waveBatchIds.length
           ? tx
               .select()
               .from(tryoutSchoolDelegations)
               .where(inArray(tryoutSchoolDelegations.batchId, waveBatchIds))
-          : [],
-        waveBatchIds.length
-          ? tx
-              .select()
-              .from(tryoutBatchStudentAllocations)
-              .where(
-                and(
-                  inArray(tryoutBatchStudentAllocations.batchId, waveBatchIds),
-                  eq(tryoutBatchStudentAllocations.studentId, studentId),
-                ),
-              )
           : [],
         waveBatchIds.length
           ? tx.select().from(tryoutWaveClaims).where(eq(tryoutWaveClaims.studentId, studentId))
@@ -899,16 +834,10 @@ export class TryoutBatchesService {
           );
           const allowed = [];
           for (const m of delegated) {
-            if (
-              !used(b.waveId, m.schoolId) &&
-              (!b.adminPublishedAt ||
-                roster.some((r) => r.batchId === b.id && r.schoolId === m.schoolId))
-            )
-              allowed.push(m);
+            if (!used(b.waveId, m.schoolId)) allowed.push(m);
           }
           if (delegated.length && !allowed.length)
-            startBlockedReason =
-              'Kesempatan gelombang sudah digunakan atau kamu tidak termasuk roster saat publikasi.';
+            startBlockedReason = 'Kesempatan gelombang sudah digunakan.';
           if (allowed.length) delegated = allowed;
         }
         const mandiri = !memberships.length && !!b.mandiriPackageId;
@@ -1004,19 +933,36 @@ export class TryoutBatchesService {
           ),
         );
       if (delegation?.allocationMode === 'BALANCED_50_50') {
-        const [allocation] = await tx
-          .select({ packageId: tryoutBatchStudentAllocations.packageId })
-          .from(tryoutBatchStudentAllocations)
+        // Keep this transaction lock until the attempt and assignment commit.
+        await tx
+          .select({ schoolId: tryoutSchoolDelegations.schoolId })
+          .from(tryoutSchoolDelegations)
           .where(
             and(
-              eq(tryoutBatchStudentAllocations.batchId, batchId),
-              eq(tryoutBatchStudentAllocations.studentId, studentId),
-              eq(tryoutBatchStudentAllocations.schoolId, selected.schoolId),
+              eq(tryoutSchoolDelegations.batchId, batchId),
+              eq(tryoutSchoolDelegations.schoolId, selected.schoolId),
             ),
-          );
-        if (!allocation)
-          throw new BadRequestException('Siswa tidak termasuk roster batch saat batch diposting.');
-        packageId = allocation.packageId;
+          )
+          .for('update');
+        const counts = await tx
+          .select({ packageId: tryoutStudentAssignments.packageId, n: count() })
+          .from(tryoutStudentAssignments)
+          .where(
+            and(
+              eq(tryoutStudentAssignments.batchId, batchId),
+              eq(tryoutStudentAssignments.schoolId, selected.schoolId),
+            ),
+          )
+          .groupBy(tryoutStudentAssignments.packageId);
+        const n = (id: string) => Number(counts.find((c) => c.packageId === id)?.n ?? 0);
+        const originalCount = n(delegation.packageId);
+        const variantCount = n(delegation.variantPackageId!);
+        packageId = balancedPackageForCounts(
+          originalCount,
+          variantCount,
+          delegation.packageId,
+          delegation.variantPackageId!,
+        );
       } else {
         packageId = delegation?.packageId ?? (b.waveId ? null : b.packageId);
       }

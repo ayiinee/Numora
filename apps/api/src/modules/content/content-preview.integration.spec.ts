@@ -247,6 +247,7 @@ describe.skipIf(!testUrl)(
         ['unallocatedStudent', 'STUDENT', null],
         ['lateStudent', 'STUDENT', null],
         ['waveStudent', 'STUDENT', null],
+        ...Array.from({ length: 202 }, (_, i) => [`balancedStudent${i}`, 'STUDENT', null]),
         ['teacher', 'TEACHER', null],
       ];
       const ids: string[] = [];
@@ -3867,6 +3868,113 @@ describe.skipIf(!testUrl)(
       await expect(
         owner`UPDATE tryout_batches SET closes_at=now()+interval '1 hour',cutoff_at=now()+interval '1 hour',result_due_at=now()+interval '73 hours' WHERE id=${terminal.id}`,
       ).rejects.toThrow();
+      // Publish an empty school, then enroll students. Legacy roster snapshots are history only.
+      const emptySchool = randomUUID(),
+        emptyClass = randomUUID();
+      await owner`INSERT INTO schools(id,code,name) VALUES(${emptySchool},${'EMPTY-' + suffix},'TEST Empty school')`;
+      await owner`INSERT INTO classes(id,school_id,name,join_code) VALUES(${emptyClass},${emptySchool},'TEST IX',${'EMPTY-' + suffix})`;
+      const balancedInput = {
+        ...makeInput('balanced late enrollment'),
+        newWaveTitle: 'TEST balanced starts',
+        schools: [
+          {
+            schoolId: emptySchool,
+            packageId: packageIds[0]!,
+            variantPackageId: packageIds[1]!,
+            allocationMode: 'BALANCED_50_50',
+          },
+        ],
+      };
+      const balancedBatch = await ok<{ id: string }>('admin/tryout-batches', 'POST', balancedInput);
+      await ok(`admin/tryout-batches/${balancedBatch.id}/publish`, 'POST', { expectedRevision: 1 });
+      expect(
+        await owner`SELECT student_id FROM tryout_batch_student_allocations WHERE batch_id=${balancedBatch.id}`,
+      ).toHaveLength(0);
+      await owner`UPDATE tryout_batches SET starts_at=clock_timestamp()-interval '1 minute' WHERE id=${balancedBatch.id}`;
+      expect(
+        (
+          await request(
+            `tryout/batches/${balancedBatch.id}/attempts`,
+            'POST',
+            { schoolId: emptySchool },
+            'balancedStudent0',
+          )
+        ).status,
+      ).toBe(400);
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) SELECT ${emptyClass},id FROM users WHERE display_name LIKE 'balancedStudent%'`;
+      // Simulate an existing immutable roster that assigned everybody to original.
+      await owner`INSERT INTO tryout_batch_student_allocations(batch_id,student_id,school_id,package_id,allocation_mode) SELECT ${balancedBatch.id},id,${emptySchool},${packageIds[0]!},'BALANCED_50_50' FROM users WHERE display_name LIKE 'balancedStudent%'`;
+      const [newStudent] = await owner`SELECT id FROM users WHERE display_name='balancedStudent0'`;
+      expect(
+        (await service.studentList(newStudent!.id as string)).items.find(
+          (b) => b.id === balancedBatch.id,
+        )?.startBlockedReason,
+      ).toBeNull();
+      const balancedAttempts: TryoutAttemptDto[] = [];
+      for (let offset = 0; offset < 200; offset += 10) {
+        balancedAttempts.push(
+          ...(await Promise.all(
+            Array.from({ length: 10 }, (_, i) =>
+              ok<TryoutAttemptDto>(
+                `tryout/batches/${balancedBatch.id}/attempts`,
+                'POST',
+                { schoolId: emptySchool },
+                `balancedStudent${offset + i}`,
+              ),
+            ),
+          )),
+        );
+      }
+      expect(balancedAttempts.filter((a) => a.packageId === packageIds[0])).toHaveLength(100);
+      expect(balancedAttempts.filter((a) => a.packageId === packageIds[1])).toHaveLength(100);
+      const odd = await ok<TryoutAttemptDto>(
+        `tryout/batches/${balancedBatch.id}/attempts`,
+        'POST',
+        { schoolId: emptySchool },
+        'balancedStudent200',
+      );
+      expect(packageIds).toContain(odd.packageId);
+      const [rollbackStudent] =
+        await owner`SELECT id FROM users WHERE display_name='balancedStudent201'`;
+      await expect(
+        getDatabase().db.transaction(async (tx) => {
+          await service.selectForStart(
+            tx,
+            rollbackStudent!.id as string,
+            balancedBatch.id,
+            emptySchool,
+          );
+          throw Error('TEST rollback allocation');
+        }),
+      ).rejects.toThrow('TEST rollback allocation');
+      expect(
+        await owner`SELECT attempt_id FROM tryout_student_assignments WHERE batch_id=${balancedBatch.id}`,
+      ).toHaveLength(201);
+      const lastStarts = await Promise.all(
+        [0, 1].map(() =>
+          ok<TryoutAttemptDto>(
+            `tryout/batches/${balancedBatch.id}/attempts`,
+            'POST',
+            { schoolId: emptySchool },
+            'balancedStudent201',
+          ),
+        ),
+      );
+      expect(lastStarts[0]!.id).toBe(lastStarts[1]!.id);
+      expect(lastStarts[0]!.packageId).not.toBe(odd.packageId);
+      const balancedCounts =
+        await owner`SELECT package_id,count(*)::int AS n FROM tryout_student_assignments WHERE batch_id=${balancedBatch.id} GROUP BY package_id`;
+      expect(balancedCounts.map((c) => c.n)).toEqual([101, 101]);
+      expect(
+        (
+          await ok<TryoutAttemptDto>(
+            `tryout/batches/${balancedBatch.id}/attempts`,
+            'POST',
+            { schoolId: emptySchool },
+            'balancedStudent0',
+          )
+        ).packageId,
+      ).toBe(balancedAttempts[0]!.packageId);
       // New batches: explicit school/mandiri targeting and account-scoped wave claims.
       await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${student!.id}),(${classB},${student!.id})`;
       const [waveStudent] = await owner`SELECT id FROM users WHERE display_name='waveStudent'`;
@@ -3968,15 +4076,25 @@ describe.skipIf(!testUrl)(
       await owner`UPDATE schools SET status='ACTIVE' WHERE id=${schoolC}`;
       await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${late!.id})`;
       expect(
-        (
-          await request(
+        (await service.studentList(late!.id as string)).items.find((b) => b.id === first.id)
+          ?.startBlockedReason,
+      ).toBeNull();
+      const lateStarts = await Promise.all(
+        [0, 1].map(() =>
+          ok<TryoutAttemptDto>(
             `tryout/batches/${first.id}/attempts`,
             'POST',
             { schoolId: schoolA },
             'lateStudent',
-          )
-        ).status,
-      ).toBe(400);
+          ),
+        ),
+      );
+      expect(lateStarts[0]!.id).toBe(lateStarts[1]!.id);
+      expect(lateStarts[0]!.packageId).not.toBe(freshAttempts[0]!.packageId);
+      expect(
+        await owner`SELECT attempt_id FROM tryout_student_assignments WHERE batch_id=${first.id} AND student_id=${late!.id}`,
+      ).toHaveLength(1);
+
       const raced = await Promise.all(
         [first, duplicateSchool].map((b) =>
           request(`tryout/batches/${b.id}/attempts`, 'POST', { schoolId: schoolA }, 'student'),
@@ -4071,7 +4189,7 @@ describe.skipIf(!testUrl)(
       const [known] =
         await owner`SELECT public.tryout_prior_exposure_sources(${student!.id}::uuid,${nextAttempt.questions[0]!.questionInstanceId}::uuid) AS sources`;
       expect(known!.sources).toContain('TRYOUT');
-    }, 120000);
+    }, 240000);
     it('batches import FK layers across the chunk boundary, skips unchanged content and rolls back failures', async () => {
       const namespace = `BATCH_${suffix}`,
         marker = `test_import_batch_${randomUUID().replaceAll('-', '')}`;

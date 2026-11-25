@@ -4,8 +4,7 @@ import {
   waveClaimBlocksSchool,
   batchStoppable,
   batchState,
-  balancedOriginalCount,
-  balancedPackageForIndex,
+  balancedPackageForCounts,
   validateBatchInput,
   validateBatchExtension,
 } from './tryout-batches.service';
@@ -27,22 +26,21 @@ describe('Tryout batch boundaries', () => {
     mandiriPackageId: 'packageA',
     schools: [{ schoolId: 'schoolA', packageId: 'packageB' }],
   };
-  it('keeps balanced roster split within one student for odd sizes', () => {
-    expect(balancedOriginalCount(0)).toBe(0);
-    expect(balancedOriginalCount(4)).toBe(2);
-    expect(balancedOriginalCount(5)).toBe(3);
-    for (let rosterSize = 1; rosterSize <= 200; rosterSize++) {
-      const assigned = Array.from({ length: rosterSize }, (_, index) =>
-        balancedPackageForIndex(index, rosterSize, 'original', 'variant'),
-      );
-      const original = assigned.filter((packageId) => packageId === 'original').length;
-      const variant = assigned.filter((packageId) => packageId === 'variant').length;
-      expect(original).toBe(Math.ceil(rosterSize / 2));
+  it('balances committed starts and repairs existing skew without resetting old assignments', () => {
+    let original = 0,
+      variant = 0;
+    for (let i = 0; i < 201; i++) {
+      const pack = balancedPackageForCounts(original, variant, 'original', 'variant');
+      if (pack === 'original') original++;
+      else variant++;
       expect(Math.abs(original - variant)).toBeLessThanOrEqual(1);
+      if (i === 199) expect([original, variant]).toEqual([100, 100]);
     }
-    expect(() => balancedPackageForIndex(-1, 2, 'original', 'variant')).toThrow();
-    expect(() => balancedPackageForIndex(2, 2, 'original', 'variant')).toThrow();
-    expect(() => balancedPackageForIndex(0, 1, 'same', 'same')).toThrow();
+    for (variant = 50; variant < 150; variant++)
+      expect(balancedPackageForCounts(150, variant, 'original', 'variant')).toBe('variant');
+    expect(balancedPackageForCounts(0, 1, 'original', 'variant')).toBe('original');
+    expect(() => balancedPackageForCounts(-1, 0, 'original', 'variant')).toThrow();
+    expect(() => balancedPackageForCounts(0, 0, 'same', 'same')).toThrow();
   });
   it('opens exactly at start and closes exactly at the end', () => {
     const batch = {

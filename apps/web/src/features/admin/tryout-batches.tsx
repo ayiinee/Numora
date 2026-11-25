@@ -879,7 +879,7 @@ function BatchForm({
               </header>
               <p className="tryout-batch-recipient-info">
                 {waveMode
-                  ? 'Hanya sekolah terpilih yang mendapat akses. Pilih sekolah atau Mandiri. Sekolah memakai roster 50/50 saat publikasi.'
+                  ? 'Hanya sekolah terpilih yang mendapat akses. Pilih sekolah atau Mandiri. Paket dibagi seimbang saat siswa mulai. Siswa boleh bergabung setelah publikasi.'
                   : 'Pilih satu paket per sekolah, atau aktifkan pembagian 50/50. Akses Mandiri diatur terpisah.'}
               </p>
               <div className="tryout-batch-recipient-controls">
