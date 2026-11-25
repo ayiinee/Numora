@@ -1,0 +1,120 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+import { provision } from './provision-tryout-batches.mjs';
+
+const config = JSON.parse(
+  await readFile(new URL('./tryout-schools-20261126.json', import.meta.url)),
+);
+const now = Date.parse('2026-11-26T00:00:00+07:00');
+const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+
+function fixture() {
+  const state = { waves: [], batches: [], writes: 0, losePublishResponse: false };
+  state.schools = config.schools.map((schoolName, i) => ({ schoolName, schoolId: id(i + 1) }));
+  const api = async (path, body) => {
+    if (path.includes('/options?'))
+      return {
+        waves: state.waves,
+        packages: [config.originalPackageId, config.variantPackageId].map((packageId) => ({
+          id: packageId,
+          familyCode: 'FAMILY',
+          valid: true,
+          status: 'PUBLISHED',
+        })),
+        packageTotal: 2,
+        schools: state.schools,
+        schoolTotal: state.schools.length,
+      };
+    if (path.includes('?')) return { items: state.batches, total: state.batches.length };
+    if (body) {
+      state.writes++;
+      if (path.endsWith('/publish')) {
+        const batch = state.batches.find((b) => path.includes(b.id));
+        assert.equal(body.expectedRevision, batch.revision);
+        batch.state = 'SCHEDULED';
+        batch.revision++;
+        if (state.losePublishResponse) {
+          state.losePublishResponse = false;
+          throw Error('Response lost after commit');
+        }
+        return { id: batch.id };
+      }
+      if (!body.waveId)
+        state.waves.push({
+          id: id(100),
+          title: body.newWaveTitle,
+          originalPackageId: body.packageIds[0],
+          variantPackageId: body.packageIds[1],
+        });
+      const batch = {
+        ...body,
+        id: id(200 + state.batches.length),
+        waveId: body.waveId ?? state.waves[0].id,
+        packages: body.packageIds.map((packageId) => ({ id: packageId })),
+        state: 'DRAFT',
+        revision: 1,
+      };
+      state.batches.push(batch);
+      if (state.loseCreateResponse) {
+        state.loseCreateResponse = false;
+        throw Error('Response lost after commit');
+      }
+      return { id: batch.id };
+    }
+    return state.batches.find((b) => path.endsWith(b.id));
+  };
+  return { state, api };
+}
+
+test('preview resolves six schools without mutations; publication and rerun preserve one wave and six batches', async () => {
+  const { state, api } = fixture();
+  const preview = await provision(config, api, { now });
+  assert.equal(preview.length, 6);
+  assert(preview.every((p) => p.action === 'CREATE_AND_PUBLISH'));
+  assert.equal(state.writes, 0);
+  await provision(config, api, { apply: true, now });
+  assert.equal(state.waves.length, 1);
+  assert.equal(state.batches.length, 6);
+  assert(
+    state.batches.every(
+      (b) => b.state === 'SCHEDULED' && b.schools.length === 1 && b.mandiriPackageId === null,
+    ),
+  );
+  assert.equal(state.writes, 12);
+  await provision(config, api, { apply: true, now });
+  assert.equal(state.writes, 12);
+});
+
+for (const lostResponse of ['losePublishResponse', 'loseCreateResponse'])
+  test(`${lostResponse} resumes without duplicate batch or wave`, async () => {
+    const { state, api } = fixture();
+    state[lostResponse] = true;
+    await assert.rejects(provision(config, api, { apply: true, now }), /Response lost/);
+    await provision(config, api, { apply: true, now });
+    assert.equal(state.waves.length, 1);
+    assert.equal(state.batches.length, 6);
+    assert.equal(state.writes, 12);
+  });
+
+test('missing school, changed existing schedule and elapsed start all abort before mutation', async () => {
+  const { state, api } = fixture();
+  state.schools.pop();
+  await assert.rejects(provision(config, api, { apply: true, now }), /Sekolah tidak ditemukan/);
+  assert.equal(state.writes, 0);
+  await assert.rejects(
+    provision({ ...config, schools: config.schools.slice(0, 1) }, api, {
+      apply: true,
+      now: Date.parse(config.startsAt),
+    }),
+    /Waktu mulai sudah lewat/,
+  );
+  assert.equal(state.writes, 0);
+  await provision({ ...config, schools: config.schools.slice(0, 1) }, api, { apply: true, now });
+  state.batches[0].closesAt = '2026-12-04T04:00:00+07:00';
+  await assert.rejects(
+    provision({ ...config, schools: config.schools.slice(0, 1) }, api, { apply: true, now }),
+    /Jadwal batch existing berbeda/,
+  );
+  assert.equal(state.writes, 2);
+});

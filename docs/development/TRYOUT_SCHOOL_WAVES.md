@@ -1,5 +1,7 @@
 # Gelombang dan akses Tryout - 25 November 2026
 
+**ENGINEERING DECISION - instruksi pemilik, 26 November 2026:** provisioning enam sekolah memakai konfigurasi `scripts/tryout-schools-20261126.json`, original `331115ad-8569-468d-9382-e8577c7afd55` dan varian revisi Kurikulum `5fc03163-4ca0-4c17-8db5-eaa86b825ae7`. Nama batch `TRY OUT TKA <NAMA SEKOLAH>`, mulai 26 November 2026 04.00 WIB dan tutup 3 Desember 2026 04.00 WIB, langsung publikasi. Satu gelombang bersama, tanpa penerima Mandiri. Ini konfigurasi operasional, bukan bukti data produksi sudah dibuat.
+
 **ENGINEERING DECISION - persetujuan pemilik:** batch baru memakai gelombang Admin dengan pasangan versi original/varian tetap. Target adalah sekolah terpilih atau Mandiri, tanpa fallback sekolah lain. Identitas sekolah berasal dari keanggotaan kelas aktif; sekolah nonaktif tidak menjadi Mandiri. Satu kesempatan per akun/sekolah/gelombang atau satu Mandiri; lintas sekolah boleh, lintas sekolah-Mandiri tidak. Kesempatan terpakai saat attempt dibuat, termasuk bila kemudian dihentikan. Gelombang baru tidak menghapus exposure.
 
 Sekolah memakai roster 50/50 saat publikasi; Mandiri dialokasikan seimbang saat start dengan assignment persisten. Batch lama tanpa gelombang mempertahankan aturan 11 November. Riwayat, sesi dan XP lama tidak berubah. Original/varian, roster dan hak pengerjaan tidak direset melalui edit penerima. Paparan keluarga soal sebelumnya tidak menjadi evidence independen baru; tidak mengubah parameter ilmiah atau menggabungkan kalibrasi lintas batch.
@@ -9,6 +11,27 @@ Sekolah memakai roster 50/50 saat publikasi; Mandiri dialokasikan seimbang saat 
 Konfigurasi dan penerima batch bergelombang dikunci saat publikasi untuk menjaga roster. Jadwal tutup masih dapat diperpanjang melalui aksi existing; stop dan batal tetap tersedia sesuai lifecycle.
 
 ## Aktivasi dan verifikasi
+
+### Provisioning VPS setelah pull
+
+Jalankan dari root repo sesudah dependency, migrasi `0081`, build dan restart API/worker selesai. Sekolah harus sudah aktif, nama harus cocok (case/spasi dinormalisasi), paket harus terbit dan punya parent code sama. Siswa harus sudah bergabung ke kelas sebelum publikasi karena roster dibekukan. Script tidak membuat sekolah, akun, paket atau keanggotaan kelas.
+
+Gunakan token sesi Admin berizin `CONTENT_MANAGE`; jangan kirim token lewat chat atau commit. Isi `NUMORA_API_URL` dengan URL API NestJS sebenarnya yang berakhiran `/api/v1` (bukan URL frontend). HTTPS wajib kecuali localhost. Contoh Bash di VPS, input token disembunyikan:
+
+```bash
+export NUMORA_API_URL='http://127.0.0.1:3001/api/v1' # sesuaikan port API VPS
+read -rsp 'Token sesi Admin: ' NUMORA_ADMIN_ACCESS_TOKEN; echo
+export NUMORA_ADMIN_ACCESS_TOKEN
+node scripts/provision-tryout-batches.mjs --config scripts/tryout-schools-20261126.json
+node scripts/provision-tryout-batches.mjs --config scripts/tryout-schools-20261126.json --apply
+unset NUMORA_ADMIN_ACCESS_TOKEN
+```
+
+Perintah pertama hanya preview; `--apply` membuat dan langsung memublikasikan keenam batch melalui API Admin existing beserta audit/otorisasinya. Publikasi tetap memvalidasi kesiapan akademik lewat backend. Wajib dijalankan sebelum 26 November 04.00 WIB; jadwal yang lewat tidak dibackdate atau digeser otomatis. Menjalankan ulang konfigurasi sama melewati batch yang sudah terbit dan melanjutkan draft. Konflik konfigurasi/nama ambigu menghentikan proses tanpa menimpa batch existing. Kegagalan setelah sebagian publikasi tidak membatalkan batch yang sudah berhasil; periksa Admin lalu jalankan ulang. Token kedaluwarsa perlu diganti token sesi baru.
+
+**ENGINEERING DECISION:** satu operator provisioning pada satu VPS/root checkout; lock lokal mencegah proses bersamaan di checkout tersebut. Jangan jalankan dari beberapa host/checkout atau membuat batch bernama sama secara manual bersamaan. Idempotensi lintas host memerlukan dukungan idempotency key server bila nanti diperlukan. Bila proses dibunuh paksa, hapus lock `.tmp/tryout-provision-*.lock` terkait hanya setelah memastikan tidak ada proses provisioning aktif. Tidak ada hook otomatis pada `git pull` dan tidak ada akses langsung ke DB bisnis.
+
+### Verifikasi implementasi
 
 Migrasi `0081_tryout_school_waves.sql` harus diterapkan sebelum API/worker baru. Pasangan gelombang immutable; batch lama tidak diberi gelombang otomatis. Pemilihan exposure berdasarkan delivery pertama hanya berlaku untuk batch bergelombang; semantik snapshot legacy dipertahankan.
 
