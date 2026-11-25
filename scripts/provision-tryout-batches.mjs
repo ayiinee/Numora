@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -226,7 +225,7 @@ async function main() {
   };
   // ponytail: one VPS operator; use server idempotency keys if provisioning spans hosts.
   await mkdir('.tmp', { recursive: true });
-  const lockPath = `.tmp/tryout-provision-${createHash('sha256').update(url.href).digest('hex').slice(0, 16)}.lock`;
+  const lockPath = '.tmp/tryout-provision.lock';
   const lock = await open(lockPath, 'wx');
   try {
     await lock.writeFile(String(process.pid));
