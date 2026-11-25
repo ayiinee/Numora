@@ -804,6 +804,18 @@ export const monitoringFindings = pgTable('monitoring_findings', {
   createdAt: createdAt(),
 }).enableRLS();
 
+export const tryoutWaves = pgTable(
+  'tryout_waves',
+  {
+    id: id(),
+    title: text('title').notNull(),
+    originalPackageId: ref('original_package_id', () => assessmentPackages.id).notNull(),
+    variantPackageId: ref('variant_package_id', () => assessmentPackages.id).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [check('tryout_waves_pair_ck', sql`${t.originalPackageId} <> ${t.variantPackageId}`)],
+).enableRLS();
+
 export const tryoutBatches = pgTable(
   'tryout_batches',
   {
@@ -814,6 +826,7 @@ export const tryoutBatches = pgTable(
     adminPublishedAt: timestamp('admin_published_at', { withTimezone: true }),
     cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     cancellationReason: text('cancellation_reason'),
+    waveId: ref('wave_id', () => tryoutWaves.id),
     mandiriPackageId: uuid('mandiri_package_id').references(() => assessmentPackages.id),
     startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
     closesAt: timestamp('closes_at', { withTimezone: true }).notNull(),

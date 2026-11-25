@@ -31,6 +31,10 @@ export class TryoutDelegationInputDto {
   variantPackageId?: string | null;
 }
 export class SaveTryoutBatchDto {
+  @ApiPropertyOptional({ nullable: true, type: String }) @IsOptional() @IsUUID() waveId?:
+    string | null;
+  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 160) newWaveTitle?: string;
+
   @ApiProperty() @IsString() @Length(1, 160) title!: string;
   @ApiProperty() @IsISO8601({ strict: true }) @Matches(/(?:Z|[+-]\d{2}:\d{2})$/) startsAt!: string;
   @ApiProperty() @IsISO8601({ strict: true }) @Matches(/(?:Z|[+-]\d{2}:\d{2})$/) closesAt!: string;
@@ -106,6 +110,9 @@ export class TryoutBatchParticipantDto {
   @ApiProperty() completed!: number;
 }
 export class TryoutBatchDto {
+  @ApiPropertyOptional({ nullable: true, type: String }) waveId?: string | null;
+  @ApiPropertyOptional({ nullable: true, type: String }) waveTitle?: string | null;
+
   @ApiProperty() id!: string;
   @ApiProperty() title!: string;
   @ApiProperty() startsAt!: string;
@@ -135,6 +142,8 @@ export class StudentTryoutSchoolDto {
   @ApiProperty() schoolName!: string;
 }
 export class StudentTryoutBatchDto {
+  @ApiPropertyOptional({ nullable: true, type: String }) startBlockedReason?: string | null;
+
   @ApiProperty() id!: string;
   @ApiProperty() title!: string;
   @ApiProperty() startsAt!: string;
@@ -155,7 +164,16 @@ export class StudentTryoutBatchesDto {
   @ApiProperty() routingActive!: boolean;
   @ApiProperty({ type: [StudentTryoutBatchDto] }) items!: StudentTryoutBatchDto[];
 }
+export class TryoutWaveDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() title!: string;
+  @ApiProperty() originalPackageId!: string;
+  @ApiProperty() variantPackageId!: string;
+  @ApiProperty({ type: [TryoutBatchPackageDto] }) packages!: TryoutBatchPackageDto[];
+}
 export class TryoutBatchOptionsDto {
+  @ApiPropertyOptional({ type: [TryoutWaveDto] }) waves?: TryoutWaveDto[];
+
   @ApiProperty({ type: [TryoutBatchPackageDto] }) packages!: TryoutBatchPackageDto[];
   @ApiProperty({ type: [StudentTryoutSchoolDto] }) schools!: StudentTryoutSchoolDto[];
   @ApiProperty() packageTotal!: number;

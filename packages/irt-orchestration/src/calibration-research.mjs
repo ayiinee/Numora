@@ -142,10 +142,12 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
       EXISTS(SELECT 1 FROM content_delivery_items di JOIN content_delivery_manifests dm ON dm.id=di.manifest_id
         WHERE di.attempt_item_id=i.id AND di.question_version_id=i.question_version_id AND dm.student_id=a.student_id
         AND dm.module='TRYOUT' AND dm.kind='ITEM_PAYLOAD_ISSUED') AS was_presented,
-      ARRAY(SELECT DISTINCT CASE WHEN e.kind='EXPLANATION_PAYLOAD_ISSUED' THEN 'EXPLANATION' ELSE e.module END
-        FROM student_item_exposures e JOIN question_variants v ON v.question_id=e.family_id
-        JOIN question_versions q ON q.variant_id=v.id WHERE q.id=i.question_version_id AND e.student_id=a.student_id
-        AND e.occurred_at<a.started_at) AS prior_sources
+      CASE WHEN EXISTS (SELECT 1 FROM tryout_batches wb WHERE wb.id=a.tryout_batch_id AND wb.wave_id IS NOT NULL)
+        THEN public.tryout_prior_exposure_sources(a.student_id,i.id)
+        ELSE ARRAY(SELECT DISTINCT CASE WHEN e.kind='EXPLANATION_PAYLOAD_ISSUED' THEN 'EXPLANATION' ELSE e.module END
+          FROM student_item_exposures e JOIN question_variants v ON v.question_id=e.family_id
+          JOIN question_versions q ON q.variant_id=v.id WHERE q.id=i.question_version_id AND e.student_id=a.student_id
+          AND e.occurred_at<a.started_at) END AS prior_sources
       FROM assessment_attempts a JOIN attempt_items i ON i.attempt_id=a.id
       LEFT JOIN attempt_answers ans ON ans.attempt_item_id=i.id
       JOIN assessment_attempt_arm_deliveries pin ON pin.attempt_id=a.id

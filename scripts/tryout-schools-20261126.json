@@ -1,0 +1,15 @@
+{
+  "waveTitle": "TRY OUT TKA 26 NOVEMBER 2026",
+  "originalPackageId": "331115ad-8569-468d-9382-e8577c7afd55",
+  "variantPackageId": "5fc03163-4ca0-4c17-8db5-eaa86b825ae7",
+  "startsAt": "2026-11-26T04:00:00+07:00",
+  "closesAt": "2026-12-03T04:00:00+07:00",
+  "schools": [
+    "SMP Negeri 2 Bantur",
+    "SMP Negeri 15 Kota Malang",
+    "SMP Negeri 2 Kota Batu",
+    "SMP Negeri 1 Kota Batu",
+    "SMP IT As Salam",
+    "SMP Negeri 19 Kota Malang"
+  ]
+}

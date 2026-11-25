@@ -86,6 +86,8 @@ test('batch creation, school delegation and compact detail work across viewports
       }
       batch = {
         id: id(9400),
+        waveId: b.waveId ?? id(9600),
+        waveTitle: b.newWaveTitle ?? 'TEST wave',
         title: b.title,
         startsAt: b.startsAt,
         closesAt: b.closesAt,
@@ -176,34 +178,35 @@ test('batch creation, school delegation and compact detail work across viewports
     .boundingBox();
   expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
   await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
-  await expect(page.getByText(/Pilih satu paket per sekolah, atau aktifkan pembagian seimbang 50\/50/)).toBeVisible();
+  await expect(page.getByText(/Hanya sekolah terpilih yang mendapat akses/)).toBeVisible();
+  await page.getByLabel('Nama gelombang', { exact: true }).fill('TEST wave');
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
   await page.getByLabel('Mulai (WIB)', { exact: true }).fill('2099-01-01T08:00');
   await expect(page.getByLabel('Tutup (WIB)', { exact: true })).toHaveValue('2099-01-08T08:00');
   await page.getByLabel('Tutup (WIB)', { exact: true }).fill('2099-01-07T20:00');
-  await page
-    .getByRole('combobox', { name: 'Paket siswa Mandiri', exact: true })
-    .selectOption(packages[0]!.id);
-  for (const s of schools)
+  await expect(
+    page.getByRole('combobox', { name: 'Akses Mandiri (original + varian seimbang)', exact: true }),
+  ).toBeEnabled();
+  for (const school of schools)
     await page
       .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
-      .selectOption(s.schoolId);
-  await page
-    .getByRole('combobox', { name: 'Paket TEST School B', exact: true })
-    .selectOption(packages[1]!.id);
-  await page
+      .selectOption(school.schoolId);
+  await expect(
+    page.getByRole('combobox', { name: 'Akses Mandiri (original + varian seimbang)', exact: true }),
+  ).toBeDisabled();
+  for (const mode of await page
     .getByRole('combobox', { name: 'Mode alokasi', exact: true })
-    .first()
-    .selectOption('BALANCED_50_50');
-  await page
-    .getByRole('combobox', { name: 'Paket varian', exact: true })
-    .first()
-    .selectOption(packages[1]!.id);
+    .all()) {
+    await expect(mode).toHaveValue('BALANCED_50_50');
+    await expect(mode).toBeDisabled();
+  }
   await page.getByRole('button', { name: 'Simpan draft', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'TEST ONLY Minggu 1', exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'TEST Variant', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('cell', { name: 'TEST Original / TEST Variant (50/50)', exact: true }),
+  ).toHaveCount(2);
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
