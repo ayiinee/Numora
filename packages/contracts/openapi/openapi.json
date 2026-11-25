@@ -16135,8 +16135,11 @@
           "durationSeconds": {
             "type": "number",
             "enum": [
+              1800,
               4500
-            ]
+            ],
+            "deprecated": true,
+            "description": "Compatibility field for legacy clients. The server applies 1,800 seconds."
           }
         },
         "required": [

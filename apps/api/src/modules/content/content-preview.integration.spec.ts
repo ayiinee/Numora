@@ -1709,7 +1709,7 @@ describe.skipIf(!testUrl)(
           expect(bank.items.some((v) => v.id === imported.items[0]!.questionVersionId)).toBe(true);
           const [schedule] =
             await owner`SELECT duration_seconds,close_at FROM assessment_packages WHERE id=${pack.id}`;
-          expect(schedule!.duration_seconds).toBe(4500);
+          expect(schedule!.duration_seconds).toBe(1800);
           expect(new Date(schedule!.close_at).toISOString()).toBe('2099-01-13T07:29:00.000Z');
         }
         expect(

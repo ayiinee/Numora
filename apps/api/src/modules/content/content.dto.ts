@@ -8,7 +8,6 @@ import {
   IsInt,
   IsISO8601,
   IsOptional,
-  Equals,
   IsString,
   IsUUID,
   IsUrl,
@@ -324,6 +323,8 @@ export class AdminTryoutDraftsDto {
   @ApiProperty() total!: number;
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
 }
+const supportedTryoutPublishDurations = [TRYOUT_DURATION_SECONDS, 4500];
+
 export class PublishTryoutPackageDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -336,8 +337,12 @@ export class PublishTryoutPackageDto {
   @IsOptional()
   @IsISO8601({ strict: true })
   releaseAt?: string;
-  @ApiPropertyOptional({ enum: [TRYOUT_DURATION_SECONDS] })
+  @ApiPropertyOptional({
+    enum: supportedTryoutPublishDurations,
+    deprecated: true,
+    description: 'Compatibility field for legacy clients. The server applies 1,800 seconds.',
+  })
   @IsOptional()
-  @Equals(TRYOUT_DURATION_SECONDS)
-  durationSeconds?: typeof TRYOUT_DURATION_SECONDS;
+  @IsIn(supportedTryoutPublishDurations)
+  durationSeconds?: number;
 }

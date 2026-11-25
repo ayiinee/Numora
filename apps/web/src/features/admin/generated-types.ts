@@ -125,7 +125,7 @@ export type AdminAssessmentPolicyDto = { "id": string; "code": string; "version"
 
 export type AdminAssessmentPoliciesDto = { "items": (AdminAssessmentPolicyDto)[]; };
 
-export type PublishTryoutPackageDto = { "curriculumApprovalReference"?: string; "scoringPolicyVersionId": string; "releaseAt"?: string; "durationSeconds"?: 4500; };
+export type PublishTryoutPackageDto = { "curriculumApprovalReference"?: string; "scoringPolicyVersionId": string; "releaseAt"?: string; "durationSeconds"?: 1800 | 4500; };
 
 export type ReviewContentDto = { "status": "READY" | "REVISION" | "ARCHIVED"; "expectedStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reason": string; };
 
