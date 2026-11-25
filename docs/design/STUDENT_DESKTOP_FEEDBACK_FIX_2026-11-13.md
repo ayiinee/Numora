@@ -1,5 +1,16 @@
 # Perbaikan audit desktop dan respons siswa
 
+**ENGINEERING DECISION — permintaan pemilik, 15 November 2026:** hapus tombol
+Jeda/Lanjutkan banner dari beranda siswa. Ini menggantikan keputusan tampilan
+kontrol jeda pada catatan historis di bawah. Indikator slide, swipe, keyboard,
+autoplay, jeda hover/fokus dan reduced-motion tetap mengikuti perilaku existing.
+
+**ENGINEERING DECISION — lanjutan komentar pemilik, 15 November 2026:** kartu
+Aktivitas Terakhir diringkas dengan ilustrasi lebih kecil dan tanpa tanggal.
+Badge Pretest Bab dihapus; judul dan nilai Pretest tetap tampil. Status kartu
+katalog Tryout ditempatkan setelah judul pada baris yang sama, dengan wrap bila
+ruang tidak mencukupi. Data hasil, nilai, tautan aksi dan aturan Tryout tetap.
+
 **ENGINEERING DECISION — permintaan pemilik, 13 November 2026:** terapkan seluruh temuan F01–F16 pada [audit desktop siswa](STUDENT_DESKTOP_FEEDBACK_AUDIT_2026-11-13.md), menggunakan perubahan terbaru `main`. Dasar implementasi: `origin/main` pada `7288b4b3` (PR #170, judul header dan navigasi riwayat level). Branch: `fix/student-desktop-feedback`.
 
 Keputusan ini menyetujui perbaikan presentasi dan pemulihan interaksi. Tidak mengubah otorisasi server, penilaian, alokasi paket, jumlah kesempatan, timer, XP, immutable history, atau dependency akademik/IRT yang masih OPEN. Tidak memerlukan migrasi atau perubahan kontrak API.

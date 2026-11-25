@@ -5,11 +5,11 @@
 
 .recent-activity__card {
   display: grid;
-  grid-template-columns: clamp(92px, 19%, 152px) minmax(0, 1fr) auto;
-  grid-template-areas: 'art body date' 'art body action';
+  grid-template-columns: clamp(64px, 12%, 96px) minmax(0, 1fr) auto;
+  grid-template-areas: 'art body action';
   align-items: center;
   gap: 8px 16px;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border: 1px solid var(--numora-purple-200);
   border-radius: var(--radius-xl);
   background: linear-gradient(140deg, var(--color-surface-raised), var(--numora-soft-50));
@@ -18,7 +18,7 @@
 
 .recent-activity__art {
   grid-area: art;
-  align-self: end;
+  align-self: center;
   border-radius: var(--radius-full);
   background: radial-gradient(ellipse, var(--color-primary-light) 42%, transparent 70%);
 }
@@ -98,15 +98,6 @@
   stroke: var(--numora-gold-900);
 }
 
-.recent-activity__date {
-  grid-area: date;
-  align-self: start;
-  justify-self: end;
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
 .recent-activity__action {
   grid-area: action;
   justify-self: end;
@@ -134,14 +125,14 @@
 
 @container (max-width: 500px) {
   .recent-activity__card {
-    grid-template-columns: clamp(58px, 22%, 92px) minmax(0, 1fr);
-    grid-template-areas: 'art body' 'date action';
-    gap: 10px 12px;
+    grid-template-columns: clamp(56px, 18%, 72px) minmax(0, 1fr);
+    grid-template-areas: 'art body';
+    gap: 8px 12px;
     padding: 12px;
   }
 
-  .recent-activity__date {
-    align-self: center;
-    justify-self: start;
+  .recent-activity__action {
+    grid-area: auto;
+    grid-column: 2;
   }
 }

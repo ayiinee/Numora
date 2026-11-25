@@ -618,16 +618,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.locator('.sh-shortcuts .sh-section__heading a')).toHaveCount(0);
     await expect(page.locator('.sh-shortcut__arrow')).toHaveCount(0);
     await expect(page.locator('.sh-carousel__arrow')).toHaveCount(0);
-    const pauseBanner = page.getByRole('button', { name: 'Jeda pergantian banner', exact: true });
-    await expect(pauseBanner).toHaveAttribute('aria-pressed', 'false');
-    const pauseBox = await pauseBanner.boundingBox();
-    expect(pauseBox!.width).toBeGreaterThanOrEqual(44);
-    expect(pauseBox!.height).toBeGreaterThanOrEqual(44);
-    await pauseBanner.click();
-    const resumeBanner = page.getByRole('button', { name: 'Lanjutkan pergantian banner', exact: true });
-    await expect(resumeBanner).toHaveAttribute('aria-pressed', 'true');
-    await resumeBanner.click();
-    await expect(pauseBanner).toHaveAttribute('aria-pressed', 'false');
+    await expect(
+      page.getByRole('button', { name: /(?:Jeda|Lanjutkan) pergantian banner/ }),
+    ).toHaveCount(0);
     expect(mutations).toEqual([]);
     await expect(page.locator('.sh-identity__xp:visible svg')).toHaveCount(1);
     await expect(page.locator('.student-identity__affiliation')).toHaveCount(0);
