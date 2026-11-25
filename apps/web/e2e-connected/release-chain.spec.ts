@@ -962,6 +962,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       new RegExp('/student/tryout/' + independent.id + '/explanation$'),
     );
     await expect(mandiri.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
+    await mandiri.getByText('Rincian jawaban', { exact: true }).click();
     const reviewOptions = mandiri.getByRole('list', { name: 'Pilihan jawaban' });
     await expect(reviewOptions.getByRole('listitem').filter({ hasText: /^B/ }))
       .toContainText('Jawabanmu');
