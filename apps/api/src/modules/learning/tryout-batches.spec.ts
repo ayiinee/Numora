@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   batchEditable,
+  waveClaimBlocksSchool,
   batchStoppable,
   batchState,
   balancedOriginalCount,
@@ -11,6 +12,13 @@ import {
 import type { SaveTryoutBatchDto } from './tryout-batches.dto';
 
 describe('Tryout batch boundaries', () => {
+  it('blocks duplicate school and Mandiri crossover while permitting another school', () => {
+    expect(waveClaimBlocksSchool('A', 'A')).toBe(true);
+    expect(waveClaimBlocksSchool('A', 'B')).toBe(false);
+    expect(waveClaimBlocksSchool('A', null)).toBe(true);
+    expect(waveClaimBlocksSchool(null, 'A')).toBe(true);
+    expect(waveClaimBlocksSchool(null, null)).toBe(true);
+  });
   const input: SaveTryoutBatchDto = {
     title: 'TEST ONLY batch',
     startsAt: '2026-11-10T01:00:00Z',

@@ -11638,6 +11638,10 @@
       "StudentTryoutBatchDto": {
         "type": "object",
         "properties": {
+          "startBlockedReason": {
+            "type": "string",
+            "nullable": true
+          },
           "id": {
             "type": "string"
           },
@@ -13136,6 +13140,14 @@
       "TryoutBatchDto": {
         "type": "object",
         "properties": {
+          "waveId": {
+            "type": "string",
+            "nullable": true
+          },
+          "waveTitle": {
+            "type": "string",
+            "nullable": true
+          },
           "id": {
             "type": "string"
           },
@@ -13235,9 +13247,45 @@
           "total"
         ]
       },
+      "TryoutWaveDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "originalPackageId": {
+            "type": "string"
+          },
+          "variantPackageId": {
+            "type": "string"
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutBatchPackageDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "originalPackageId",
+          "variantPackageId",
+          "packages"
+        ]
+      },
       "TryoutBatchOptionsDto": {
         "type": "object",
         "properties": {
+          "waves": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutWaveDto"
+            }
+          },
           "packages": {
             "type": "array",
             "items": {
@@ -13294,6 +13342,13 @@
       "SaveTryoutBatchDto": {
         "type": "object",
         "properties": {
+          "waveId": {
+            "type": "string",
+            "nullable": true
+          },
+          "newWaveTitle": {
+            "type": "string"
+          },
           "title": {
             "type": "string"
           },

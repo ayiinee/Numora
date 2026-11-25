@@ -105,7 +105,8 @@ function StudentBatch({
   const starting = start.isPending || start.isSuccess;
   const working =
     b.attemptId && b.attemptStatus === 'IN_PROGRESS' && b.state === 'OPEN' && b.canResume === true;
-  const canStart = b.state === 'OPEN' && !b.attemptId && (b.mandiri || !!selectedSchool);
+  const canStart =
+    !b.startBlockedReason && b.state === 'OPEN' && !b.attemptId && (b.mandiri || !!selectedSchool);
   return (
     <>
       <TryoutCatalogCard
@@ -132,7 +133,8 @@ function StudentBatch({
               {working ? 'Lanjutkan pengerjaan' : 'Periksa status sesi'}
             </Link>
           ) : (
-            b.state === 'OPEN' && (
+            b.state === 'OPEN' &&
+            !b.startBlockedReason && (
               <Button
                 aria-haspopup="dialog"
                 onClick={() => {
@@ -148,6 +150,7 @@ function StudentBatch({
           )
         }
       >
+        {b.startBlockedReason && !b.attemptId && <p role="status">{b.startBlockedReason}</p>}
         <TryoutSchedule opensAt={b.startsAt} closesAt={b.closesAt} />
         <span>30 soal · {Math.round(b.durationSeconds / 60)} menit</span>
       </TryoutCatalogCard>

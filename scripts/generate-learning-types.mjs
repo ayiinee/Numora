@@ -137,6 +137,7 @@ const groups = [
       'ExtendTryoutBatchDto',
       'TryoutDelegationInputDto',
       'TryoutBatchOptionsDto',
+      'TryoutWaveDto',
       'StudentTryoutSchoolDto',
       'ImportBodyDto',
       'UploadSummaryDto',

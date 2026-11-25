@@ -3,7 +3,7 @@
 
 export type StudentTryoutBatchesDto = { "routingActive": boolean; "items": (StudentTryoutBatchDto)[]; };
 
-export type StudentTryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "durationSeconds": number; "state": string; "schools": (StudentTryoutSchoolDto)[]; "mandiri": boolean; "attemptId": string | null; "attemptStatus": string | null; "resultState"?: "waiting" | "overdue" | "ready" | null; "canResume"?: boolean; };
+export type StudentTryoutBatchDto = { "startBlockedReason"?: string | null; "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "durationSeconds": number; "state": string; "schools": (StudentTryoutSchoolDto)[]; "mandiri": boolean; "attemptId": string | null; "attemptStatus": string | null; "resultState"?: "waiting" | "overdue" | "ready" | null; "canResume"?: boolean; };
 
 export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
 

@@ -1,3 +1,5 @@
+**ENGINEERING DECISION - pemilik, 25 November 2026:** [gelombang dan akses Tryout](../development/TRYOUT_SCHOOL_WAVES.md) membatasi batch baru ke sekolah penerima atau Mandiri, satu kesempatan per sekolah/gelombang dengan pengecualian multisekolah; paparan ulang tetap tercatat. Menggantikan fallback semua sekolah untuk batch baru, tanpa mengubah histori atau parameter ilmiah OPEN.
+
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
 **ENGINEERING DECISION - owner instruction, 17 November 2026:** Tryout runtime controls use 75-minute new attempts, allow overlapping active batches, let Content Admin stop an open batch, and keep package archival behind active-batch protection. See `docs/development/TRYOUT_RUNTIME_CONTROLS_2026-11-17.md`.

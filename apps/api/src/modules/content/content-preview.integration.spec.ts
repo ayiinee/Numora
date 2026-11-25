@@ -246,6 +246,7 @@ describe.skipIf(!testUrl)(
         ['otherStudent', 'STUDENT', null],
         ['unallocatedStudent', 'STUDENT', null],
         ['lateStudent', 'STUDENT', null],
+        ['waveStudent', 'STUDENT', null],
         ['teacher', 'TEACHER', null],
       ];
       const ids: string[] = [];
@@ -3397,10 +3398,23 @@ describe.skipIf(!testUrl)(
           { schoolId: schoolB, packageId: packageIds[1]! },
         ],
       });
+      // TEST ONLY pre-wave historical fixture. New API creation requires a wave;
+      // retain this scenario's assertions for legacy fallback and live delegation.
+      const legacyBatch = async (input: SaveTryoutBatchDto) =>
+        owner.begin(async (tx) => {
+          const [b] =
+            await tx`INSERT INTO tryout_batches(admin_title,package_id,starts_at,closes_at,cutoff_at,result_due_at,mandiri_package_id)
+          VALUES(${input.title},${input.packageIds[0]!},${input.startsAt},${input.closesAt},${input.closesAt},${input.closesAt}::timestamptz+interval '72 hours',${input.mandiriPackageId ?? null}) RETURNING id`;
+          for (const packageId of input.packageIds)
+            await tx`INSERT INTO tryout_batch_packages(batch_id,package_id) VALUES(${b!.id},${packageId})`;
+          for (const school of input.schools)
+            await tx`INSERT INTO tryout_school_delegations(batch_id,school_id,package_id) VALUES(${b!.id},${school.schoolId},${school.packageId})`;
+          return { id: b!.id as string };
+        });
       const sparePackageId = packageIds.pop()!;
       const sparePath = `admin/content/packages/${sparePackageId}`;
       const spare = await ok<ContentPackageDetailDto>(sparePath);
-      const spareBatch = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+      const spareBatch = await legacyBatch({
         ...makeInput('archive race'),
         packageIds: [sparePackageId],
         schools: [],
@@ -3433,7 +3447,7 @@ describe.skipIf(!testUrl)(
         'admin/tryout-batches/options?limit=100&search=TEST',
       );
       expect(options.schools.map((s) => s.schoolId)).toContain(schoolA);
-      const expired = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+      const expired = await legacyBatch({
         ...makeInput('expired draft'),
       });
       await owner`UPDATE tryout_batches SET starts_at=now()-interval '2 hours', closes_at=now()-interval '1 hour', cutoff_at=now()-interval '1 hour', result_due_at=now()-interval '1 hour'+interval '72 hours' WHERE id=${expired.id}`;
@@ -3453,11 +3467,7 @@ describe.skipIf(!testUrl)(
         expectedRevision: 2,
         reason: 'TEST ONLY draft cleanup',
       });
-      const inactive = await ok<{ id: string }>(
-        'admin/tryout-batches',
-        'POST',
-        makeInput('inactive recipient'),
-      );
+      const inactive = await legacyBatch(makeInput('inactive recipient'));
       await owner`UPDATE schools SET status='INACTIVE' WHERE id=${schoolA}`;
       expect(
         (
@@ -3474,7 +3484,7 @@ describe.skipIf(!testUrl)(
         expectedRevision: 1,
         reason: 'TEST ONLY inactive school cleanup',
       });
-      const defaults = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+      const defaults = await legacyBatch({
         ...makeInput('default only'),
         schools: [],
       });
@@ -3483,7 +3493,7 @@ describe.skipIf(!testUrl)(
         expectedRevision: 2,
         reason: 'TEST ONLY cleanup',
       });
-      const created = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('one'));
+      const created = await legacyBatch(makeInput('one'));
       expect((await request('admin/tryout-batches', 'GET', undefined, 'operations')).status).toBe(
         200,
       );
@@ -3524,7 +3534,7 @@ describe.skipIf(!testUrl)(
           })
         ).status,
       ).toBe(409);
-      const competing = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('two'));
+      const competing = await legacyBatch(makeInput('two'));
       const races = await Promise.all(
         [created, competing].map((b) =>
           request(`admin/tryout-batches/${b.id}/publish`, 'POST', { expectedRevision: 1 }),
@@ -3753,7 +3763,7 @@ describe.skipIf(!testUrl)(
       // Distinct recipients may share the same package; published batches may overlap.
       const shared = {
         ...makeInput('shared'),
-        mandiriPackageId: packageIds[0],
+        mandiriPackageId: packageIds[0]!,
         packageIds: [packageIds[0]!],
         schools: [
           { schoolId: schoolA, packageId: packageIds[0]! },
@@ -3762,7 +3772,7 @@ describe.skipIf(!testUrl)(
         startsAt: new Date(Date.now() + 60000).toISOString(),
         closesAt: detail.closesAt,
       };
-      const next = await ok<{ id: string }>('admin/tryout-batches', 'POST', shared);
+      const next = await legacyBatch(shared);
       await ok(`admin/tryout-batches/${next.id}/publish`, 'POST', { expectedRevision: 1 });
       const extension = {
         expectedRevision: 4,
@@ -3825,11 +3835,7 @@ describe.skipIf(!testUrl)(
       await expect(
         owner`UPDATE tryout_batches SET closes_at=closes_at-interval '1 minute',cutoff_at=closes_at-interval '1 minute',result_due_at=closes_at-interval '1 minute'+interval '72 hours' WHERE id=${activeId}`,
       ).rejects.toThrow();
-      const terminal = await ok<{ id: string }>(
-        'admin/tryout-batches',
-        'POST',
-        makeInput('terminal fixture'),
-      );
+      const terminal = await legacyBatch(makeInput('terminal fixture'));
       // TEST ONLY atomically age an unpublished fixture, without waiting or disabling guards.
       await owner`UPDATE tryout_batches SET admin_published_at=now()-interval '3 hours',starts_at=now()-interval '2 hours',closes_at=now()-interval '1 hour',cutoff_at=now()-interval '1 hour',result_due_at=now()-interval '1 hour'+interval '72 hours' WHERE id=${terminal.id}`;
       expect(
@@ -3851,6 +3857,210 @@ describe.skipIf(!testUrl)(
       await expect(
         owner`UPDATE tryout_batches SET closes_at=now()+interval '1 hour',cutoff_at=now()+interval '1 hour',result_due_at=now()+interval '73 hours' WHERE id=${terminal.id}`,
       ).rejects.toThrow();
+      // New batches: explicit school/mandiri targeting and account-scoped wave claims.
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${student!.id}),(${classB},${student!.id})`;
+      const [waveStudent] = await owner`SELECT id FROM users WHERE display_name='waveStudent'`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${waveStudent!.id}),(${classB},${waveStudent!.id})`;
+      expect(
+        (await request('admin/tryout-batches', 'POST', makeInput('missing wave'))).status,
+      ).toBe(400);
+      const waveInput = (title: string, schoolId: string): SaveTryoutBatchDto => ({
+        ...makeInput(title),
+        newWaveTitle: title,
+        schools: [
+          {
+            schoolId,
+            packageId: packageIds[0]!,
+            allocationMode: 'BALANCED_50_50',
+            variantPackageId: packageIds[1]!,
+          },
+        ],
+      });
+      const first = await ok<{ id: string }>(
+        'admin/tryout-batches',
+        'POST',
+        waveInput('wave A', schoolA),
+      );
+      const firstDetail = await ok<TryoutBatchDto>(`admin/tryout-batches/${first.id}`);
+      expect(firstDetail.waveId).toBeTruthy();
+      const createSibling = async (title: string, schoolId?: string) =>
+        ok<{ id: string }>('admin/tryout-batches', 'POST', {
+          ...waveInput(title, schoolId ?? schoolA),
+          newWaveTitle: undefined,
+          waveId: firstDetail.waveId,
+          ...(!schoolId ? { schools: [], mandiriPackageId: packageIds[0] } : {}),
+        });
+      const second = await createSibling('wave B', schoolB);
+      const duplicateSchool = await createSibling('wave duplicate A', schoolA);
+      const general = await createSibling('wave Mandiri');
+      for (const b of [first, second, duplicateSchool, general]) {
+        await ok(`admin/tryout-batches/${b.id}/publish`, 'POST', { expectedRevision: 1 });
+        await owner`UPDATE tryout_batches SET starts_at=clock_timestamp()-interval '1 minute' WHERE id=${b.id}`;
+      }
+      const freshAttempts = await Promise.all([
+        ok<TryoutAttemptDto>(
+          `tryout/batches/${first.id}/attempts`,
+          'POST',
+          { schoolId: schoolA },
+          'waveStudent',
+        ),
+        ok<TryoutAttemptDto>(
+          `tryout/batches/${second.id}/attempts`,
+          'POST',
+          { schoolId: schoolB },
+          'waveStudent',
+        ),
+      ]);
+      const exposureCounts = [];
+      for (const attempt of freshAttempts) {
+        const [exposure] =
+          await owner`SELECT cardinality(public.tryout_prior_exposure_sources(${waveStudent!.id}::uuid,${attempt.questions[0]!.questionInstanceId}::uuid)) AS n`;
+        exposureCounts.push(exposure!.n as number);
+      }
+      expect(exposureCounts.sort()).toEqual([0, 1]);
+      const list = await service.studentList(student!.id as string);
+      expect(list.items.find((b) => b.id === general.id)).toBeUndefined();
+      expect(list.items.find((b) => b.id === first.id)?.schools.map((s) => s.schoolId)).toEqual([
+        schoolA,
+      ]);
+      expect(list.items.find((b) => b.id === second.id)?.schools.map((s) => s.schoolId)).toEqual([
+        schoolB,
+      ]);
+      expect(
+        (await service.studentList(unallocated!.id as string)).items.some((b) =>
+          [first.id, second.id, general.id].includes(b.id),
+        ),
+      ).toBe(false);
+      expect(
+        (await request(`tryout/batches/${first.id}/attempts`, 'POST', {}, 'unallocatedStudent'))
+          .status,
+      ).toBe(400);
+      expect(
+        (
+          await request(
+            `tryout/batches/${general.id}/attempts`,
+            'POST',
+            { schoolId: schoolA },
+            'student',
+          )
+        ).status,
+      ).toBe(400);
+      await owner`UPDATE schools SET status='INACTIVE' WHERE id=${schoolC}`;
+      expect(
+        (await service.studentList(unallocated!.id as string)).items.some(
+          (b) => b.id === general.id,
+        ),
+      ).toBe(false);
+      expect(
+        (await request(`tryout/batches/${general.id}/attempts`, 'POST', {}, 'unallocatedStudent'))
+          .status,
+      ).toBe(400);
+      await owner`UPDATE schools SET status='ACTIVE' WHERE id=${schoolC}`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${late!.id})`;
+      expect(
+        (
+          await request(
+            `tryout/batches/${first.id}/attempts`,
+            'POST',
+            { schoolId: schoolA },
+            'lateStudent',
+          )
+        ).status,
+      ).toBe(400);
+      const raced = await Promise.all(
+        [first, duplicateSchool].map((b) =>
+          request(`tryout/batches/${b.id}/attempts`, 'POST', { schoolId: schoolA }, 'student'),
+        ),
+      );
+      expect(raced.map((r) => r.status).sort()).toEqual([201, 409]);
+      const winningIndex = raced.findIndex((r) => r.status === 201);
+      const winning = (await raced[winningIndex]!.json()) as TryoutAttemptDto;
+      const winningBatch = [first, duplicateSchool][winningIndex]!;
+      expect(
+        (
+          await ok<TryoutAttemptDto>(
+            `tryout/batches/${winningBatch.id}/attempts`,
+            'POST',
+            { schoolId: schoolA },
+            'student',
+          )
+        ).id,
+      ).toBe(winning.id);
+      const otherSchool = await ok<TryoutAttemptDto>(
+        `tryout/batches/${second.id}/attempts`,
+        'POST',
+        { schoolId: schoolB },
+        'student',
+      );
+      expect(otherSchool.id).not.toBe(winning.id);
+      const [prior] =
+        await owner`SELECT public.tryout_prior_exposure_sources(${student!.id}::uuid,${otherSchool.questions[0]!.questionInstanceId}::uuid) AS sources`;
+      expect(prior!.sources).toContain('TRYOUT');
+      const independentOne = await ok<TryoutAttemptDto>(
+        `tryout/batches/${general.id}/attempts`,
+        'POST',
+        {},
+        'otherStudent',
+      );
+      await owner`UPDATE class_memberships SET left_at=clock_timestamp(),end_reason='LEFT' WHERE student_user_id=${unallocated!.id} AND left_at IS NULL`;
+      const independentTwo = await ok<TryoutAttemptDto>(
+        `tryout/batches/${general.id}/attempts`,
+        'POST',
+        {},
+        'unallocatedStudent',
+      );
+      expect(independentTwo.packageId).not.toBe(independentOne.packageId);
+      const generalDuplicate = await createSibling('wave duplicate Mandiri');
+      await ok(`admin/tryout-batches/${generalDuplicate.id}/publish`, 'POST', {
+        expectedRevision: 1,
+      });
+      await owner`UPDATE tryout_batches SET starts_at=clock_timestamp()-interval '1 minute' WHERE id=${generalDuplicate.id}`;
+      expect(
+        (
+          await request(
+            `tryout/batches/${generalDuplicate.id}/attempts`,
+            'POST',
+            {},
+            'otherStudent',
+          )
+        ).status,
+      ).toBe(409);
+      const [mandiriUser] = await owner`SELECT id FROM users WHERE display_name='otherStudent'`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${mandiriUser!.id})`;
+      const laterSchool = await createSibling('school after Mandiri', schoolA);
+      await ok(`admin/tryout-batches/${laterSchool.id}/publish`, 'POST', { expectedRevision: 1 });
+      await owner`UPDATE tryout_batches SET starts_at=clock_timestamp()-interval '1 minute' WHERE id=${laterSchool.id}`;
+      expect(
+        (
+          await request(
+            `tryout/batches/${laterSchool.id}/attempts`,
+            'POST',
+            { schoolId: schoolA },
+            'otherStudent',
+          )
+        ).status,
+      ).toBe(409);
+      await owner`UPDATE class_memberships SET left_at=clock_timestamp(),end_reason='LEFT' WHERE student_user_id=${student!.id} AND left_at IS NULL`;
+      expect(
+        (await request(`tryout/batches/${general.id}/attempts`, 'POST', {}, 'student')).status,
+      ).toBe(409);
+      const nextWave = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+        ...waveInput('next wave', schoolA),
+        schools: [],
+        mandiriPackageId: packageIds[0],
+      });
+      await ok(`admin/tryout-batches/${nextWave.id}/publish`, 'POST', { expectedRevision: 1 });
+      await owner`UPDATE tryout_batches SET starts_at=clock_timestamp()-interval '1 minute' WHERE id=${nextWave.id}`;
+      const nextAttempt = await ok<TryoutAttemptDto>(
+        `tryout/batches/${nextWave.id}/attempts`,
+        'POST',
+        {},
+        'student',
+      );
+      expect(nextAttempt.id).not.toBe(winning.id);
+      const [known] =
+        await owner`SELECT public.tryout_prior_exposure_sources(${student!.id}::uuid,${nextAttempt.questions[0]!.questionInstanceId}::uuid) AS sources`;
+      expect(known!.sources).toContain('TRYOUT');
     }, 120000);
     it('batches import FK layers across the chunk boundary, skips unchanged content and rolls back failures', async () => {
       const namespace = `BATCH_${suffix}`,
