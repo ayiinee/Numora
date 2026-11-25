@@ -1,3 +1,7 @@
+**ENGINEERING DECISION - konfigurasi pemilik, 26 November 2026:** [provisioning enam batch sekolah](../development/TRYOUT_SCHOOL_WAVES.md#provisioning-vps-setelah-pull) memakai satu gelombang dan pasangan paket yang ditentukan, 26 November 04.00 WIB sampai 3 Desember 04.00 WIB. Publikasi melalui API Admin setelah aktivasi VPS; bukan bukti data produksi sudah dibuat.
+
+**ENGINEERING DECISION - pemilik, 25 November 2026:** [gelombang dan akses Tryout](../development/TRYOUT_SCHOOL_WAVES.md) membatasi batch baru ke sekolah penerima atau Mandiri, satu kesempatan per sekolah/gelombang dengan pengecualian multisekolah; paparan ulang tetap tercatat. Menggantikan fallback semua sekolah untuk batch baru, tanpa mengubah histori atau parameter ilmiah OPEN.
+
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
 **ENGINEERING DECISION - owner instruction, 25 November 2026:** New Tryout attempts receive up to 30 minutes (1,800 seconds), capped by the batch or legacy package closing time. Existing attempts use their pinned deadline. This supersedes the earlier duration decisions below. [Tryout runtime controls](../development/TRYOUT_RUNTIME_CONTROLS_2026-11-17.md) also cover overlapping batches, stopping an open batch and package archival.

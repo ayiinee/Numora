@@ -13,6 +13,7 @@ import {
 import {
   currentTryoutPackage,
   tryoutStudentAssignments,
+  tryoutWaveClaims,
   tryoutBatches,
   tryoutBatchCloseAt,
   TRYOUT_DURATION_SECONDS,
@@ -748,6 +749,14 @@ export class TryoutService {
         await tx.insert(tryoutStudentAssignments).values({
           attemptId: attempt.id,
           batchId: selected.batch.id,
+          studentId,
+          schoolId: selected.schoolId,
+          packageId,
+        });
+      if (selected?.batch.waveId)
+        await tx.insert(tryoutWaveClaims).values({
+          attemptId: attempt.id,
+          waveId: selected.batch.waveId,
           studentId,
           schoolId: selected.schoolId,
           packageId,

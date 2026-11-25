@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { tryoutBatches } from './measurement.js';
+import { tryoutBatches, tryoutWaves } from './measurement.js';
 import { tryoutBatchPackages } from './assessment-arms.js';
 import { schools, users } from './identity.js';
 import { assessmentAttempts } from './assessments.js';
@@ -96,5 +96,30 @@ export const tryoutStudentAssignments = pgTable(
       columns: [t.batchId, t.packageId],
       foreignColumns: [tryoutBatchPackages.batchId, tryoutBatchPackages.packageId],
     }),
+  ],
+).enableRLS();
+
+export const tryoutWaveClaims = pgTable(
+  'tryout_wave_claims',
+  {
+    attemptId: uuid('attempt_id')
+      .primaryKey()
+      .references(() => assessmentAttempts.id),
+    waveId: uuid('wave_id')
+      .notNull()
+      .references(() => tryoutWaves.id),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id),
+    schoolId: uuid('school_id').references(() => schools.id),
+    packageId: uuid('package_id').notNull(),
+  },
+  (t) => [
+    uniqueIndex('tryout_wave_claims_school_uq')
+      .on(t.waveId, t.studentId, t.schoolId)
+      .where(sql`${t.schoolId} is not null`),
+    uniqueIndex('tryout_wave_claims_mandiri_uq')
+      .on(t.waveId, t.studentId)
+      .where(sql`${t.schoolId} is null`),
   ],
 ).enableRLS();

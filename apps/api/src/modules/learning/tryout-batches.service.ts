@@ -14,6 +14,8 @@ import {
   getDatabase,
   schools,
   tryoutBatches,
+  tryoutWaves,
+  tryoutWaveClaims,
   tryoutBatchStudentAllocations,
   tryoutBatchPackages,
   tryoutSchoolDelegations,
@@ -86,6 +88,10 @@ export function validateBatchInput(body: SaveTryoutBatchDto, now?: Date) {
   ];
   if (delegated.some((id) => !selected.has(id)))
     throw new BadRequestException('Paket delegasi harus termasuk paket batch.');
+}
+
+export function waveClaimBlocksSchool(claimSchoolId: string | null, schoolId: string | null) {
+  return schoolId === null || claimSchoolId === null || claimSchoolId === schoolId;
 }
 
 export function balancedOriginalCount(rosterSize: number) {
@@ -183,8 +189,42 @@ export class TryoutBatchesService {
       db.select({ total: count() }).from(assessmentPackages).where(packageWhere),
       db.select({ total: count() }).from(schools).where(schoolWhere),
     ]);
+    const waves = await db
+      .select()
+      .from(tryoutWaves)
+      .orderBy(desc(tryoutWaves.createdAt))
+      .limit(1000);
+    const wavePackageIds = [
+      ...new Set(waves.flatMap((w) => [w.originalPackageId, w.variantPackageId])),
+    ];
+    const wavePackages = wavePackageIds.length
+      ? await db
+          .select({
+            p: assessmentPackages,
+            usedBatchCount:
+              sql<number>`(select count(*) from tryout_batch_packages tbp where tbp.package_id = ${assessmentPackages.id})`.mapWith(
+                Number,
+              ),
+          })
+          .from(assessmentPackages)
+          .where(inArray(assessmentPackages.id, wavePackageIds))
+      : [];
     return {
       packages,
+      waves: waves.map((w) => ({
+        ...w,
+        packages: wavePackages
+          .filter(({ p }) => p.id === w.originalPackageId || p.id === w.variantPackageId)
+          .map(({ p, usedBatchCount }) => ({
+            id: p.id,
+            name: p.name,
+            packageVersion: p.packageVersion,
+            familyCode: p.familyCode,
+            status: p.status,
+            usedBatchCount,
+            valid: p.status === 'PUBLISHED' && !p.isDemo,
+          })),
+      })),
       schools: delegated,
       packageTotal: packageCount[0]!.total,
       schoolTotal: schoolCount[0]!.total,
@@ -287,9 +327,16 @@ export class TryoutBatchesService {
         resultDueAt: b.resultDueAt.toISOString(),
         revision: b.configRevision,
         state: batchState(b, now),
-        editable: batchEditable(b, now),
-        delegationsEditable: ['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, now)),
+        editable: !(b.waveId && b.adminPublishedAt) && batchEditable(b, now),
+        delegationsEditable:
+          !(b.waveId && b.adminPublishedAt) &&
+          ['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, now)),
         extendable: batchState(b, now) === 'OPEN' && ['PLANNED', 'OPEN'].includes(b.status),
+        waveId: b.waveId,
+        waveTitle: b.waveId
+          ? ((await tx.select().from(tryoutWaves).where(eq(tryoutWaves.id, b.waveId)))[0]?.title ??
+            null)
+          : null,
         mandiriPackageId: b.mandiriPackageId,
         packages,
         schools: delegated,
@@ -351,6 +398,7 @@ export class TryoutBatchesService {
     if (new Date(body.startsAt) <= new Date(clock!.now))
       throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
     await this.ready(tx, body.packageIds);
+    if (body.waveId) await this.validateWave(tx, body.waveId, body);
     const selected = await tx
       .select({ familyCode: assessmentPackages.familyCode })
       .from(assessmentPackages)
@@ -397,6 +445,8 @@ export class TryoutBatchesService {
       async (tx) => {
         await lockTryoutBatchSchedule(tx);
         const old = id ? await this.batch(tx, id, 'update') : null;
+        if (old?.waveId && old.adminPublishedAt)
+          throw new ConflictException('Konfigurasi gelombang sudah dikunci saat publikasi.');
         if (old) await this.mutable(tx, old, body.expectedRevision);
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         validateBatchInput(body, new Date(clock!.now));
@@ -413,7 +463,31 @@ export class TryoutBatchesService {
         if (packs.length !== body.packageIds.length)
           throw new BadRequestException('Paket Tryout tidak ditemukan.');
         if (!old?.adminPublishedAt) await this.validateSchools(tx, body.schools);
+        let waveId = body.waveId ?? null;
+        if (old && waveId !== old.waveId)
+          throw new ConflictException('Gelombang batch tidak dapat diganti.');
+        if (!old || old.waveId) {
+          if (waveId && body.newWaveTitle)
+            throw new BadRequestException('Pilih atau buat satu gelombang.');
+          if (!waveId) {
+            if (!body.newWaveTitle?.trim() || body.packageIds.length !== 2)
+              throw new BadRequestException(
+                'Batch baru wajib memakai gelombang dengan original dan varian.',
+              );
+            const [wave] = await tx
+              .insert(tryoutWaves)
+              .values({
+                title: body.newWaveTitle.trim(),
+                originalPackageId: body.packageIds[0]!,
+                variantPackageId: body.packageIds[1]!,
+              })
+              .returning();
+            waveId = wave!.id;
+          }
+          await this.validateWave(tx, waveId, body);
+        }
         const values = {
+          waveId,
           adminTitle: body.title.trim(),
           packageId: body.packageIds[0]!,
           startsAt: new Date(body.startsAt),
@@ -453,6 +527,10 @@ export class TryoutBatchesService {
       'tryout_batch',
       async (tx) => {
         const b = await this.batch(tx, id, 'update');
+        if (b.waveId && b.adminPublishedAt)
+          throw new ConflictException(
+            'Penerima dan roster gelombang sudah dikunci saat publikasi.',
+          );
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         if (!['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, new Date(clock!.now))))
           throw new ConflictException('Penerima hanya dapat diubah sebelum batch berakhir.');
@@ -470,13 +548,16 @@ export class TryoutBatchesService {
           .select()
           .from(tryoutBatchPackages)
           .where(eq(tryoutBatchPackages.batchId, id));
-        validateBatchInput({
+        const input = {
+          waveId: b.waveId,
           title: b.adminTitle!,
           startsAt: b.startsAt.toISOString(),
           closesAt: b.closesAt.toISOString(),
           packageIds: packages.map((p) => p.packageId),
           ...body,
-        });
+        };
+        validateBatchInput(input);
+        if (b.waveId) await this.validateWave(tx, b.waveId, input);
         await this.validateSchools(tx, body.schools);
         await tx.delete(tryoutSchoolDelegations).where(eq(tryoutSchoolDelegations.batchId, id));
         if (body.schools.length)
@@ -494,6 +575,53 @@ export class TryoutBatchesService {
       },
       { configuration: body, appliesTo: 'NEW_STARTS_ONLY' },
     );
+  }
+  private async validateWave(
+    tx: AdminTransaction,
+    waveId: string,
+    body: Pick<SaveTryoutBatchDto, 'packageIds' | 'schools' | 'mandiriPackageId'>,
+  ) {
+    const [wave] = await tx
+      .select()
+      .from(tryoutWaves)
+      .where(eq(tryoutWaves.id, waveId))
+      .for('share');
+    if (
+      !wave ||
+      body.packageIds.length !== 2 ||
+      !body.packageIds.includes(wave.originalPackageId) ||
+      !body.packageIds.includes(wave.variantPackageId)
+    )
+      throw new BadRequestException(
+        'Paket batch harus sama dengan pasangan original/varian gelombang.',
+      );
+    if (!!body.mandiriPackageId === !!body.schools.length)
+      throw new BadRequestException('Pilih penerima sekolah atau Mandiri, bukan keduanya.');
+    if (body.mandiriPackageId && body.mandiriPackageId !== wave.originalPackageId)
+      throw new BadRequestException('Paket Mandiri harus memakai original gelombang.');
+    if (
+      body.schools.some(
+        (s) =>
+          s.allocationMode !== 'BALANCED_50_50' ||
+          s.packageId !== wave.originalPackageId ||
+          s.variantPackageId !== wave.variantPackageId,
+      )
+    )
+      throw new BadRequestException(
+        'Sekolah gelombang wajib memakai pasangan original/varian 50/50.',
+      );
+  }
+  async waveBlock(
+    tx: AdminTransaction,
+    studentId: string,
+    waveId: string,
+    schoolId: string | null,
+  ) {
+    const claims = await tx
+      .select()
+      .from(tryoutWaveClaims)
+      .where(and(eq(tryoutWaveClaims.waveId, waveId), eq(tryoutWaveClaims.studentId, studentId)));
+    return claims.some((c) => waveClaimBlocksSchool(c.schoolId, schoolId));
   }
   private async validateSchools(tx: AdminTransaction, delegated: SaveTryoutBatchDto['schools']) {
     if (!delegated.length) return;
@@ -590,6 +718,7 @@ export class TryoutBatchesService {
         allocationMode: school.allocationMode as 'SINGLE_PACKAGE' | 'BALANCED_50_50',
       }));
       await this.validatePublished(tx, id, {
+        waveId: b.waveId,
         title: b.adminTitle!,
         startsAt: b.startsAt.toISOString(),
         closesAt: b.closesAt.toISOString(),
@@ -728,19 +857,66 @@ export class TryoutBatchesService {
         );
       const byBatch = new Map(attempts.map((attempt) => [attempt.batchId, attempt]));
       const { ready } = await releases.studentPublications(attempts, now, tx);
+      const waveBatchIds = batches.filter((b) => b.waveId).map((b) => b.id);
+      const [recipients, roster, claims] = await Promise.all([
+        waveBatchIds.length
+          ? tx
+              .select()
+              .from(tryoutSchoolDelegations)
+              .where(inArray(tryoutSchoolDelegations.batchId, waveBatchIds))
+          : [],
+        waveBatchIds.length
+          ? tx
+              .select()
+              .from(tryoutBatchStudentAllocations)
+              .where(
+                and(
+                  inArray(tryoutBatchStudentAllocations.batchId, waveBatchIds),
+                  eq(tryoutBatchStudentAllocations.studentId, studentId),
+                ),
+              )
+          : [],
+        waveBatchIds.length
+          ? tx.select().from(tryoutWaveClaims).where(eq(tryoutWaveClaims.studentId, studentId))
+          : [],
+      ]);
+      const used = (waveId: string, schoolId: string | null) =>
+        claims.some((c) => c.waveId === waveId && waveClaimBlocksSchool(c.schoolId, schoolId));
       const items = [];
       for (const b of batches) {
         const attempt = byBatch.get(b.id);
-        const delegated = [
+        let delegated = [
           ...new Map(
             memberships
               .filter((m) => m.schoolActive)
               .map((m) => [m.schoolId, { schoolId: m.schoolId, schoolName: m.schoolName }]),
           ).values(),
         ];
+        let startBlockedReason: string | null = null;
+        if (b.waveId) {
+          delegated = delegated.filter((m) =>
+            recipients.some((r) => r.batchId === b.id && r.schoolId === m.schoolId),
+          );
+          const allowed = [];
+          for (const m of delegated) {
+            if (
+              !used(b.waveId, m.schoolId) &&
+              (!b.adminPublishedAt ||
+                roster.some((r) => r.batchId === b.id && r.schoolId === m.schoolId))
+            )
+              allowed.push(m);
+          }
+          if (delegated.length && !allowed.length)
+            startBlockedReason =
+              'Kesempatan gelombang sudah digunakan atau kamu tidak termasuk roster saat publikasi.';
+          if (allowed.length) delegated = allowed;
+        }
         const mandiri = !memberships.length && !!b.mandiriPackageId;
+        if (b.waveId && mandiri && used(b.waveId, null))
+          startBlockedReason = 'Kesempatan gelombang sudah digunakan.';
         if (!attempt && !mandiri && !delegated.length) continue;
         items.push({
+          startBlockedReason,
           id: b.id,
           title: b.adminTitle!,
           startsAt: b.startsAt.toISOString(),
@@ -842,11 +1018,33 @@ export class TryoutBatchesService {
           throw new BadRequestException('Siswa tidak termasuk roster batch saat batch diposting.');
         packageId = allocation.packageId;
       } else {
-        packageId = delegation?.packageId ?? b.packageId;
+        packageId = delegation?.packageId ?? (b.waveId ? null : b.packageId);
       }
       contextSchool = selected.schoolId;
     }
     if (!packageId) throw new BadRequestException('Batch tidak tersedia untuk kelompok siswa ini.');
+    if (b.waveId) {
+      if (await this.waveBlock(tx, studentId, b.waveId, contextSchool))
+        throw new ConflictException('Kesempatan gelombang ini sudah digunakan.');
+      if (!contextSchool) {
+        // Serialize allocations across Mandiri starts so counts differ by at most one.
+        const [wave] = await tx
+          .select()
+          .from(tryoutWaves)
+          .where(eq(tryoutWaves.id, b.waveId))
+          .for('update');
+        const counts = await tx
+          .select({ packageId: tryoutWaveClaims.packageId, n: count() })
+          .from(tryoutWaveClaims)
+          .where(and(eq(tryoutWaveClaims.waveId, b.waveId), isNull(tryoutWaveClaims.schoolId)))
+          .groupBy(tryoutWaveClaims.packageId);
+        const n = (id: string) => Number(counts.find((c) => c.packageId === id)?.n ?? 0);
+        packageId =
+          n(wave!.originalPackageId) <= n(wave!.variantPackageId)
+            ? wave!.originalPackageId
+            : wave!.variantPackageId;
+      }
+    }
     await this.ready(tx, [packageId]);
     return {
       existingId: null,

@@ -313,6 +313,22 @@ async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false
   return rawTryoutAnswers;
 }
 
+test('wave opportunity used hides start and explains eligibility', async ({ page }) => {
+  await fixture(page);
+  await page.route('**/api/v1/tryout/batches', route => route.fulfill({ json: {
+    routingActive: true,
+    items: [{ id: past, title: 'TEST wave school', state: 'OPEN',
+      startsAt: '2026-01-01T00:00:00Z', closesAt: '2099-01-01T00:00:00Z',
+      resultDueAt: '2099-01-04T00:00:00Z', durationSeconds: 4500,
+      schools: [{ schoolId: chapter, schoolName: 'TEST School A' }], mandiri: false,
+      attemptId: null, attemptStatus: null, startBlockedReason: 'Kesempatan gelombang sudah digunakan.' }],
+  } }));
+  await page.goto('/student/tryout');
+  await expect(page.getByRole('heading', { name: 'TEST wave school' })).toBeVisible();
+  await expect(page.getByText('Kesempatan gelombang sudah digunakan.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mulai Tryout', exact: true })).toHaveCount(0);
+});
+
 test('delegated Tryout asks multi-school students to choose one school before starting', async ({
   page,
 }) => {

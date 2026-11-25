@@ -1,7 +1,7 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type TryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "delegationsEditable": boolean; "extendable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
+export type TryoutBatchDto = { "waveId"?: string | null; "waveTitle"?: string | null; "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "delegationsEditable": boolean; "extendable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
 
 export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; };
 
@@ -11,7 +11,7 @@ export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVers
 
 export type TryoutBatchParticipantDto = { "packageId": string; "schoolId": string | null; "assigned": number; "completed": number; };
 
-export type SaveTryoutBatchDto = { "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "expectedRevision"?: number; };
+export type SaveTryoutBatchDto = { "waveId"?: string | null; "newWaveTitle"?: string; "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "expectedRevision"?: number; };
 
 export type UpdateTryoutDelegationsDto = { "expectedRevision": number; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; };
 
@@ -19,7 +19,9 @@ export type ExtendTryoutBatchDto = { "expectedRevision": number; "closesAt": str
 
 export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; "allocationMode"?: "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId"?: string | null; };
 
-export type TryoutBatchOptionsDto = { "packages": (TryoutBatchPackageDto)[]; "schools": (StudentTryoutSchoolDto)[]; "packageTotal": number; "schoolTotal": number; };
+export type TryoutBatchOptionsDto = { "waves"?: (TryoutWaveDto)[]; "packages": (TryoutBatchPackageDto)[]; "schools": (StudentTryoutSchoolDto)[]; "packageTotal": number; "schoolTotal": number; };
+
+export type TryoutWaveDto = { "id": string; "title": string; "originalPackageId": string; "variantPackageId": string; "packages": (TryoutBatchPackageDto)[]; };
 
 export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
 
