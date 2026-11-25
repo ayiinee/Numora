@@ -97,3 +97,14 @@
     gap: 8px;
   }
 }
+
+/* Waiting uses the shared desktop navigation and keeps the mobile duel controls in view. */
+.pvp-waiting-shell .student-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 959px) {
+  .app-shell--student.pvp-waiting-shell {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
