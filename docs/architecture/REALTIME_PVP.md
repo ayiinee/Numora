@@ -143,6 +143,8 @@ Do not add horizontal WebSocket complexity before load tests justify it.
 
 **ENGINEERING DECISION:** Socket.IO namespace `/pvp`; event names and envelopes follow [Student Area Contract](../api/STUDENT_AREA_CONTRACT.md) and `packages/contracts/websocket/pvp-events.schema.json`. Commands use `eventVersion: "1"`, UUID `requestId`, and validated payloads. Handshake accepts Bearer auth; every command revalidates Student authorization.
 
+**ENGINEERING DECISION — 25 November 2026:** new room codes use six random characters, omitting easily confused symbols. Existing twelve-character codes and their links/QRs remain valid. Short-code joins use the shared authenticated code-attempt limit. Students with an active room can resume it from the lobby. If create/join confirmation times out, the lobby checks active membership before offering a retry with the same request ID.
+
 Client events: `room:create`, `room:join`, `player:ready`, `match:start`, `answer:submit`, `match:reconnect`, `room:leave`, `room:cancel`, `invitation:send`, `invitation:respond`.
 
 **ENGINEERING DECISION - requested by Reyhan and approved by owner Aini, 10 November 2026:** Ready no longer starts the duel. The second `player:ready` leaves the room in WAITING; only the room creator may send `match:start`, and the server still requires two active, connected, Ready players before it opens question 1. This adds a deliberate pre-arena step instead of the previous instantaneous auto-start and keeps match start server-authoritative. Aini explicitly confirmed "Setuju, host memulai duel" during the review of [PR #150](https://github.com/ayiinee/Numora/pull/150), approving this amendment to PRD v0.6 section 23.5's `Ready -> Arena` flow.

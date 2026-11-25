@@ -187,19 +187,24 @@ export function JoinRoomForm({
           label="Kode room"
           value={code}
           maxLength={12}
-          pattern="[A-Z0-9]{12}"
+          disabled={disabled || busy}
+          pattern="(?:[A-Z0-9]{6}|[A-Z0-9]{12})"
           required
           onChange={(event) => onChange(event.target.value.toUpperCase())}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Masukkan kode 12 karakter…"
+          placeholder="Contoh: K7M4TX"
         />
-        <Button loading={busy} disabled={disabled || !code.trim()} type="submit">
+        <Button
+          loading={busy}
+          disabled={disabled || !/^(?:[A-Z0-9]{6}|[A-Z0-9]{12})$/.test(code)}
+          type="submit"
+        >
           Gabung room
         </Button>
       </form>
       <p className="pvp-small-note">
-        Gunakan kode 12 karakter atau buka link/QR yang dibagikan teman melalui kamera perangkat.
+        Masukkan kode dari temanmu, atau buka tautan dan QR yang mereka bagikan.
       </p>
     </Card>
   );

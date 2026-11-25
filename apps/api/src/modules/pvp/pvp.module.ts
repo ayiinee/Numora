@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
+import { CodeAttemptModule } from '../security/code-attempt.module';
 import { PvpController } from './pvp.controller';
 import { PvpEngineService } from './pvp-engine.service';
 import { PvpGateway } from './pvp.gateway';
@@ -9,7 +10,7 @@ import { PVP_POLICY } from './pvp.policy';
 import { resolvePvpPolicy } from './pvp-runtime.policy';
 
 @Module({
-  imports: [IdentityModule],
+  imports: [IdentityModule, CodeAttemptModule],
   exports: [PvpService],
   controllers: [PvpController],
   providers: [

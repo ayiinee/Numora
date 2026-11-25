@@ -3,16 +3,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
+import { request } from '@/features/core-learning/api';
 import { useStudentToken } from '@/features/core-learning/student-session';
 import type { PvpAvailabilityDto, PvpSnapshotDto } from '@/features/core-learning/generated-types';
 import type { Acknowledgement, PvpEnvelope } from './generated-protocol';
 type Command = Extract<PvpEnvelope, { requestId: string }>['event'];
 type Ack = { payload: Acknowledgement };
 type ConnectionState = 'idle' | 'connecting' | 'connected' | 'disconnected';
+const isLobbyEntry = (event?: Command) => event === 'room:create' || event === 'room:join';
 const availabilityKey = ['pvp-availability'] as const;
 export function usePvpSocket(enabled: boolean, matchId?: string) {
   const token = useStudentToken();
-  const router = useRouter();
+  const navigate = useRouter().push;
   const client = useQueryClient();
   const socket = useRef<Socket | null>(null);
   const [state, setState] = useState<PvpSnapshotDto | null>(null);
@@ -20,6 +22,8 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
   const [busy, setBusy] = useState(false);
   const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
   const connected = connectionState === 'connected';
+  const [checkingRoom, setCheckingRoom] = useState(false);
+  const roomCheck = useRef<Socket | null>(null);
   const sending = useRef(false);
   const pending = useRef<{
     event: Command;
@@ -39,6 +43,14 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       const previous = observedRoom.current;
       observedRoom.current = { matchId: snapshot.matchId, active };
 
+      if (!matchId && active && isLobbyEntry(pending.current?.event)) {
+        pending.current = null;
+        setUncertain(false);
+        setError('');
+        setCheckingRoom(false);
+        navigate(`/student/pvp/${snapshot.matchId}`);
+        membershipCommand = true;
+      }
       if (active) {
         if (!membershipCommand) return;
       } else if (previous?.matchId === snapshot.matchId) {
@@ -51,7 +63,39 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       }
       void client.invalidateQueries({ queryKey: availabilityKey });
     },
-    [client],
+    [client, matchId, navigate],
+  );
+  const checkLobbyRoom = useCallback(
+    async (currentSocket: Socket, resume: boolean) => {
+      if (matchId || roomCheck.current === currentSocket) return;
+      const attempt = pending.current;
+      roomCheck.current = currentSocket;
+      setCheckingRoom(true);
+      try {
+        const availability = await request<PvpAvailabilityDto>(token, '/pvp/availability', {
+          signal: AbortSignal.timeout(7000),
+        });
+        if (socket.current !== currentSocket || pending.current !== attempt) return;
+        if (availability.activeMatchId) {
+          pending.current = null;
+          setUncertain(false);
+          setError('');
+          client.setQueryData(availabilityKey, availability);
+          if (resume) navigate(`/student/pvp/${availability.activeMatchId}`);
+          return;
+        }
+        setError('Room belum ditemukan. Coba lagi.');
+      } catch {
+        if (socket.current === currentSocket && pending.current === attempt)
+          setError('Room belum bisa diperiksa. Coba lagi.');
+      } finally {
+        if (roomCheck.current === currentSocket) {
+          roomCheck.current = null;
+          if (socket.current === currentSocket) setCheckingRoom(false);
+        }
+      }
+    },
+    [client, matchId, navigate, token],
   );
   useEffect(() => {
     // Token renewal keeps the request ID; changing matches or disabling PvP clears it.
@@ -59,7 +103,8 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     pendingMatch.current = matchId;
     setState(null);
     setConnectionState(enabled ? 'connecting' : 'idle');
-    setError(pending.current ? 'Periksa permintaan sebelumnya setelah koneksi pulih.' : '');
+    setCheckingRoom(false);
+    setError(pending.current && matchId ? 'Coba lagi setelah koneksi pulih.' : '');
     setBusy(false);
     setUncertain(pending.current !== null);
     sending.current = false;
@@ -77,6 +122,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     s.on('connect', () => {
       setConnectionState('connected');
       setError('');
+      if (!matchId && isLobbyEntry(pending.current?.event)) void checkLobbyRoom(s, true);
       if (matchId)
         s.timeout(7000).emit(
           'match:reconnect',
@@ -89,20 +135,23 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
           },
           (err: Error | null, ack: Ack) => {
             if (socket.current !== s) return;
-            if (err) setError('Snapshot pertandingan belum diterima. Coba sambungkan lagi.');
+            if (err) setError('Duel belum bisa dilanjutkan. Coba sambungkan kembali.');
             else if (!ack.payload.ok)
               setError(ack.payload.error?.detail ?? 'Pertandingan belum dapat dilanjutkan.');
             else if (ack.payload.state?.matchId === matchId) receiveSnapshot(ack.payload.state);
           },
         );
     });
-    s.on('disconnect', () => setConnectionState('disconnected'));
+    s.on('disconnect', () => {
+      setError('');
+      setConnectionState('disconnected');
+    });
     s.on('connect_error', (err: Error) => {
       setConnectionState('disconnected');
       setError(
         err.message === 'PVP_AUTH_REQUIRED'
           ? 'Sesi berakhir. Masuk kembali untuk melanjutkan.'
-          : 'Koneksi PvP terputus. Coba sambungkan lagi.',
+          : 'Sambungkan kembali untuk masuk ke room.',
       );
     });
     s.on('room:state', (event: { payload: PvpSnapshotDto }) => {
@@ -113,15 +162,18 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       'invitation:received',
       () => void client.invalidateQueries({ queryKey: ['pvp-invitations'] }),
     );
-    s.on('room:error', (event: { payload: { detail: string } }) => setError(event.payload.detail));
+    s.on('room:error', (event: { payload: { detail: string } }) => {
+      if (!sending.current && !roomCheck.current) setError(event.payload.detail);
+    });
     return () => {
       socket.current = null;
+      if (roomCheck.current === s) roomCheck.current = null;
       s.removeAllListeners();
       s.disconnect();
     };
-  }, [enabled, matchId, token, client, receiveSnapshot]);
+  }, [enabled, matchId, token, client, receiveSnapshot, checkLobbyRoom]);
   async function command(event: Command, payload: Record<string, unknown>) {
-    if (sending.current) return;
+    if (sending.current || roomCheck.current) return;
     if (!socket.current?.connected) {
       setError('Koneksi PvP belum siap.');
       return;
@@ -135,6 +187,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       return;
     }
     pending.current ??= { event, payload, requestId: crypto.randomUUID() };
+    const attempt = pending.current;
     sending.current = true;
     const currentSocket = socket.current;
     setBusy(true);
@@ -143,15 +196,19 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       const ack = (await currentSocket.timeout(7000).emitWithAck(event, {
         event,
         eventVersion: '1',
-        requestId: pending.current.requestId,
+        requestId: attempt.requestId,
         sentAt: new Date().toISOString(),
         payload,
       })) as Ack;
-      if (socket.current !== currentSocket) return;
+      if (socket.current !== currentSocket || pending.current !== attempt) return;
       if (!ack.payload.ok) {
         pending.current = null;
         setUncertain(false);
-        setError(ack.payload.error?.detail ?? 'Permintaan belum berhasil.');
+        if (!matchId && ack.payload.error?.code === 'PVP_ACTIVE_ROOM_EXISTS') {
+          await checkLobbyRoom(currentSocket, false);
+          return;
+        }
+        setError(ack.payload.error?.detail ?? 'Coba lagi sebentar.');
         if (event === 'invitation:respond')
           await client.invalidateQueries({ queryKey: ['student-notifications'] });
         return;
@@ -167,14 +224,20 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
           event === 'room:cancel' ||
           event === 'invitation:respond';
         receiveSnapshot(ack.payload.state, membershipCommand);
-        if (!matchId) router.push(`/student/pvp/${ack.payload.state.matchId}`);
+        if (!matchId) navigate(`/student/pvp/${ack.payload.state.matchId}`);
       }
       await client.invalidateQueries({ queryKey: ['pvp-invitations'] });
       await client.invalidateQueries({ queryKey: ['student-notifications'] });
     } catch {
-      if (socket.current !== currentSocket) return;
+      if (socket.current !== currentSocket || pending.current !== attempt) return;
       setUncertain(true);
-      setError('Jawaban server belum diterima. Sambungkan lagi untuk memeriksa state tersimpan.');
+      if (!matchId && isLobbyEntry(event)) await checkLobbyRoom(currentSocket, true);
+      else
+        setError(
+          event === 'answer:submit'
+            ? 'Jawabanmu belum bisa dikonfirmasi. Coba periksa lagi.'
+            : 'Tindakan ini belum bisa dikonfirmasi. Coba lagi.',
+        );
     } finally {
       if (socket.current === currentSocket) {
         sending.current = false;
@@ -188,15 +251,20 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     busy,
     connected,
     connectionState,
+    checkingRoom,
     uncertain,
+    retryEvent: uncertain ? pending.current?.event : undefined,
     command,
     retry: () => {
       if (pending.current) void command(pending.current.event, pending.current.payload);
     },
     reconnect: () => {
       if (socket.current?.connected) {
-        setState(null);
-        void client.invalidateQueries({ queryKey: ['pvp-match', matchId] });
+        if (!matchId) void checkLobbyRoom(socket.current, isLobbyEntry(pending.current?.event));
+        else {
+          setState(null);
+          void client.invalidateQueries({ queryKey: ['pvp-match', matchId] });
+        }
       } else if (socket.current) {
         setConnectionState('connecting');
         setError('');

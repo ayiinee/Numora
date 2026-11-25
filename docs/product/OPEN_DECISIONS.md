@@ -337,3 +337,4 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 
 
 **ENGINEERING DECISION — 15 November 2026:** untuk batch sekolah tunggal, pemilik memilih snapshot roster saat posting. Mode BALANCED_50_50 membagi siswa aktif ke original/varian dengan selisih maksimal satu; assignment siswa dan paket dipin untuk batch tersebut. Ini menggantikan batas satu paket per sekolah hanya ketika mode balanced dipilih.
+**ENGINEERING DECISION — 25 November 2026:** six-character PvP room codes and active-room recovery are approved implementation details. See the [Realtime PvP contract](../architecture/REALTIME_PVP.md#websocket-contract).

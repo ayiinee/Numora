@@ -20,7 +20,7 @@ it('batches tabs once and sends each student only their own answer', async () =>
     ]),
   });
   const engine = { snapshotViews, snapshot: vi.fn() };
-  const gateway = new PvpGateway({ engine } as never, {} as never);
+  const gateway = new PvpGateway({ engine } as never, {} as never, {} as never);
   const sockets = ['one', 'one', 'two'].map((id, i) => ({
     id: String(i),
     data: { matchId: 'match', studentId: id },
@@ -52,7 +52,7 @@ it('acknowledges committed room state before a stalled transient scheduler', asy
     engine: { create: vi.fn().mockResolvedValue(state) },
   };
   const scheduler = { schedule: vi.fn(() => new Promise<void>(() => {})) };
-  const gateway = new PvpGateway(service as never, scheduler as never);
+  const gateway = new PvpGateway(service as never, scheduler as never, {} as never);
   const broadcast = vi
     .spyOn(gateway as unknown as { broadcast: () => Promise<void> }, 'broadcast')
     .mockResolvedValue(undefined);
@@ -89,6 +89,7 @@ it('routes match:start to the engine without starting the match locally', async 
   const gateway = new PvpGateway(
     { student: vi.fn().mockResolvedValue({ id: 'host' }), engine } as never,
     scheduler as never,
+    {} as never,
   );
   const socket = {
     data: { authorization: 'Bearer TEST_ONLY', studentId: 'host' },
@@ -111,3 +112,32 @@ it('routes match:start to the engine without starting the match locally', async 
     expect.objectContaining({ payload: { ok: true, state, response: null } }),
   );
 });
+
+it.each(['K7M4TX', 'NMR842ABC123'])(
+  'accepts room code %s and limits short-code attempts per student',
+  async (roomCode) => {
+    const consume = vi.fn().mockResolvedValue(undefined);
+    const join = vi.fn().mockResolvedValue(null);
+    const gateway = new PvpGateway(
+      { student: vi.fn().mockResolvedValue({ id: 'student' }), engine: { join } } as never,
+      {} as never,
+      { consume } as never,
+    );
+    const socket = { data: { studentId: 'student' }, emit: vi.fn() };
+    const ack = vi.fn();
+    await gateway.join(
+      socket as never,
+      {
+        event: 'room:join',
+        eventVersion: '1',
+        requestId: randomUUID(),
+        sentAt: new Date().toISOString(),
+        payload: { roomCode },
+      },
+      ack,
+    );
+    expect(join).toHaveBeenCalledExactlyOnceWith('student', roomCode);
+    if (roomCode.length === 6) expect(consume).toHaveBeenCalledExactlyOnceWith('pvp:student', 10);
+    else expect(consume).not.toHaveBeenCalled();
+  },
+);

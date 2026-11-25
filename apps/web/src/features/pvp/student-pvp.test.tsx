@@ -109,15 +109,15 @@ it('keeps initial connection in the create button and offers recovery only after
   expect(create.hasAttribute('disabled')).toBe(true);
   expect(create.getAttribute('aria-busy')).toBe('true');
   expect(screen.queryByText('Menghubungkan PvP')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Sambungkan lagi' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Sambungkan kembali' })).toBeNull();
   fireEvent.click(create);
   expect(mocks.emit).not.toHaveBeenCalled();
 
   act(() => mocks.listeners[0]!.get('connect_error')!(new Error('TEST connection failure')));
-  expect(screen.getByText('Koneksi PvP terputus')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Sambungkan lagi' }));
+  expect(screen.getByText('Koneksi terputus')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Sambungkan kembali' }));
   expect(mocks.connect).toHaveBeenCalledOnce();
-  expect(screen.queryByRole('button', { name: 'Sambungkan lagi' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Sambungkan kembali' })).toBeNull();
   expect(create.hasAttribute('disabled')).toBe(true);
 
   mocks.io.mock.results[0]!.value.connected = true;
@@ -128,7 +128,7 @@ it('keeps initial connection in the create button and offers recovery only after
 
   mocks.io.mock.results[0]!.value.connected = false;
   act(() => mocks.listeners[0]!.get('disconnect')!());
-  expect(screen.getByRole('button', { name: 'Sambungkan lagi' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Sambungkan kembali' })).toBeTruthy();
   expect(create.hasAttribute('disabled')).toBe(true);
 });
 
@@ -147,17 +147,93 @@ it('reuses a timed-out create request ID on explicit retry instead of creating a
   const create = await screen.findByRole('button', { name: 'Buat room' });
   await waitFor(() => expect(create.hasAttribute('disabled')).toBe(false));
   fireEvent.click(create);
-  const retry = await screen.findByRole('button', { name: 'Periksa permintaan sebelumnya' });
+  const retry = await screen.findByRole('button', { name: 'Coba buat lagi' });
   expect(mocks.push).not.toHaveBeenCalled();
   fireEvent.click(retry);
   await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/student/pvp/TEST-match'));
-  expect(availabilityRequestCount()).toBe(2);
+  // The lobby reads availability on entry, at timeout, and after confirmed membership.
+  expect(availabilityRequestCount()).toBe(3);
   expect(mocks.emit).toHaveBeenCalledTimes(2);
   const first = mocks.emit.mock.calls[0]![1];
   const second = mocks.emit.mock.calls[1]![1];
   expect(second.requestId).toBe(first.requestId);
   expect(second.payload).toEqual(first.payload);
 });
+it('offers the active room as the only room action', async () => {
+  const originalRequest = vi.mocked(request).getMockImplementation()!;
+  vi.mocked(request).mockImplementation(async (token, path) =>
+    path === '/pvp/availability'
+      ? { available: true, activeMatchId: 'ACTIVE-match' }
+      : originalRequest(token, path),
+  );
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  const resume = await screen.findByRole('link', { name: 'Lanjutkan ke room' });
+  expect(resume.getAttribute('href')).toBe('/student/pvp/ACTIVE-match');
+  expect(screen.queryByRole('tab', { name: /Gabung via Kode/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Buat room' })).toBeNull();
+});
+
+it.each(['room:create', 'room:join'])('resumes a saved room after %s times out', async (event) => {
+  let resolveLookup!: (availability: unknown) => void;
+  const originalRequest = vi.mocked(request).getMockImplementation()!;
+  vi.mocked(request).mockImplementation(async (token, path) =>
+    path === '/pvp/availability' && mocks.emit.mock.calls.length > 0
+      ? new Promise((resolve) => {
+          resolveLookup = resolve;
+        })
+      : originalRequest(token, path),
+  );
+  mocks.emit.mockRejectedValueOnce(new Error('TEST acknowledgement lost'));
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  if (event === 'room:join') {
+    fireEvent.click(await screen.findByRole('tab', { name: /Gabung via Kode/ }));
+    fireEvent.change(await screen.findByLabelText(/Kode room/), { target: { value: 'k7m4tx' } });
+  }
+  const submit = await screen.findByRole('button', {
+    name: event === 'room:join' ? 'Gabung room' : 'Buat room',
+  });
+  await waitFor(() => expect(submit.hasAttribute('disabled')).toBe(false));
+  fireEvent.click(submit);
+  await screen.findByText('Sebentar, kami sedang mencari room kamu…');
+  expect(screen.queryByRole('alert')).toBeNull();
+  await act(async () => resolveLookup({ available: true, activeMatchId: 'ACTIVE-match' }));
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/student/pvp/ACTIVE-match');
+  expect(mocks.emit).toHaveBeenCalledTimes(1);
+  if (event === 'room:join')
+    expect(mocks.emit.mock.calls[0]?.[1].payload).toEqual({ roomCode: 'K7M4TX' });
+});
+
+it('shows the resume action when another tab claims a room first', async () => {
+  const originalRequest = vi.mocked(request).getMockImplementation()!;
+  vi.mocked(request).mockImplementation(async (token, path) =>
+    path === '/pvp/availability' && mocks.emit.mock.calls.length > 0
+      ? { available: true, activeMatchId: 'OTHER-tab-match' }
+      : originalRequest(token, path),
+  );
+  mocks.emit.mockResolvedValueOnce({
+    payload: { ok: false, error: { code: 'PVP_ACTIVE_ROOM_EXISTS' } },
+  });
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  const create = await screen.findByRole('button', { name: 'Buat room' });
+  await waitFor(() => expect(create.hasAttribute('disabled')).toBe(false));
+  fireEvent.click(create);
+  const resume = await screen.findByRole('link', { name: 'Lanjutkan ke room' });
+  expect(resume.getAttribute('href')).toBe('/student/pvp/OTHER-tab-match');
+  expect(mocks.push).not.toHaveBeenCalled();
+});
+
 it('does not connect or expose create commands when server availability is false', async () => {
   vi.mocked(request).mockResolvedValue({ available: false });
   render(
@@ -223,7 +299,7 @@ it('ignores an old connection acknowledgement and preserves its request ID acros
   });
   expect(mocks.push).not.toHaveBeenCalled();
   mocks.emit.mockResolvedValueOnce({ payload: { ok: true, state: { matchId: 'CURRENT-match' } } });
-  const retry = await screen.findByRole('button', { name: 'Periksa permintaan sebelumnya' });
+  const retry = await screen.findByRole('button', { name: 'Coba buat lagi' });
   await waitFor(() => expect(retry.hasAttribute('disabled')).toBe(false));
   fireEvent.click(retry);
   await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/student/pvp/CURRENT-match'));

@@ -69,7 +69,10 @@ export function validateCommand(event: PvpCommand, value: unknown): CommandEnvel
       (typeof val !== 'string' || !['easy', 'medium', 'hard'].includes(val))
     )
       return invalid();
-    if (key === 'roomCode' && (typeof val !== 'string' || !/^[A-Za-z0-9]{12}$/.test(val)))
+    if (
+      key === 'roomCode' &&
+      (typeof val !== 'string' || !/^(?:[A-Za-z0-9]{6}|[A-Za-z0-9]{12})$/.test(val))
+    )
       return invalid();
     if (
       key === 'optionId' &&

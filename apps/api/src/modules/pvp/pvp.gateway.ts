@@ -10,6 +10,7 @@ import {
   type OnGatewayInit,
 } from '@nestjs/websockets';
 import type { Namespace, Socket } from 'socket.io';
+import { CodeAttemptLimiter } from '../security/code-attempt-limiter';
 import { PvpService } from './pvp.service';
 import { PvpSchedulerService } from './pvp-scheduler.service';
 import { validateCommand, type PvpCommand } from './pvp.protocol';
@@ -31,6 +32,7 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
   constructor(
     private readonly service: PvpService,
     private readonly scheduler: PvpSchedulerService,
+    private readonly codeAttempts: CodeAttemptLimiter,
   ) {}
   afterInit(server: Namespace) {
     server.use(async (socket, next) => {
@@ -113,7 +115,11 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
       let response: unknown;
       if (event === 'room:create')
         state = await engine.create(user.id, p.difficulty as Difficulty, requestId);
-      if (event === 'room:join') state = await engine.join(user.id, String(p.roomCode));
+      if (event === 'room:join') {
+        const code = String(p.roomCode);
+        if (code.length === 6) await this.codeAttempts.consume(`pvp:${user.id}`, 10);
+        state = await engine.join(user.id, code);
+      }
       if (event === 'player:ready') state = await engine.ready(user.id, String(p.matchId));
       if (event === 'match:start') state = await engine.start(user.id, String(p.matchId));
       if (event === 'answer:submit')
