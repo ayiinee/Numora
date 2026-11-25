@@ -237,7 +237,7 @@ export class TryoutService {
       eligible: !attempt,
       attemptId: attempt?.id ?? null,
       questionCount: count?.total ?? 0,
-      durationSeconds: current.durationSeconds,
+      durationSeconds: TRYOUT_DURATION_SECONDS,
       isDemo: current.isDemo,
       resultPendingReason: pendingReason,
       closeAt: current.closeAt?.toISOString() ?? null,
@@ -332,6 +332,7 @@ export class TryoutService {
         pack.status === 'ARCHIVED' ||
         (pack.closeAt ?? tryoutBatchCloseAt(pack.releaseAt!)) <= now;
       const ongoing = !past && current?.id === pack.id;
+      const closeAt = ongoing ? current.closeAt : pack.closeAt;
       const released = !!attempt && ready.has(attempt.id);
       const reason = reasons.get(pack.id);
       const pendingReason = released ? null : reason === undefined ? 'CONTENT_PENDING' : reason;
@@ -339,13 +340,13 @@ export class TryoutService {
         id: pack.id,
         title: presentFixtureText(pack.id, 'name', pack.name),
         releaseAt: pack.releaseAt!.toISOString(),
-        closeAt: pack.closeAt?.toISOString() ?? null,
+        closeAt: closeAt?.toISOString() ?? null,
         resultDueAt:
-          !pendingReason && pack.closeAt
-            ? new Date(pack.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
+          !pendingReason && closeAt
+            ? new Date(closeAt.getTime() + 72 * 3600 * 1000).toISOString()
             : null,
         questionCount: statistics.get(pack.id)?.total ?? 0,
-        durationSeconds: pack.durationSeconds,
+        durationSeconds: ongoing ? TRYOUT_DURATION_SECONDS : pack.durationSeconds,
         isDemo: pack.isDemo,
         resultPendingReason: pendingReason,
         attemptId: attempt?.id ?? null,
@@ -606,14 +607,9 @@ export class TryoutService {
       const [selectedPackage] = selected
         ? await tx.select().from(assessmentPackages).where(eq(assessmentPackages.id, packageId))
         : [];
-      const current =
-        selected && selectedPackage
-          ? {
-              ...selectedPackage,
-              closeAt: selected.batch.closesAt,
-              durationSeconds: TRYOUT_DURATION_SECONDS,
-            }
-          : await currentTryoutPackage(tx);
+      const current = selected
+        ? selectedPackage && { ...selectedPackage, closeAt: selected.batch.closesAt }
+        : await currentTryoutPackage(tx);
       if (!current || current.id !== packageId)
         throw new ConflictException(
           problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'),
@@ -724,15 +720,11 @@ export class TryoutService {
         }
       }
       const now = await databaseTime(tx);
-      if (current.closeAt && current.closeAt <= now)
+      if (current.closeAt <= now)
         throw new ConflictException(
           problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Batch Tryout sudah ditutup.'),
         );
-      const deadlineAt = tryoutAttemptDeadline(now, current.durationSeconds, current.closeAt);
-      if (!deadlineAt)
-        throw new ServiceUnavailableException(
-          problem('TRYOUT_DEADLINE_MISSING', 'Durasi atau akhir batch wajib ditentukan.'),
-        );
+      const deadlineAt = tryoutAttemptDeadline(now, current.closeAt);
       const [attempt] = await tx
         .insert(assessmentAttempts)
         .values({

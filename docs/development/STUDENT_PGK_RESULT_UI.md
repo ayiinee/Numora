@@ -4,6 +4,8 @@
 
 **ENGINEERING DECISION — revised by Aini:** result pages show a **Lihat pembahasan** button. Dedicated Drill/TryOut explanation pages reuse the question-taking layout, with read-only answers and explanation below the question. No answer matrix appears on the result page. Navigation in explanation is for selecting a question; it never saves or resubmits.
 
+**Student UI refresh:** The explanation opens with the question, recorded status and points, a short answer summary, and the solution. **Rincian jawaban** expands the read-only comparison for the current item. The question map is available beside the content on desktop and in **Semua Soal** on smaller screens. Assessment text uses the stored item version and displays authored paragraphs, lists, tables, images, and math through the shared renderer.
+
 **PRD RULE / owner clarification:** server owns grading, mastery, stars, rewards and release. TryOut XP is posted at submit independently of IRT. Historical results/rewards are not recalculated.
 
 ## Integration boundary

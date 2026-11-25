@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { normalizedScore, tryoutAttemptDeadline } from './tryout.policy';
 
 describe('Tryout time and PG score policy', () => {
-  it('gives ten minutes normally and caps a late Sunday start at 23:59:00 WIB', () => {
+  it('gives 30 minutes normally and caps a late Sunday start at 23:59:00 WIB', () => {
     const close = new Date('2026-10-11T16:59:00Z');
-    expect(tryoutAttemptDeadline(new Date('2026-10-06T00:00:00Z'), 600, close)?.toISOString()).toBe(
-      '2026-10-06T00:10:00.000Z',
+    expect(tryoutAttemptDeadline(new Date('2026-10-06T00:00:00Z'), close).toISOString()).toBe(
+      '2026-10-06T00:30:00.000Z',
     );
-    expect(tryoutAttemptDeadline(new Date('2026-10-11T16:58:30Z'), 600, close)?.toISOString()).toBe(
+    expect(tryoutAttemptDeadline(new Date('2026-10-11T16:58:30Z'), close).toISOString()).toBe(
       close.toISOString(),
     );
   });

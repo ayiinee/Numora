@@ -1,3 +1,5 @@
+import { TRYOUT_DURATION_SECONDS } from '@tka/database';
+
 export function isJakartaMondayMidnight(instant: Date): boolean {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Jakarta',
@@ -22,12 +24,6 @@ export function normalizedScore(awarded: number, maximum: number) {
   return Math.round((awarded * 100) / maximum);
 }
 
-export function tryoutAttemptDeadline(
-  startAt: Date,
-  durationSeconds: number | null,
-  closeAt: Date | null,
-) {
-  return durationSeconds
-    ? new Date(Math.min(startAt.getTime() + durationSeconds * 1000, closeAt?.getTime() ?? Infinity))
-    : closeAt;
+export function tryoutAttemptDeadline(startAt: Date, closeAt: Date) {
+  return new Date(Math.min(startAt.getTime() + TRYOUT_DURATION_SECONDS * 1000, closeAt.getTime()));
 }

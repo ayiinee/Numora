@@ -62,6 +62,29 @@ export function sameAnswer(a: AssessmentAnswer, b: AssessmentAnswer) {
 }
 export const questionTypeLabels = {
   SINGLE_CHOICE: 'Pilihan ganda',
-  MULTIPLE_CHOICE_MULTIPLE_ANSWER: 'PGK — pilih beberapa jawaban',
+  MULTIPLE_CHOICE_MULTIPLE_ANSWER: 'PGK — pilihan jamak',
   CATEGORY: 'PGK — kategori',
 } as const;
+
+export function assessmentOptions(question: Pick<DrillQuestionDto, 'options' | 'richOptions'>) {
+  if (!question.options.length)
+    return (question.richOptions ?? []).map(({ id, content }) => ({ id, text: content.text }));
+  return question.options.map((option) => ({
+    ...option,
+    text: question.richOptions?.find((rich) => rich.id === option.id)?.content.text ?? option.text,
+  }));
+}
+
+export function optionLabel(id: string, index: number) {
+  return id.length === 1 ? id : String.fromCharCode(65 + index);
+}
+
+export function assessmentAssetIds(texts: string[]) {
+  return [
+    ...new Set(
+      texts.flatMap((text) =>
+        Array.from(text.matchAll(/\[\[asset:([A-Za-z0-9_-]+)\]\]/g), (match) => match[1]!),
+      ),
+    ),
+  ];
+}

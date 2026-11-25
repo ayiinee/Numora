@@ -14,13 +14,15 @@ import {
   SubmitConfirmation,
 } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
-import { TryoutQuestionMap, type TryoutQuestionState } from './tryout-question-map';
+import { AssessmentQuestionMap, type TryoutQuestionState } from './tryout-question-map';
 import { readTryoutResume, writeTryoutResume } from './tryout-resume';
 
 import { ContentRichText } from '@/components/content-rich-text';
 import type { SavedAnswerDto, PreviewMediaDto } from './generated-types';
 import {
   answerOf,
+  assessmentAssetIds,
+  assessmentOptions,
   answerFromChoice,
   choiceValue,
   emptyAnswer,
@@ -78,6 +80,7 @@ export function AssessmentSession({
   exitLabel?: string;
 }) {
   const isTryout = sessionKind === 'tryout';
+  const focusedLayout = redesign && sessionKind !== 'pretest';
   const [resume] = useState(() =>
     resumeKey
       ? readTryoutResume(
@@ -99,7 +102,7 @@ export function AssessmentSession({
   const sessionRef = useRef<HTMLDivElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!isTryout) return;
+    if (!focusedLayout) return;
     const session = sessionRef.current;
     const header = session?.querySelector('.practice-header');
     const feedback = feedbackRef.current;
@@ -117,7 +120,7 @@ export function AssessmentSession({
     observer.observe(header);
     observer.observe(feedback);
     return () => observer.disconnect();
-  }, [isTryout]);
+  }, [focusedLayout]);
   const navigator = useRef<HTMLElement>(null);
   useEffect(() => {
     const nav = navigator.current;
@@ -201,16 +204,9 @@ export function AssessmentSession({
     emptyAnswer(answers[item.questionInstanceId] ?? null),
   ).length;
 
-  const assetIds = [
-    ...new Set(
-      [
-        question?.richStem?.text ?? question?.stem ?? '',
-        ...(question?.options.map((o) => o.text) ?? []),
-      ].flatMap((text) =>
-        [...text.matchAll(/\[\[asset:([A-Za-z0-9_-]+)\]\]/g)].map((match) => match[1]!),
-      ),
-    ),
-  ];
+  const options = question ? assessmentOptions(question) : [];
+  const stem = question?.richStem?.text ?? question?.stem ?? '';
+  const assetIds = assessmentAssetIds([stem, ...options.map((option) => option.text)]);
   const media = useQuery({
     queryKey: ['assessment-work-media', question?.questionInstanceId, assetIds],
     enabled: !!loadMedia && !!question && assetIds.length > 0,
@@ -219,12 +215,13 @@ export function AssessmentSession({
   });
   if (!question)
     return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;
-  const renderContent = (text: string) => (
+  const renderContent = (text: string, layout: 'default' | 'reading' | 'choice' = 'default') => (
     <ContentRichText
       text={text}
       media={media.data ?? []}
+      mediaPending={!!loadMedia && media.isFetching}
       retry={() => void media.refetch()}
-      renderBareMath
+      layout={layout}
     />
   );
   async function choose(questionId: string, answer: AssessmentAnswer) {
@@ -257,10 +254,17 @@ export function AssessmentSession({
         }
       }
     } catch (error) {
-      if (onReload && error instanceof LearningApiError && error.code === 'ANSWER_REVISION_CONFLICT')
+      if (
+        onReload &&
+        error instanceof LearningApiError &&
+        error.code === 'ANSWER_REVISION_CONFLICT'
+      )
         setSaveConflict(true);
-      if (isTryout && error instanceof LearningApiError &&
-        (error.code === 'TRYOUT_DEADLINE_PASSED' || error.code === 'ATTEMPT_COMPLETED'))
+      if (
+        isTryout &&
+        error instanceof LearningApiError &&
+        (error.code === 'TRYOUT_DEADLINE_PASSED' || error.code === 'ATTEMPT_COMPLETED')
+      )
         onFinalizationCheck?.();
       setSaveError(error instanceof Error ? error.message : 'Jawaban belum tersimpan.');
     } finally {
@@ -274,12 +278,18 @@ export function AssessmentSession({
     else if (window.confirm(confirmMessage(emptyCount))) finalize();
   }
 
-  function goToTryoutQuestion(position: number) {
+  function goToQuestion(position: number) {
     setIndex(position);
     setMapOpen(false);
     setMapSubmitOpen(false);
     setConfirmationOpen(false);
-    requestAnimationFrame(() => questionHeading.current?.focus());
+    if (focusedLayout) {
+      requestAnimationFrame(() => {
+        const heading = questionHeading.current;
+        heading?.focus({ preventScroll: true });
+        heading?.scrollIntoView?.({ block: 'start' });
+      });
+    }
   }
 
   function retrySave() {
@@ -322,22 +332,28 @@ export function AssessmentSession({
       deadline.remaining !== null && deadline.remaining > 0 && deadline.remaining <= 60;
     const canSubmit = !deadline.expired && !unsaved && !submit.isPending && !submit.isSuccess;
     const renderMap = (fromDialog: boolean) => (
-      <TryoutQuestionMap
+      <AssessmentQuestionMap
         items={questionStates.map((state, position) => ({
           state,
           flagged: !!flags[questions[position]!.questionInstanceId],
         }))}
         current={index}
-        onSelect={goToTryoutQuestion}
-        canSubmit={canSubmit}
-        onSubmit={() => {
-          setMapSubmitOpen(fromDialog);
-          confirmSubmit();
-        }}
+        onSelect={goToQuestion}
+        {...(isTryout && {
+          canSubmit,
+          onSubmit: () => {
+            setMapSubmitOpen(fromDialog);
+            confirmSubmit();
+          },
+        })}
       />
     );
     return (
-      <div ref={sessionRef} className="practice-session" data-session-kind={sessionKind}>
+      <div
+        ref={sessionRef}
+        className={'practice-session' + (focusedLayout ? ' assessment-workspace' : '')}
+        data-session-kind={sessionKind}
+      >
         <AssessmentHeader
           title={
             sessionKind === 'pretest'
@@ -349,17 +365,13 @@ export function AssessmentSession({
           exitHref={exitHref}
           {...(exitLabel && { exitLabel })}
           status={
-            isTryout ? (
-              <p className="tryout-question-position">Soal {index + 1} dari {questions.length}</p>
-            ) : (
-              <span role="status">
-                {saveError
-                  ? 'Belum tersimpan'
-                  : save.isPending || unsaved
-                    ? 'Menyimpan…'
-                    : 'Tersimpan'}
-              </span>
-            )
+            <span role="status">
+              {saveError
+                ? 'Belum tersimpan'
+                : save.isPending || unsaved
+                  ? 'Menyimpan…'
+                  : 'Tersimpan'}
+            </span>
           }
           timer={
             sessionKind === 'tryout' ? (
@@ -378,20 +390,23 @@ export function AssessmentSession({
               headerExtra
             )
           }
-          progress={(100 * (isTryout ? savedCount : index + 1)) / questions.length}
-          progressLabel={isTryout ? 'Jawaban tersimpan' : 'Posisi soal'}
+          progress={(100 * (focusedLayout ? savedCount : index + 1)) / questions.length}
+          progressLabel={focusedLayout ? 'Jawaban tersimpan' : 'Posisi soal'}
           progressText={
-            isTryout
+            focusedLayout
               ? `${savedCount} dari ${questions.length} soal terisi lengkap dan tersimpan`
               : undefined
           }
           exitDisabled={submit.isPending}
+          showProfile={!focusedLayout}
         />
-        {isTryout && (
+        {focusedLayout && (
           <div ref={feedbackRef} className="tryout-session-feedback">
-            <div role="status" className={warning ? undefined : 'sr-only'}>
-              {warning && <strong>Waktu hampir habis</strong>}
-            </div>
+            {isTryout && (
+              <div role="status" className={warning ? undefined : 'sr-only'}>
+                {warning && <strong>Waktu hampir habis</strong>}
+              </div>
+            )}
             {unsaved && !deadline.expired && !submit.isSuccess && (
               <div className="tryout-session-feedback__save">
                 <div role={saveError ? 'alert' : 'status'}>
@@ -405,13 +420,20 @@ export function AssessmentSession({
                   )}
                 </div>
                 {saveError && (
-                  <Button
-                    variant="secondary"
-                    disabled={save.isPending || submit.isPending || submit.isSuccess}
-                    onClick={retrySave}
-                  >
-                    {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
-                  </Button>
+                  <div className="assessment-save-actions">
+                    <Button
+                      variant="secondary"
+                      disabled={save.isPending || submit.isPending || submit.isSuccess}
+                      onClick={retrySave}
+                    >
+                      {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
+                    </Button>
+                    {unsavedPosition > 0 && unsavedPosition !== index + 1 && (
+                      <Button variant="secondary" onClick={() => goToQuestion(unsavedPosition - 1)}>
+                        Ke soal {unsavedPosition}
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -430,44 +452,48 @@ export function AssessmentSession({
         <div className="practice-layout">
           <div className="practice-main">
             {notice}
-            <div className="practice-breadcrumb">
-              <span>{title}</span>
-              {isTryout ? (
-                <div className="tryout-mobile-map">
-                  <Button variant="secondary" aria-haspopup="dialog" onClick={() => setMapOpen(true)}>
-                    <Icon name="menu" width={16} height={16} /> Semua Soal
-                  </Button>
-                </div>
-              ) : (
+            {!focusedLayout && (
+              <div className="practice-breadcrumb">
+                <span>{title}</span>
                 <a href="#practice-navigator">
                   <Icon name="menu" width={16} height={16} />
                   Semua Soal
                 </a>
-              )}
-            </div>
-            <Card className="practice-question">
-              <div className="practice-question__tags">
-                {!isTryout && (
-                  <span>
-                    Soal {index + 1} dari {questions.length}
-                  </span>
-                )}
-                <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
               </div>
-              <h2
-                className="practice-stem"
-                ref={questionHeading}
-                tabIndex={isTryout ? -1 : undefined}
-              >
-                {renderContent(question.richStem?.text ?? question.stem)}
-              </h2>
+            )}
+            <Card className="practice-question">
+              {focusedLayout ? (
+                <>
+                  <div className="assessment-question-heading">
+                    <div>
+                      {title && <p className="assessment-question-context">{title}</p>}
+                      <h2 className="assessment-question-title" ref={questionHeading} tabIndex={-1}>
+                        Soal {index + 1} dari {questions.length}
+                      </h2>
+                    </div>
+                    <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
+                  </div>
+                  <div className="practice-stem">{renderContent(stem, 'reading')}</div>
+                </>
+              ) : (
+                <>
+                  <div className="practice-question__tags">
+                    <span>
+                      Soal {index + 1} dari {questions.length}
+                    </span>
+                    <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
+                  </div>
+                  <h2 className="practice-stem">{renderContent(stem)}</h2>
+                </>
+              )}
               <QuestionChoices
                 kind={question.type ?? 'SINGLE_CHOICE'}
                 name={`answer-${question.questionInstanceId}`}
-                options={question.options}
-                renderContent={renderContent}
+                options={options}
+                renderContent={(text) => renderContent(text, focusedLayout ? 'choice' : 'default')}
+                assessment={focusedLayout}
                 value={choiceValue(answers[question.questionInstanceId] ?? null)}
-                statements={question.options}
+                statements={options}
                 categories={question.categories ?? []}
                 disabled={disabled}
                 onChange={(value) =>
@@ -513,7 +539,7 @@ export function AssessmentSession({
             )}
           </div>
           <aside className="practice-toolbar" id="practice-navigator">
-            {!isTryout && saveError && !deadline.expired && (
+            {!focusedLayout && saveError && !deadline.expired && (
               <div className="practice-save-recovery">
                 <div role="alert">
                   <strong>Jawaban belum tersimpan</strong>
@@ -528,8 +554,8 @@ export function AssessmentSession({
                 </Button>
               </div>
             )}
-            {isTryout ? (
-              <div className="tryout-desktop-map">
+            {focusedLayout ? (
+              <div className="assessment-desktop-map">
                 <h2>Peta soal</h2>
                 {renderMap(false)}
               </div>
@@ -552,15 +578,26 @@ export function AssessmentSession({
               <Button
                 variant="secondary"
                 disabled={index === 0}
-                onClick={() => (isTryout ? goToTryoutQuestion(index - 1) : setIndex(index - 1))}
+                onClick={() => goToQuestion(index - 1)}
               >
                 <Icon name="back" width={16} height={16} />
                 Sebelumnya
               </Button>
+              {focusedLayout && (
+                <div className="assessment-map-trigger">
+                  <Button
+                    fullWidth
+                    variant="secondary"
+                    aria-haspopup="dialog"
+                    onClick={() => setMapOpen(true)}
+                  >
+                    <Icon name="menu" width={16} height={16} />
+                    <span>Semua Soal</span>
+                  </Button>
+                </div>
+              )}
               {index < questions.length - 1 ? (
-                <Button
-                  onClick={() => (isTryout ? goToTryoutQuestion(index + 1) : setIndex(index + 1))}
-                >
+                <Button onClick={() => goToQuestion(index + 1)}>
                   Berikutnya
                   <Icon name="chevron" width={16} height={16} />
                 </Button>
@@ -581,14 +618,14 @@ export function AssessmentSession({
             </div>
           </aside>
         </div>
-        {isTryout && (
+        {focusedLayout && (
           <Dialog
             className="tryout-map-dialog"
             open={mapOpen && !confirmationOpen && !deadline.expired}
             title="Semua Soal"
             onClose={() => setMapOpen(false)}
           >
-            {renderMap(true)}
+            {mapOpen && !confirmationOpen && !deadline.expired && renderMap(true)}
           </Dialog>
         )}
         <SubmitConfirmation
@@ -615,7 +652,7 @@ export function AssessmentSession({
           description={confirmMessage(emptyCount)}
           pending={submit.isPending}
           error={submit.isError ? submit.error.message : undefined}
-          onReviewQuestion={isTryout ? goToTryoutQuestion : undefined}
+          onReviewQuestion={isTryout ? goToQuestion : undefined}
         />
         <AssessmentExitDialog {...exitDialog} />
       </div>
@@ -652,15 +689,13 @@ export function AssessmentSession({
         showLabel
       />
       <Panel className="assessment-question">
-        <h2 className="text-lg font-bold">
-          {renderContent(question.richStem?.text ?? question.stem)}
-        </h2>
+        <h2 className="text-lg font-bold">{renderContent(stem)}</h2>
         <QuestionChoices
           kind={question.type ?? 'SINGLE_CHOICE'}
           name={`answer-${question.questionInstanceId}`}
-          options={question.options}
-          renderContent={renderContent}
-          statements={question.options}
+          options={options}
+          renderContent={(text) => renderContent(text)}
+          statements={options}
           categories={question.categories ?? []}
           value={choiceValue(answers[question.questionInstanceId] ?? null)}
           disabled={

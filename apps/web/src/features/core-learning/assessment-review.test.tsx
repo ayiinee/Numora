@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { AssessmentExplanation, QuestionReviewDetail } from './assessment-review';
 import { RewardSummary } from './reward-summary';
@@ -67,7 +67,7 @@ const question: ReviewedQuestionDto = {
     { optionId: 'B', selected: false, isKey: true },
   ],
 };
-it('renders a dedicated read-only question layout with explanation underneath and navigates', () => {
+it('shows the explanation before collapsed, read-only answer details and focuses the next question', async () => {
   const view = render(
     <QueryClientProvider client={new QueryClient()}>
       <AssessmentExplanation
@@ -77,15 +77,26 @@ it('renders a dedicated read-only question layout with explanation underneath an
       />
     </QueryClientProvider>,
   );
-  expect(screen.getByText('Sebagian benar')).toBeTruthy();
-  expect(view.container.querySelector('.practice-question .practice-choices')).toBeTruthy();
+  expect(screen.getByText('Sebagian benar', { selector: '.numora-badge' })).toBeTruthy();
+  const details = view.container.querySelector('details');
+  expect(details?.open).toBe(false);
+  expect(view.container.querySelector('.drill-review__explanation')?.nextElementSibling).toBe(
+    details,
+  );
   expect(
     view.container.querySelector('.practice-question .drill-review__explanation math msqrt')
       ?.textContent,
   ).toBe('4');
-  expect(screen.getAllByRole('checkbox').every((input) => input.matches(':disabled'))).toBe(true);
+  expect(view.container.querySelector('input')).toBeNull();
+  fireEvent.click(screen.getByText('Rincian jawaban'));
+  expect(details?.open).toBe(true);
+  expect(screen.getByRole('list', { name: 'Pilihan jawaban' }).children).toHaveLength(2);
   fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
-  expect(screen.getByRole('heading', { name: 'Soal kedua' })).toBeTruthy();
+  expect(screen.getByText('Soal kedua')).toBeTruthy();
+  expect(view.container.querySelector('details')?.open).toBe(false);
+  await waitFor(() =>
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Soal 2 dari 2' })),
+  );
   expect(screen.getByRole('link', { name: 'Kembali ke hasil' }).getAttribute('href')).toBe(
     '/student/drill/a/result',
   );
@@ -125,7 +136,9 @@ it('shows partial Category responses and per-statement key matching', () => {
       }}
     />,
   );
-  expect(screen.getAllByText('Tidak dijawab', { selector: 'p' })).toBeTruthy();
+  expect(screen.getByText('1 dari 2 pernyataan dijawab')).toBeTruthy();
+  fireEvent.click(screen.getByText('Rincian jawaban'));
+  expect(screen.getByText('Tidak dijawab', { selector: 'p' })).toBeTruthy();
   expect(screen.getByText('Benar', { selector: 'p' })).toBeTruthy();
 });
 it('keeps XP prominent and distinguishes XP fallback from result method', () => {

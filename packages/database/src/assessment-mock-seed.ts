@@ -19,7 +19,7 @@ import {
   subchapters,
   users,
 } from './schema/index.js';
-import { tryoutBatchCloseAt } from './tryout-visibility.js';
+import { TRYOUT_DURATION_SECONDS, tryoutBatchCloseAt } from './tryout-visibility.js';
 
 export const assessmentMockNamespace = 'NUMORA-ASSESSMENT-MOCK-V1';
 export const assessmentMockChapters: Record<string, MockTopic> = {
@@ -185,7 +185,7 @@ export async function seedAssessmentMocks() {
       assessmentType: 'TRYOUT' as const,
       isDemo: true,
       scoringPolicyVersionId: tryoutPolicy.id,
-      durationSeconds: 600,
+      durationSeconds: TRYOUT_DURATION_SECONDS,
       releaseAt,
       closeAt,
       status: 'PUBLISHED' as const,
@@ -332,7 +332,7 @@ export async function seedAssessmentMocks() {
         formats: { pg: 10, multiAnswer: 10, category: 10 },
         releaseAt,
         closeAt,
-        durationSeconds: 600,
+        durationSeconds: TRYOUT_DURATION_SECONDS,
       },
       questionCount: 110,
     };

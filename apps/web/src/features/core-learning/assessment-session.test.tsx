@@ -492,7 +492,7 @@ describe('typed PGK sessions (TEST ONLY)', () => {
     expect((screen.getAllByRole('radio', { name: 'Ya' })[0] as HTMLInputElement).checked).toBe(
       true,
     );
-    expect(screen.getByRole('button', { name: 'Soal 1, belum lengkap' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Soal 1, kategori belum lengkap' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
     expect(screen.getByText(/1 soal Kategori belum lengkap/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }));

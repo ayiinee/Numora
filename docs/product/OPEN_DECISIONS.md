@@ -1,6 +1,6 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
-**ENGINEERING DECISION - owner instruction, 17 November 2026:** Tryout runtime controls use 75-minute new attempts, allow overlapping active batches, let Content Admin stop an open batch, and keep package archival behind active-batch protection. See `docs/development/TRYOUT_RUNTIME_CONTROLS_2026-11-17.md`.
+**ENGINEERING DECISION - owner instruction, 25 November 2026:** New Tryout attempts receive up to 30 minutes (1,800 seconds), capped by the batch or legacy package closing time. Existing attempts use their pinned deadline. This supersedes the earlier duration decisions below. [Tryout runtime controls](../development/TRYOUT_RUNTIME_CONTROLS_2026-11-17.md) also cover overlapping batches, stopping an open batch and package archival.
 
 **ENGINEERING DECISION - usulan Reyhan, disetujui pemilik Aini pada 10 November 2026.** Duel PvP tidak lagi mulai otomatis pada Ready kedua; pembuat room menekan Mulai duel dan server tetap memvalidasi dua pemain aktif, terhubung serta siap. Aini mengonfirmasi "Setuju, host memulai duel" dalam review [PR #150](https://github.com/ayiinee/Numora/pull/150). Persetujuan pemilik atas tambahan aksi mulai eksplisit dalam alur PRD v0.6 bagian 23.5 telah ditutup. Rincian di [PRD mapping](PRD_MAPPING.md) dan [kontrak realtime](../architecture/REALTIME_PVP.md).
 

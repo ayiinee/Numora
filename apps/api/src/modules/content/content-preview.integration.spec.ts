@@ -3608,6 +3608,10 @@ describe.skipIf(!testUrl)(
         ),
       ]);
       expect(attempts[0].id).toBe(attempts[1].id);
+      const [timing] = await owner<{ duration_seconds: number }[]>`
+        SELECT EXTRACT(EPOCH FROM (deadline_at - started_at))::integer AS duration_seconds
+        FROM assessment_attempts WHERE id=${attempts[0].id}`;
+      expect(timing?.duration_seconds).toBe(1800);
       const [assignment] =
         await owner`SELECT * FROM tryout_student_assignments WHERE batch_id=${activeId} AND student_id=${student!.id}`;
       expect(assignment!.package_id).toBe(
@@ -3620,7 +3624,12 @@ describe.skipIf(!testUrl)(
         (await service.studentList(student!.id as string)).items.find(
           (batch) => batch.id === activeId,
         ),
-      ).toMatchObject({ attemptId: attempts[0].id, canResume: true, resultState: null });
+      ).toMatchObject({
+        attemptId: attempts[0].id,
+        canResume: true,
+        resultState: null,
+        durationSeconds: 1800,
+      });
       for (const question of attempts[0].questions)
         await ok(
           `tryout/attempts/${attempts[0].id}/answers/${question.questionInstanceId}`,
@@ -3637,6 +3646,7 @@ describe.skipIf(!testUrl)(
       expect(resumed.questions.map((question) => question.questionInstanceId)).toEqual(
         attempts[0].questions.map((question) => question.questionInstanceId),
       );
+      expect(resumed.deadlineAt).toBe(attempts[0].deadlineAt);
       expect(
         resumed.questions.every((question) => question.selectedOptionId === correctOptionId),
       ).toBe(true);

@@ -1272,9 +1272,6 @@
   color: var(--color-primary);
 }
 
-.tryout-attempt-shell .practice-header {
-  margin-bottom: 0;
-}
 .tryout-attempt-shell .practice-timer {
   padding: 0;
   background: transparent;
@@ -1301,10 +1298,6 @@
   font-size: 12px;
   color: var(--color-text-muted);
   margin-top: 6px;
-}
-.tryout-question-position {
-  font-size: 12px;
-  color: var(--color-text-muted);
 }
 .tryout-session-feedback {
   position: sticky;
@@ -1333,9 +1326,6 @@
 }
 .tryout-session-feedback__save p {
   margin-top: 2px;
-}
-.tryout-attempt-shell .practice-stem {
-  scroll-margin-top: calc(var(--tryout-session-header-height, 104px) + var(--tryout-session-feedback-height, 0px) + 16px);
 }
 .tryout-question-map {
   display: grid;
@@ -1383,26 +1373,6 @@
   gap: 4px 10px;
   color: var(--color-text-strong);
   font-size: 12px;
-}
-.tryout-desktop-map h2 {
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-.tryout-attempt-shell .practice-layout {
-  grid-template-columns: minmax(0, 680px) minmax(260px, 1fr);
-}
-.tryout-attempt-shell .practice-toolbar {
-  top: 108px;
-  max-height: calc(100dvh - 108px);
-  overflow: auto;
-}
-.tryout-attempt-shell .practice-actions button {
-  white-space: nowrap;
-  gap: 4px;
-  padding-inline: 4px;
-}
-.tryout-attempt-shell .tryout-mobile-map {
-  display: none;
 }
 .student-join-actions .button-link--secondary {
   background: var(--color-primary-light);
@@ -1511,43 +1481,6 @@
   margin-bottom: 8px;
   text-align: start;
 }
-@media (max-width: 959px) {
-  .tryout-desktop-map {
-    display: none;
-  }
-  .tryout-attempt-shell .tryout-mobile-map {
-    display: inline-flex;
-    flex-shrink: 0;
-  }
-  .tryout-attempt-shell .practice-toolbar {
-    top: auto;
-    max-height: none;
-    overflow: visible;
-  }
-  .tryout-attempt-shell .practice-actions {
-    margin-top: 0;
-  }
-}
-.explanation-session .practice-option input:disabled + .practice-option__letter,
-.explanation-session .practice-statement input:disabled {
-  opacity: 1;
-}
-
-.explanation-session .practice-choices:disabled,
-.explanation-session .practice-categories:disabled {
-  opacity: 1;
-}
-.tryout-review-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 12px;
-  color: var(--color-text-strong);
-}
-.tryout-review-header h1 {
-  font-size: 16px;
-  font-weight: 800;
-}
 .tryout-review-notice {
   display: flex;
   flex-wrap: wrap;
@@ -1555,49 +1488,6 @@
   gap: 8px;
   max-width: 980px;
   margin: 0 auto 12px;
-}
-.tryout-review-controls {
-  display: none;
-}
-.tryout-explanation .practice-layout {
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
-}
-.tryout-explanation .practice-toolbar {
-  top: 16px;
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
-}
-.tryout-explanation .practice-toolbar h2 {
-  font-weight: 800;
-  margin-bottom: 12px;
-}
-.explanation-session .practice-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.25rem), 1fr));
-}
-.explanation-session .practice-actions button,
-.tryout-attempt-shell .practice-actions button {
-  min-height: 44px;
-  white-space: nowrap;
-  word-break: normal;
-  overflow-wrap: normal;
-}
-.tryout-explanation .practice-stem:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 4px;
-}
-.tryout-explanation .question-review-details {
-  border-top: 0;
-  padding-top: 0;
-}
-.tryout-explanation .content-rich-text {
-  display: block;
-  overflow-x: auto;
-}
-.tryout-explanation .practice-statement p .content-rich-text {
-  display: inline-block;
-  max-width: 100%;
-  vertical-align: top;
 }
 .tryout-review-options {
   display: grid;
@@ -1637,40 +1527,6 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
-@media (max-width: 959px) {
-  .tryout-explanation .practice-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .tryout-explanation .practice-toolbar {
-    display: none;
-  }
-  .tryout-explanation .tryout-review-desktop-position {
-    display: none;
-  }
-  .tryout-review-controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 12px;
-    color: var(--color-text-strong);
-    font-size: 13px;
-    font-weight: 700;
-  }
-  .tryout-review-controls button {
-    min-width: 44px;
-    min-height: 44px;
-    padding-inline: 8px;
-    white-space: nowrap;
-  }
-  .tryout-review-controls .review-direction-label {
-    display: none;
-  }
-  .tryout-review-controls button:last-child {
-    margin-inline-start: auto;
-  }
-}
-
 /* Keep visually hidden statement legends from inheriting full-width positioning. */
 .practice-statement > legend.sr-only { float: none; width: 1px; min-width: 0; }
 /* Pretest uses the existing assessment layout and semantic Student tokens. */

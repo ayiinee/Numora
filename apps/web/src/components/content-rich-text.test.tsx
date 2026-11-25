@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ContentRichText } from './content-rich-text';
 
@@ -7,6 +7,52 @@ afterEach(cleanup);
 function content(text: string) {
   return render(<ContentRichText text={text} media={[]} retry={vi.fn()} />);
 }
+
+it('renders complete nested imported math and preserves currency and malformed formulas', () => {
+  const { container } = content(
+    'sqrt((x+1)^2), sqrt(sqrt(16)), (2 + 3) ^ 2, x_1^2. Dari $10 menjadi $20. Salah: $\\sqrt{5$.',
+  );
+  expect(container.querySelector('msqrt msup')?.textContent).toBe('(x+1)2');
+  expect(container.querySelector('msqrt msqrt')?.textContent).toBe('16');
+  expect(container.querySelector('msubsup')?.textContent).toBe('x12');
+  expect(container.querySelectorAll('math')).toHaveLength(4);
+  expect(container.querySelector('.katex-error')).toBeNull();
+  expect(container.textContent).toContain('Dari $10 menjadi $20. Salah: $\\sqrt{5$.');
+});
+
+it('presents authored steps and wide formulas as separate reading blocks', () => {
+  render(
+    <ContentRichText
+      text={'Tentukan luas.\n\n2. Hitung sisi.\n3. Substitusi.\n\n$$\\sqrt{16}=4$$'}
+      layout="reading"
+      media={[]}
+      retry={vi.fn()}
+    />,
+  );
+  const steps = screen.getByRole('list');
+  expect(within(steps).getAllByRole('listitem')).toHaveLength(2);
+  expect(steps.firstElementChild?.getAttribute('value')).toBe('2');
+  expect(screen.getByRole('region', { name: 'Rumus' }).querySelector('msqrt')).toBeTruthy();
+});
+
+it('keeps delimited math with units and literal dollar amounts in the same sentence', () => {
+  const { container } = content('Dari $10 menjadi $20, dengan panjang $2 cm$.');
+  expect(container.querySelectorAll('math')).toHaveLength(1);
+  expect(container.querySelector('math')?.textContent).toContain('2cm');
+  expect(container.textContent).toContain('Dari $10 menjadi $20, dengan panjang ');
+});
+
+it('distinguishes initial media loading from a recoverable media failure', () => {
+  const retry = vi.fn();
+  const { rerender } = render(
+    <ContentRichText text="[[asset:diagram]]" media={[]} retry={retry} mediaPending />,
+  );
+  expect(screen.getByRole('status').textContent).toBe('Memuat gambar…');
+  expect(screen.queryByRole('button')).toBeNull();
+  rerender(<ContentRichText text="[[asset:diagram]]" media={[]} retry={retry} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Coba muat gambar lagi' }));
+  expect(retry).toHaveBeenCalledOnce();
+});
 
 it('renders imported notation by default in Admin and preserves parenthesized powers', () => {
   const { container } = content('Luas m^(2), sqrt(16), dan \\frac{3}{4}.');

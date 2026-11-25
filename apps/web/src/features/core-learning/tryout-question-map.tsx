@@ -10,7 +10,7 @@ const states = {
 
 export type TryoutQuestionState = keyof typeof states;
 
-export function TryoutQuestionMap({
+export function AssessmentQuestionMap({
   items,
   current,
   onSelect,
@@ -20,8 +20,8 @@ export function TryoutQuestionMap({
   items: { state: TryoutQuestionState; flagged: boolean }[];
   current: number;
   onSelect: (index: number) => void;
-  canSubmit: boolean;
-  onSubmit: () => void;
+  canSubmit?: boolean;
+  onSubmit?: () => void;
 }) {
   return (
     <div className="tryout-question-map">
@@ -54,10 +54,12 @@ export function TryoutQuestionMap({
           <span aria-hidden="true">⚑ </span>Ragu-ragu
         </li>
       </ul>
-      <Button fullWidth disabled={!canSubmit} onClick={onSubmit}>
-        <Icon name="check" width={16} height={16} />
-        Kumpulkan jawaban
-      </Button>
+      {onSubmit && (
+        <Button fullWidth disabled={!canSubmit} onClick={onSubmit}>
+          <Icon name="check" width={16} height={16} />
+          Kumpulkan jawaban
+        </Button>
+      )}
     </div>
   );
 }
