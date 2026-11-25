@@ -7,7 +7,7 @@ import {
   ServiceUnavailableException,
   type OnModuleDestroy,
 } from '@nestjs/common';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import {
   analyticsOutbox,
   assessmentPackages,
@@ -51,6 +51,7 @@ import {
   type Difficulty,
   type PvpPolicy,
 } from './pvp.policy';
+import { generateJoinCode } from '../security/join-code';
 import type { PvpSnapshotDto } from './pvp.dto';
 import {
   PvpDrillBank,
@@ -321,41 +322,50 @@ export class PvpEngineService implements OnModuleDestroy {
       await this.assertRoomAvailable(tx, studentId);
       const { pack, items, version } = await this.freezeDrillPackage(tx, difficulty);
       const now = this.now();
-      const [match] = await tx
-        .insert(pvpMatches)
-        .values({
-          packageId: pack.id,
-          creatorStudentId: studentId,
-          createRequestId: requestId,
-          roomCode: randomBytes(6).toString('hex').toUpperCase(),
-          difficulty,
-          dataMode: this.dataMode,
-          createdAt: now,
-          expiresAt: new Date(now.getTime() + policy.roomLifetimeSeconds * 1000),
-          scoringPolicyVersionId: policy.policyVersionId,
-          scoringSnapshot: {
-            versionId: version.id,
-            configuration: version.configuration,
-            durationSeconds: durationSeconds(difficulty),
-            reconnectSeconds: 20,
-            policy,
-          },
-        })
-        .returning();
+      const room = {
+        packageId: pack.id,
+        creatorStudentId: studentId,
+        createRequestId: requestId,
+        difficulty,
+        dataMode: this.dataMode,
+        createdAt: now,
+        expiresAt: new Date(now.getTime() + policy.roomLifetimeSeconds * 1000),
+        scoringPolicyVersionId: policy.policyVersionId,
+        scoringSnapshot: {
+          versionId: version.id,
+          configuration: version.configuration,
+          durationSeconds: durationSeconds(difficulty),
+          reconnectSeconds: 20,
+          policy,
+        },
+      };
+      let match: Match | undefined;
+      for (let attempt = 0; attempt < 5 && !match; attempt++) {
+        [match] = await tx
+          .insert(pvpMatches)
+          .values({ ...room, roomCode: generateJoinCode() })
+          .onConflictDoNothing({ target: pvpMatches.roomCode })
+          .returning();
+      }
+      if (!match)
+        throw new ServiceUnavailableException({
+          code: 'PVP_ROOM_CODE_UNAVAILABLE',
+          detail: 'Room belum bisa dibuat. Coba sebentar lagi.',
+        });
       await tx
         .insert(pvpPlayers)
-        .values({ matchId: match!.id, studentId, playerSlot: 1, totalPoints: '0' });
+        .values({ matchId: match.id, studentId, playerSlot: 1, totalPoints: '0' });
       await tx.insert(pvpMatchQuestions).values(
         items.map(({ item }, i) => ({
-          matchId: match!.id,
+          matchId: match.id,
           packageId: pack.id,
           packageItemId: item.id,
           questionVersionId: item.questionVersionId,
           displayOrder: i + 1,
         })),
       );
-      await this.event(tx, match!, 'pvp_room_created');
-      return match!.id;
+      await this.event(tx, match, 'pvp_room_created');
+      return match.id;
     });
     return this.snapshot(studentId, matchId);
   }

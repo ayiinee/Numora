@@ -119,6 +119,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     const create = await command(first, 'room:create', { difficulty: 'easy' });
     expect(create.payload).toMatchObject({ ok: true });
     const room = create.payload.state as PvpSnapshotDto;
+    expect(room.roomCode).toMatch(/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/);
     expect((await command(second, 'room:join', { roomCode: room.roomCode })).payload.ok).toBe(true);
     await command(first, 'player:ready', { matchId: room.matchId });
     await command(second, 'player:ready', { matchId: room.matchId });

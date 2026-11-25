@@ -348,3 +348,4 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 
 
 **ENGINEERING DECISION — 15 November 2026:** batch sekolah tunggal dapat memakai snapshot alokasi per siswa dengan mode `BALANCED_50_50`; implementasi memakai migration `0075_tryout_balanced_school_allocations`, DTO delegasi, dan assignment snapshot durable. Hasil multi-paket tetap mengikuti gate IRT yang berlaku.
+**ENGINEERING DECISION — 25 November 2026:** new PvP rooms use six-character codes and existing twelve-character codes remain valid. The lobby offers to resume an active room and checks server membership after create/join timeouts. [Realtime PvP contract](../architecture/REALTIME_PVP.md#websocket-contract).

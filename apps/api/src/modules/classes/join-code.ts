@@ -1,9 +1,9 @@
-import { randomInt } from 'node:crypto';
+import { generateJoinCode } from '../security/join-code';
 
-const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function generateClassJoinCode(): string {
-  return Array.from({ length: 6 }, () => alphabet[randomInt(alphabet.length)]).join('');
+  return generateJoinCode();
 }
+
 export function isJoinCodeCollision(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) return false;
   if (

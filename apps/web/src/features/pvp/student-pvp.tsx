@@ -69,7 +69,8 @@ export function PvpScreen() {
   });
   const rankingEntries = ranking.data?.entries ?? [];
   const tied = hasLeaderboardPodiumTie(rankingEntries);
-  const disabled = socket.busy || socket.uncertain || !socket.connected;
+  const activeMatchId = availability.data?.activeMatchId;
+  const disabled = socket.busy || socket.checkingRoom || socket.uncertain || !socket.connected;
   const selectedAvailable =
     availability.data?.difficulties?.find((item) => item.difficulty === difficulty)?.available !==
     false;
@@ -83,17 +84,17 @@ export function PvpScreen() {
         <div className="pvp-lobby-main">
           <PvpHero />
 
-          {availability.data?.activeMatchId && (
-            <Status title="Kamu memiliki room aktif">
-              <Link
-                className="button-link"
-                href={`/student/pvp/${availability.data.activeMatchId}`}
-              >
-                Lanjutkan room aktif
+          {activeMatchId ? (
+            <Status title="Kamu punya room aktif">
+              <p>
+                Lanjutkan duel dari room yang sudah kamu masuki. Untuk ganti room, keluar dari sana
+                dulu.
+              </p>
+              <Link className="button-link" href={`/student/pvp/${activeMatchId}`}>
+                Lanjutkan ke room
               </Link>
             </Status>
-          )}
-          {availability.isPending || availability.isError ? (
+          ) : availability.isPending || availability.isError ? (
             <DataState
               pending={availability.isPending}
               error={availability.error}
@@ -111,11 +112,15 @@ export function PvpScreen() {
           ) : (
             <>
               {socket.connectionState === 'disconnected' && (
-                <Status title="Koneksi PvP terputus">
+                <Status title="Koneksi terputus">
+                  <p>{socket.error || 'Sambungkan kembali untuk masuk ke room.'}</p>
                   <Button variant="secondary" onClick={socket.reconnect}>
-                    Sambungkan lagi
+                    Sambungkan kembali
                   </Button>
                 </Status>
+              )}
+              {socket.connectionState === 'connecting' && (
+                <p role="status">Menghubungkan ke PvP…</p>
               )}
               <Tabs
                 label="Buat atau gabung duel"
@@ -141,10 +146,11 @@ export function PvpScreen() {
                         />
                         <Button
                           fullWidth
-                          loading={socket.busy || socket.connectionState === 'connecting'}
-                          disabled={
-                            disabled || !selectedAvailable || !!availability.data.activeMatchId
+                          loading={
+                            socket.connectionState === 'connecting' ||
+                            (socket.busy && !socket.checkingRoom)
                           }
+                          disabled={disabled || !selectedAvailable}
                           onClick={() => void socket.command('room:create', { difficulty })}
                         >
                           Buat room
@@ -165,7 +171,7 @@ export function PvpScreen() {
                         code={code}
                         onChange={setCode}
                         disabled={disabled}
-                        busy={socket.busy}
+                        busy={tab === 'join' && socket.busy && !socket.checkingRoom}
                         onJoin={() =>
                           void socket.command('room:join', { roomCode: code.trim().toUpperCase() })
                         }
@@ -174,18 +180,24 @@ export function PvpScreen() {
                   },
                 ]}
               />
-              {socket.error && (
+              {socket.checkingRoom ? (
+                <p role="status">Sebentar, kami sedang mencari room kamu…</p>
+              ) : socket.error && socket.connectionState !== 'disconnected' ? (
                 <p role="alert" className="pvp-command-error">
                   {socket.error}
                 </p>
-              )}
-              {socket.uncertain && (
+              ) : null}
+              {socket.uncertain && !socket.checkingRoom && socket.connected && (
                 <Button
                   variant="secondary"
                   disabled={socket.busy || !socket.connected}
                   onClick={socket.retry}
                 >
-                  Periksa permintaan sebelumnya
+                  {socket.retryEvent === 'room:create'
+                    ? 'Coba buat lagi'
+                    : socket.retryEvent === 'room:join'
+                      ? 'Coba gabung lagi'
+                      : 'Coba lagi'}
                 </Button>
               )}
             </>
@@ -264,7 +276,7 @@ export function PvpScreen() {
                       <div>
                         <Button
                           size="sm"
-                          disabled={disabled}
+                          disabled={disabled || !!activeMatchId}
                           onClick={() =>
                             void socket.command('invitation:respond', {
                               inviteId: invite.id,
