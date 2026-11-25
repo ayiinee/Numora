@@ -159,6 +159,39 @@ it('reuses a timed-out create request ID on explicit retry instead of creating a
   expect(second.requestId).toBe(first.requestId);
   expect(second.payload).toEqual(first.payload);
 });
+it('rechecks cached membership before offering a room on lobby re-entry', async () => {
+  let resolveAvailability!: (value: unknown) => void;
+  const originalRequest = vi.mocked(request).getMockImplementation()!;
+  vi.mocked(request).mockImplementation(async (token, path) => {
+    if (path !== '/pvp/availability') return originalRequest(token, path);
+    if (availabilityRequestCount() === 1) return { available: true, activeMatchId: 'OLD-room' };
+    return new Promise((resolve) => {
+      resolveAvailability = resolve;
+    });
+  });
+  const view = render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  await screen.findByRole('link', { name: 'Lanjutkan ke room' });
+  view.rerender(
+    <StudentAccess>
+      <span>Halaman lain</span>
+    </StudentAccess>,
+  );
+  view.rerender(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  await waitFor(() => expect(availabilityRequestCount()).toBe(2));
+  expect(screen.queryByRole('link', { name: 'Lanjutkan ke room' })).toBeNull();
+  await act(async () => resolveAvailability({ available: true, activeMatchId: null }));
+  const create = await screen.findByRole('button', { name: 'Buat room' });
+  await waitFor(() => expect(create.hasAttribute('disabled')).toBe(false));
+});
+
 it('offers the active room as the only room action', async () => {
   const originalRequest = vi.mocked(request).getMockImplementation()!;
   vi.mocked(request).mockImplementation(async (token, path) =>
@@ -442,15 +475,9 @@ it('keeps selection separate from server lock and retries uncertain answers with
 });
 
 it.each(['FINISHED', 'CANCELLED'] as const)(
-  'refreshes availability once when the server broadcasts a %s match',
+  'handles a %s broadcast without loading lobby availability from the room',
   async (status) => {
-    const running = matchSnapshot();
-    let activeMatchId: string | null = running.matchId;
-    vi.mocked(request).mockImplementation(async (_token, path) => {
-      if (path === '/pvp/availability') return { available: true, activeMatchId };
-      if (path.startsWith('/pvp/matches/')) return running;
-      return { classmates: [], invites: [] };
-    });
+    serveMatch(matchSnapshot());
     render(
       <StudentAccess>
         <PvpMatchScreen />
@@ -459,18 +486,38 @@ it.each(['FINISHED', 'CANCELLED'] as const)(
     await screen.findByRole('timer', { name: 'Sisa waktu' });
     await waitFor(() => expect(mocks.listeners).toHaveLength(1));
     const publish = mocks.listeners[0]!.get('room:state')!;
-    const initialRequests = availabilityRequestCount();
-    await act(async () => publish({ payload: running }));
-    expect(availabilityRequestCount()).toBe(initialRequests);
-
-    activeMatchId = null;
-    const ended = matchSnapshot(status);
-    await act(async () => publish({ payload: ended }));
-    await waitFor(() => expect(availabilityRequestCount()).toBe(initialRequests + 1));
-    await act(async () => publish({ payload: ended }));
-    expect(availabilityRequestCount()).toBe(initialRequests + 1);
+    await act(async () => publish({ payload: matchSnapshot(status) }));
+    await waitFor(() =>
+      expect(document.querySelector('.pvp-header h1')?.textContent).toBe('Hasil Duel PvP'),
+    );
+    expect(availabilityRequestCount()).toBe(0);
   },
 );
+
+it('can open a confirmed active room over WebSocket while its HTTP snapshot is still loading', async () => {
+  const originalRequest = vi.mocked(request).getMockImplementation()!;
+  vi.mocked(request).mockImplementation(async (token, path) => {
+    if (path === '/pvp/availability') return { available: true, activeMatchId: mocks.matchId };
+    if (path.startsWith('/pvp/matches/')) return new Promise(() => {});
+    return originalRequest(token, path);
+  });
+  const view = render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  await screen.findByRole('link', { name: 'Lanjutkan ke room' });
+  view.rerender(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  await waitFor(() => expect(mocks.listeners).toHaveLength(2));
+  const publish = mocks.listeners[1]!.get('room:state')!;
+  await act(async () => publish({ payload: matchSnapshot('WAITING') }));
+  await screen.findByRole('button', { name: 'Saya siap' });
+  expect(availabilityRequestCount()).toBe(1);
+});
 
 it('keeps ready waiting on the server and allows Mandiri to share without classmates', async () => {
   const snapshot = matchSnapshot('WAITING');
@@ -490,6 +537,9 @@ it('keeps ready waiting on the server and allows Mandiri to share without classm
     </StudentAccess>,
   );
   const ready = await screen.findByRole('button', { name: 'Saya siap' });
+  expect(document.querySelector('.app-sidebar')).not.toBeNull();
+  expect(document.querySelector('.materials-header h1')?.textContent).toBe('Ruang Tunggu Duel');
+  expect(availabilityRequestCount()).toBe(0);
   await waitFor(() => expect(ready.hasAttribute('disabled')).toBe(false));
   await screen.findByText('Belum ada teman sekelas. Kamu tetap dapat membagikan link room.');
   fireEvent.click(ready);

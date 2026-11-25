@@ -1,21 +1,30 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
 import { request } from '@/features/core-learning/api';
 import { useStudentToken } from '@/features/core-learning/student-session';
 import type { PvpAvailabilityDto, PvpSnapshotDto } from '@/features/core-learning/generated-types';
+import { pvpAvailabilityKey, pvpMatchKey, pvpMatchQuery } from './pvp-match-query';
 import type { Acknowledgement, PvpEnvelope } from './generated-protocol';
 type Command = Extract<PvpEnvelope, { requestId: string }>['event'];
 type Ack = { payload: Acknowledgement };
 type ConnectionState = 'idle' | 'connecting' | 'connected' | 'disconnected';
 const isLobbyEntry = (event?: Command) => event === 'room:create' || event === 'room:join';
-const availabilityKey = ['pvp-availability'] as const;
 export function usePvpSocket(enabled: boolean, matchId?: string) {
   const token = useStudentToken();
   const navigate = useRouter().push;
+  const [openingRoom, startRoomNavigation] = useTransition();
   const client = useQueryClient();
+  const openRoom = useCallback(
+    (id: string) => {
+      if (!client.getQueryData(pvpMatchKey(id)))
+        void client.prefetchQuery(pvpMatchQuery(token, id));
+      startRoomNavigation(() => navigate(`/student/pvp/${id}`));
+    },
+    [client, navigate, token],
+  );
   const socket = useRef<Socket | null>(null);
   const [state, setState] = useState<PvpSnapshotDto | null>(null);
   const [error, setError] = useState('');
@@ -36,6 +45,8 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
   const receiveSnapshot = useCallback(
     (snapshot: PvpSnapshotDto, membershipCommand = false) => {
       setState(snapshot);
+      if (matchId && !client.getQueryData(pvpMatchKey(matchId)))
+        client.setQueryData(pvpMatchKey(matchId), snapshot);
       const active =
         snapshot.participantActive !== false &&
         snapshot.status !== 'FINISHED' &&
@@ -48,7 +59,8 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
         setUncertain(false);
         setError('');
         setCheckingRoom(false);
-        navigate(`/student/pvp/${snapshot.matchId}`);
+        client.setQueryData(pvpMatchKey(snapshot.matchId), snapshot);
+        openRoom(snapshot.matchId);
         membershipCommand = true;
       }
       if (active) {
@@ -57,13 +69,21 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
         if (!previous.active) return; // A terminal ACK can be followed by the same broadcast.
       } else if (
         !membershipCommand &&
-        client.getQueryData<PvpAvailabilityDto>(availabilityKey)?.activeMatchId !== snapshot.matchId
+        client.getQueryData<PvpAvailabilityDto>(pvpAvailabilityKey)?.activeMatchId !==
+          snapshot.matchId
       ) {
         return;
       }
-      void client.invalidateQueries({ queryKey: availabilityKey });
+      client.setQueryData<PvpAvailabilityDto>(pvpAvailabilityKey, (cached) => {
+        if (!cached) return cached;
+        if (active) return { ...cached, activeMatchId: snapshot.matchId };
+        return cached.activeMatchId === snapshot.matchId
+          ? { ...cached, activeMatchId: null }
+          : cached;
+      });
+      void client.invalidateQueries({ queryKey: pvpAvailabilityKey });
     },
-    [client, matchId, navigate],
+    [client, matchId, openRoom],
   );
   const checkLobbyRoom = useCallback(
     async (currentSocket: Socket, resume: boolean) => {
@@ -80,8 +100,8 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
           pending.current = null;
           setUncertain(false);
           setError('');
-          client.setQueryData(availabilityKey, availability);
-          if (resume) navigate(`/student/pvp/${availability.activeMatchId}`);
+          client.setQueryData(pvpAvailabilityKey, availability);
+          if (resume) openRoom(availability.activeMatchId);
           return;
         }
         setError('Room belum ditemukan. Coba lagi.');
@@ -95,7 +115,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
         }
       }
     },
-    [client, matchId, navigate, token],
+    [client, matchId, openRoom, token],
   );
   useEffect(() => {
     // Token renewal keeps the request ID; changing matches or disabling PvP clears it.
@@ -224,7 +244,10 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
           event === 'room:cancel' ||
           event === 'invitation:respond';
         receiveSnapshot(ack.payload.state, membershipCommand);
-        if (!matchId) navigate(`/student/pvp/${ack.payload.state.matchId}`);
+        if (!matchId) {
+          client.setQueryData(pvpMatchKey(ack.payload.state.matchId), ack.payload.state);
+          openRoom(ack.payload.state.matchId);
+        }
       }
       await client.invalidateQueries({ queryKey: ['pvp-invitations'] });
       await client.invalidateQueries({ queryKey: ['student-notifications'] });
@@ -252,6 +275,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     connected,
     connectionState,
     checkingRoom,
+    openingRoom,
     uncertain,
     retryEvent: uncertain ? pending.current?.event : undefined,
     command,
@@ -263,7 +287,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
         if (!matchId) void checkLobbyRoom(socket.current, isLobbyEntry(pending.current?.event));
         else {
           setState(null);
-          void client.invalidateQueries({ queryKey: ['pvp-match', matchId] });
+          void client.invalidateQueries({ queryKey: pvpMatchKey(matchId) });
         }
       } else if (socket.current) {
         setConnectionState('connecting');

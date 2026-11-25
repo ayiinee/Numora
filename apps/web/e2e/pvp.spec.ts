@@ -305,6 +305,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     expect(commands[0]?.payload.roomCode).toBe(roomCode);
     await page.getByText('Tampilkan QR room', { exact: true }).click();
     await expect(page.getByRole('img', { name: 'QR link gabung room' })).toBeVisible();
+    await expect(page.locator('.app-mobile-header')).toContainText('Ruang Tunggu Duel');
+    if (width >= 960) await expect(page.locator('.app-sidebar')).toBeVisible();
+    else await expect(page.locator('.app-sidebar')).toBeHidden();
     await capture('waiting');
     await page.getByRole('button', { name: 'Saya siap' }).click();
     await expect(page.getByRole('button', { name: 'Kamu sudah siap' })).toBeDisabled();
@@ -448,13 +451,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       page.getByText('Pertandingan ini tidak berkontribusi pada leaderboard.'),
     ).toBeVisible();
     await expect(leaveDialog).toHaveCount(0);
-    expect(commands.filter((command) => command.event === 'room:leave')).toHaveLength(width === 320 ? 3 : 1);
+    expect(commands.filter((command) => command.event === 'room:leave')).toHaveLength(
+      width === 320 ? 3 : 1,
+    );
     await capture('outcome-forfeit');
     expect(errors).toEqual([]);
   });
 }
 
-test('leaving the page during a disconnected duel shows the server warning and sends no leave command', async ({ page }) => {
+test('leaving the page during a disconnected duel shows the server warning and sends no leave command', async ({
+  page,
+}) => {
   commands = [];
   snapshot = state('RUNNING');
   await page.setViewportSize({ width: 320, height: 640 });

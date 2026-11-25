@@ -150,12 +150,31 @@ export class PvpEngineService implements OnModuleDestroy {
   }
 
   async activeRoom(studentId: string) {
-    const { db } = getDatabase();
-    const [room] = await db
-      .select()
+    const [claim] = await getDatabase()
+      .db.select({ matchId: pvpActiveRooms.matchId })
       .from(pvpActiveRooms)
-      .where(eq(pvpActiveRooms.studentId, studentId));
-    return room?.matchId ?? null;
+      .innerJoin(pvpMatches, eq(pvpMatches.id, pvpActiveRooms.matchId))
+      .innerJoin(
+        pvpPlayers,
+        and(
+          eq(pvpPlayers.id, pvpActiveRooms.playerId),
+          eq(pvpPlayers.matchId, pvpMatches.id),
+          eq(pvpPlayers.studentId, studentId),
+          isNull(pvpPlayers.leftAt),
+        ),
+      )
+      .where(
+        and(
+          eq(pvpActiveRooms.studentId, studentId),
+          inArray(pvpMatches.status, ['WAITING', 'READY', 'RUNNING']),
+          or(
+            eq(pvpMatches.status, 'RUNNING'),
+            isNull(pvpMatches.expiresAt),
+            gt(pvpMatches.expiresAt, this.now()),
+          ),
+        ),
+      );
+    return claim?.matchId ?? null;
   }
 
   private async scoringVersion(tx: Database | Transaction, lock = false) {

@@ -268,6 +268,19 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
       recordEligible: false,
     });
   });
+  it('does not advertise a past-due waiting room before the scheduler releases its claim', async () => {
+    const room = await engine.create(s(0), 'easy', randomUUID());
+    expect(await engine.activeRoom(s(0))).toBe(room.matchId);
+    expect(await engine.activeRoom(s(1))).toBeNull();
+    now = new Date(room.expiresAt!);
+    expect(await engine.activeRoom(s(0))).toBeNull();
+    await engine.tick(room.matchId);
+    expect(await engine.snapshot(s(0), room.matchId)).toMatchObject({
+      status: 'CANCELLED',
+      endReason: 'ROOM_EXPIRED',
+    });
+  });
+
   it('releases a disconnected waiting guest at grace expiry but cancels an expired host', async () => {
     const room = await engine.create(s(0), 'easy', randomUUID());
     await engine.join(s(1), room.roomCode);

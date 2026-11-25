@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { StudentMascot } from '@/components/student-mascot';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePvpSocket } from './use-pvp-socket';
+import { pvpAvailabilityKey, pvpMatchQuery } from './pvp-match-query';
+import { PvpWaitingFrame } from './pvp-waiting-frame';
 import QRCode from 'qrcode';
 import { Avatar, Button, Card, Dialog, Icon, Tabs } from '@tka/ui';
 import { AppShell } from '@/components/shell';
@@ -36,14 +38,14 @@ import { DataState, LearningFrame, Status } from '@/features/core-learning/ui';
 import type {
   PvpAvailabilityDto,
   PvpInvitesDto,
-  PvpSnapshotDto,
   StudentPeersDto,
 } from '@/features/core-learning/generated-types';
 
 export function PvpScreen() {
   const token = useStudentToken();
+  const client = useQueryClient();
   const availability = useQuery({
-    queryKey: ['pvp-availability'],
+    queryKey: pvpAvailabilityKey,
     queryFn: () => request<PvpAvailabilityDto>(token, '/pvp/availability'),
   });
   const socket = usePvpSocket(availability.data?.available === true);
@@ -69,7 +71,10 @@ export function PvpScreen() {
   });
   const rankingEntries = ranking.data?.entries ?? [];
   const tied = hasLeaderboardPodiumTie(rankingEntries);
-  const activeMatchId = availability.data?.activeMatchId;
+  const checkingAvailability =
+    availability.isPending || (!availability.isFetchedAfterMount && availability.isFetching);
+  const activeMatchId =
+    checkingAvailability || availability.isError ? null : availability.data?.activeMatchId;
   const disabled = socket.busy || socket.checkingRoom || socket.uncertain || !socket.connected;
   const selectedAvailable =
     availability.data?.difficulties?.find((item) => item.difficulty === difficulty)?.available !==
@@ -84,19 +89,25 @@ export function PvpScreen() {
         <div className="pvp-lobby-main">
           <PvpHero />
 
-          {activeMatchId ? (
+          {socket.openingRoom ? (
+            <p role="status">Membuka ruang tunggu…</p>
+          ) : activeMatchId && !socket.busy && !socket.checkingRoom ? (
             <Status title="Kamu punya room aktif">
               <p>
                 Lanjutkan duel dari room yang sudah kamu masuki. Untuk ganti room, keluar dari sana
                 dulu.
               </p>
-              <Link className="button-link" href={`/student/pvp/${activeMatchId}`}>
+              <Link
+                className="button-link"
+                href={`/student/pvp/${activeMatchId}`}
+                onNavigate={() => void client.prefetchQuery(pvpMatchQuery(token, activeMatchId))}
+              >
                 Lanjutkan ke room
               </Link>
             </Status>
-          ) : availability.isPending || availability.isError ? (
+          ) : checkingAvailability || availability.isError ? (
             <DataState
-              pending={availability.isPending}
+              pending={checkingAvailability}
               error={availability.error}
               retry={() => void availability.refetch()}
             />
@@ -317,22 +328,24 @@ export function PvpMatchScreen() {
   const router = useRouter();
   const { state: auth } = useAuth();
   const { matchId } = useParams<{ matchId: string }>();
-  const availability = useQuery({
-    queryKey: ['pvp-availability'],
-    queryFn: () => request<PvpAvailabilityDto>(token, '/pvp/availability'),
-  });
-  const result = useQuery({
-    queryKey: ['pvp-match', matchId],
-    queryFn: () => request<PvpSnapshotDto>(token, `/pvp/matches/${encodeURIComponent(matchId)}`),
-  });
-  const transportActive =
-    availability.data?.available === true || availability.data?.activeMatchId === matchId;
+  const client = useQueryClient();
+  const result = useQuery(pvpMatchQuery(token, matchId));
+  const room = result.data;
+  const transportActive = room
+    ? room.participantActive !== false && room.status !== 'FINISHED' && room.status !== 'CANCELLED'
+    : !result.isError &&
+      client.getQueryData<PvpAvailabilityDto>(pvpAvailabilityKey)?.activeMatchId === matchId;
   const socket = usePvpSocket(transportActive, matchId);
-  const snapshot = socket.state ?? result.data;
+  const snapshot = socket.state ?? room;
+  const isSchoolStudent = auth.status === 'ready' && auth.profile.studentAffiliation === 'SCHOOL';
   const peers = useQuery({
     queryKey: ['pvp-classmates'],
     queryFn: () => request<StudentPeersDto>(token, '/pvp/classmates'),
-    enabled: availability.data?.available === true,
+    enabled:
+      isSchoolStudent &&
+      transportActive &&
+      (snapshot?.status === 'WAITING' || snapshot?.status === 'READY') &&
+      snapshot.creatorStudentId === auth.profile.id,
   });
   const [selected, setSelected] = useState<string | null>(null);
   const [qr, setQr] = useState('');
@@ -435,26 +448,26 @@ export function PvpMatchScreen() {
     const interval = setInterval(update, 250);
     return () => clearInterval(interval);
   }, [snapshot]);
-  if (result.isPending || result.isError)
+  if (!snapshot)
     return (
-      <LearningFrame title="Pertandingan PvP" focus className="pvp-match-shell">
-        <PvpHeader title="Pertandingan PvP" />
+      <PvpWaitingFrame>
         <div className="pvp-match-content">
           <DataState
             pending={result.isPending}
             error={result.error}
             retry={() => void result.refetch()}
+            recovery={{ href: '/student/pvp', label: 'Kembali ke PvP' }}
           />
         </div>
-      </LearningFrame>
+      </PvpWaitingFrame>
     );
-  if (!snapshot) return null;
   const self = snapshot.players.find(
     (p) => auth.status === 'ready' && p.studentId === auth.profile.id,
   );
   const closed = snapshot.status === 'FINISHED' || snapshot.status === 'CANCELLED';
   const left = snapshot.participantActive === false;
   const active = transportActive;
+  const waiting = !closed && !left && snapshot.status !== 'RUNNING';
   const disabled = !active || socket.busy || socket.uncertain || !socket.connected;
   const title = closed
     ? 'Hasil Duel PvP'
@@ -485,7 +498,9 @@ export function PvpMatchScreen() {
           <Icon name="users" />
           Undang teman sekelas
         </h2>
-        {peers.isPending || peers.isError ? (
+        {!isSchoolStudent ? (
+          <p>Belum ada teman sekelas. Kamu tetap dapat membagikan link room.</p>
+        ) : peers.isPending || peers.isError ? (
           active && (
             <DataState
               pending={peers.isPending}
@@ -519,26 +534,9 @@ export function PvpMatchScreen() {
         )}
       </Card>
     ) : undefined;
-  return (
-    <LearningFrame title={title} focus className="pvp-match-shell">
-      <PvpHeader
-        title={title}
-        connected={!closed && !left && active ? socket.connected : undefined}
-        onLeave={isParticipating ? openLeave : undefined}
-        leaveLabel={snapshot.status === 'RUNNING' ? 'Menyerah' : 'Keluar'}
-        showProfile={!isParticipating}
-      />
+  const roomContent = (
+    <>
       <div className="pvp-match-content">
-        {availability.isError && !closed && (
-          <DataState
-            pending={false}
-            error={availability.error}
-            retry={() => void availability.refetch()}
-          />
-        )}
-        {availability.data?.available === false && !active && !closed && (
-          <Status title="PvP belum tersedia">{availability.data.message}</Status>
-        )}
         {active && socket.connectionState === 'disconnected' && !closed && !left && (
           <Status title="Koneksi terputus" illustration={<StudentMascot pose="offline" compact />}>
             Server memberi kesempatan reconnect selama 20 detik.
@@ -674,6 +672,19 @@ export function PvpMatchScreen() {
           </p>
         )}
       </Dialog>
+    </>
+  );
+  if (waiting) return <PvpWaitingFrame onLeave={openLeave}>{roomContent}</PvpWaitingFrame>;
+  return (
+    <LearningFrame title={title} focus className="pvp-match-shell">
+      <PvpHeader
+        title={title}
+        connected={!closed && !left && active ? socket.connected : undefined}
+        onLeave={isParticipating ? openLeave : undefined}
+        leaveLabel={snapshot.status === 'RUNNING' ? 'Menyerah' : 'Keluar'}
+        showProfile={!isParticipating}
+      />
+      {roomContent}
     </LearningFrame>
   );
 }
