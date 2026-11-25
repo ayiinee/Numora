@@ -74,6 +74,7 @@ function atomicWrite(path, text) {
 
 export async function probeRedis(Redis, url, prefix, { readOnly = false } = {}) {
   let client;
+  let quotaEvent = false;
   // PING alone may pass while a provider rejects quota-consuming commands.
   const key = `${prefix}:redis-switch-probe:${randomUUID()}`;
   const value = randomUUID();
@@ -83,7 +84,13 @@ export async function probeRedis(Redis, url, prefix, { readOnly = false } = {}) 
       connectTimeout: 5000, commandTimeout: 5000, retryStrategy: () => null,
       enableReadyCheck: false, disableClientInfo: true,
     });
-    client.on('error', () => {});
+    client.on('error', (error) => {
+      // Upstash can reject AUTH with a quota error before connect() rejects
+      // with a generic connection-closed error. Retain only the classification.
+      if (error instanceof Error && /max requests limit exceeded/i.test(error.message)) {
+        quotaEvent = true;
+      }
+    });
     await client.connect();
     if (readOnly) { await client.get(key); return; }
     if (await client.set(key, value, 'EX', 30, 'NX') !== 'OK') throw new Error();
@@ -92,7 +99,8 @@ export async function probeRedis(Redis, url, prefix, { readOnly = false } = {}) 
   } catch (error) {
     const failure = new OperatorError('Tes baca/tulis Redis tujuan gagal. Periksa URL, TLS, izin, dan kuota tujuan.');
     // Preserve only a fixed classification; raw provider errors can contain credentials.
-    failure.quotaExceeded = error instanceof Error && /max requests limit exceeded/i.test(error.message);
+    failure.quotaExceeded = quotaEvent ||
+      (error instanceof Error && /max requests limit exceeded/i.test(error.message));
     throw failure;
   } finally {
     client?.disconnect();

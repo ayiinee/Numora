@@ -1,6 +1,55 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { command, probeRedis, profileFile, redisUrlFrom, replaceRedisUrl, switchRedis } from './switch-redis.mjs';
+import { autoFailover } from './redis-failover.mjs';
+
+test('quota emitted during connection triggers automatic backup selection after a generic close', async () => {
+  const switches = [];
+  class Redis {
+    constructor(url) { this.url = url; }
+    on(_event, listener) { this.listener = listener; }
+    async connect() {
+      if (this.url !== primary) return;
+      this.listener(new Error(`ERR max requests limit exceeded ${primary}`));
+      this.listener(new Error('Connection reset'));
+      throw new Error('Connection is closed.');
+    }
+    async get() { return this.value ?? null; }
+    async set(_key, value) { this.value = value; return 'OK'; }
+    async del() { return 1; }
+    disconnect() {}
+  }
+  await assert.rejects(probeRedis(Redis, primary, 'fixture', { readOnly: true }), (error) => {
+    assert.equal(error.quotaExceeded, true);
+    assert.equal(error.message.includes(primary), false);
+    return true;
+  });
+  assert.equal(await autoFailover({
+    currentUrl: primary,
+    loadCandidates: () => [{ name: 'backup-1', url: backup }],
+    probe: (url, options) => probeRedis(Redis, url, 'fixture', options),
+    switchTo: async (name) => { switches.push(name); },
+    readState: () => ({ version: 1, exhausted: [], cooldownUntil: 0 }),
+    saveState: () => {}, log: () => {},
+  }), 'backup-1');
+  assert.deepEqual(switches, ['backup-1']);
+});
+
+test('ordinary connection errors remain unconfirmed when no quota event is received', async () => {
+  class Redis {
+    on(_event, listener) { this.listener = listener; }
+    async connect() {
+      this.listener(new Error('WRONGPASS fixture secret'));
+      throw new Error('Connection is closed.');
+    }
+    disconnect() {}
+  }
+  await assert.rejects(probeRedis(Redis, primary, 'fixture'), (error) => {
+    assert.equal(error.quotaExceeded, false);
+    assert.equal(error.message.includes('fixture secret'), false);
+    return true;
+  });
+});
 
 test('interactive authorization commands accept inherited stdio without an output buffer', () => {
   assert.equal(command(process.execPath, ['-e', ''], { stdio: 'inherit' }), '');
