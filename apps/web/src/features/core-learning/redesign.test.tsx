@@ -152,8 +152,9 @@ describe('Student Home carousel and server-driven actions', () => {
     ).toBe(true);
     expect(screen.queryByRole('button', { name: 'Slide berikutnya' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Slide sebelumnya' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Jeda carousel' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Putar carousel' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /(?:Jeda|Lanjutkan) pergantian banner/ }),
+    ).toBeNull();
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
     expect(document.querySelector('.sh-carousel__slide--tryout')?.hasAttribute('inert')).toBe(true);
     expect(screen.getByRole('link', { name: 'Pilih materi' }).getAttribute('href')).toBe(

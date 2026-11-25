@@ -8517,6 +8517,28 @@ a.settings-row:hover {
   flex: 0 0 56px;
   margin-inline: 0;
 }
+.tryout-catalog-card__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.tryout-catalog-card__title-row h2 {
+  min-width: 0;
+  margin: 0;
+}
+.tryout-catalog-card__title-row .tryout-badges {
+  margin-bottom: 0;
+}
+@media (max-width: 400px) {
+  .tryout-catalog-card__heading--mascot {
+    gap: var(--space-2);
+  }
+  .tryout-catalog-card__heading--mascot img {
+    flex-basis: 40px;
+    width: 40px;
+  }
+}
 .tryout-catalog-card__footer {
   display: grid;
   gap: 12px;

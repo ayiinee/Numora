@@ -92,9 +92,9 @@ export function TryoutCatalogCard({
   return (
     <Card fullWidth className="tryout-catalog-card">
       <div className="tryout-catalog-card__heading tryout-catalog-card__heading--mascot">
-        <div>
-          <div className="tryout-badges">{badge}</div>
+        <div className="tryout-catalog-card__title-row">
           <h2>{title}</h2>
+          <div className="tryout-badges">{badge}</div>
         </div>
         <StudentMascot pose={pose} compact />
       </div>
