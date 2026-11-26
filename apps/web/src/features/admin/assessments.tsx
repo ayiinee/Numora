@@ -61,9 +61,11 @@ function Assessments({ usage, mode = 'list', packageId, archived = false }: Prop
         />
       ) : (
         <>
-          <Link className="assessment-back-link" href={back}>
-            {mode === 'create' ? 'Batal' : '← Kembali ke daftar'}
-          </Link>
+          {!(usage === 'TRYOUT' && mode === 'detail') && (
+            <Link className="assessment-back-link" href={back}>
+              {mode === 'create' ? 'Batal' : '← Kembali ke daftar'}
+            </Link>
+          )}
           <ContentPackageWorkspace
             key={`${state.profile.id}:${usage}:${packageId ?? 'new'}`}
             token={state.session.access_token}
@@ -72,6 +74,7 @@ function Assessments({ usage, mode = 'list', packageId, archived = false }: Prop
             refreshKey={0}
             initialUsage={usage}
             mode={mode}
+            {...(usage === 'TRYOUT' && mode === 'detail' ? { backHref: back } : {})}
             {...(packageId ? { packageId } : {})}
           />
         </>

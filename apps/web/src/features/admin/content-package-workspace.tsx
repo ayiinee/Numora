@@ -59,6 +59,7 @@ export function ContentPackageWorkspace({
   urlContext = false,
   mode = 'picker',
   packageId,
+  backHref,
 }: {
   token: string;
   disabled: boolean;
@@ -70,6 +71,7 @@ export function ContentPackageWorkspace({
   urlContext?: boolean;
   mode?: 'picker' | 'create' | 'detail';
   packageId?: string;
+  backHref?: string;
 }) {
   const url = useAdminUrl();
   const router = useRouter();
@@ -373,14 +375,139 @@ export function ContentPackageWorkspace({
         return sub?.status !== 'ARCHIVED' && (!chapter || sub?.parentId === chapter);
       })(),
   );
+  const compactTryout = mode === 'detail' && initialUsage === 'TRYOUT';
+  const generatorAction =
+    detail?.assessmentType === 'TRYOUT' &&
+    detail.status === 'PUBLISHED' &&
+    detail.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
+    (variantAvailable === true ? (
+      <Link
+        className="button-link"
+        href={`/admin/assessments/tryout/${encodeURIComponent(detail.id)}/variant/new`}
+      >
+        Generate varian paket
+      </Link>
+    ) : (
+      <Button
+        variant="secondary"
+        disabled
+        title="Mapping generator belum lengkap untuk 25 focal soal."
+      >
+        {variantAvailable === null ? 'Memeriksa generator…' : 'Generate varian paket'}
+      </Button>
+    ));
+  const packageActions = detail && (
+    <div className="assessment-header-actions">
+      {detail.assessmentType === 'TRYOUT' && !compactTryout && (
+        <Link className="button-link" href="/admin/tryout-batches">
+          Batch Tryout
+        </Link>
+      )}
+      {detail.assessmentType === 'TRYOUT' && (
+        <Button
+          variant="secondary"
+          disabled={!printableTryout}
+          onClick={printTryout}
+          title={
+            printableTryout
+              ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
+              : 'Lengkapi seluruh soal paket sebelum mengekspor'
+          }
+        >
+          Export PDF
+        </Button>
+      )}
+      <Button onClick={() => setPublicationOpen(true)}>
+        {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
+      </Button>
+
+      {compactTryout ? (
+        <>
+          <Button
+            variant="secondary"
+            popoverTarget="tryout-package-actions"
+            className="tryout-package-more"
+            aria-label="Tindakan lainnya"
+            title="Tindakan lainnya"
+          >
+            <span aria-hidden="true">⋯</span>
+          </Button>
+          <div
+            id="tryout-package-actions"
+            popover="auto"
+            className="tryout-package-menu"
+            aria-label="Tindakan paket lainnya"
+            onClick={(event) => {
+              if ((event.target as HTMLElement).closest('button, a'))
+                event.currentTarget.hidePopover();
+            }}
+          >
+            <Link className="button-link" href="/admin/tryout-batches">
+              Batch Tryout
+            </Link>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSettingsName(detail.name);
+                setCompositionOpen(true);
+              }}
+            >
+              Komposisi paket
+            </Button>
+
+            <Button variant="secondary" onClick={() => setInformationOpen('access')}>
+              <Icon name="users" width={18} height={18} /> Akses siswa
+            </Button>
+            <Button variant="secondary" onClick={() => setInformationOpen('readiness')}>
+              <Icon name="clipboard" width={18} height={18} /> Syarat penerbitan
+            </Button>
+            {generatorAction}
+          </div>
+        </>
+      ) : (
+        <>
+          <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
+            Komposisi paket
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setSettingsName(detail.name);
+              setCompositionOpen(true);
+            }}
+          >
+            Pengaturan
+          </Button>
+
+          {generatorAction}
+        </>
+      )}
+    </div>
+  );
   return (
     <Card
       id="paket-soal"
       className={
-        mode === 'detail' ? 'content-import-card assessment-detail-card' : 'content-import-card'
+        mode === 'detail'
+          ? `content-import-card assessment-detail-card${compactTryout ? ' tryout-package-detail' : ''}`
+          : 'content-import-card'
       }
-      style={embedded ? { border: 0, boxShadow: 'none', paddingTop: 0 } : undefined}
+      style={
+        compactTryout
+          ? { border: 0, boxShadow: 'none', padding: 0 }
+          : embedded
+            ? { border: 0, boxShadow: 'none', paddingTop: 0 }
+            : undefined
+      }
     >
+      {compactTryout && (
+        <div className="tryout-package-toolbar">
+          <Link className="assessment-back-link" href={backHref ?? assessmentPath('TRYOUT')}>
+            ← Kembali ke daftar
+          </Link>
+          {packageActions}
+        </div>
+      )}
       {mode === 'picker' && (
         <>
           <h2>{urlContext ? 'Daftar paket' : 'Tujuan & paket soal'}</h2>
@@ -685,61 +812,7 @@ export function ContentPackageWorkspace({
                   }[detail.status] ?? detail.status}
                 </Badge>
               </div>
-              <div className="assessment-header-actions">
-                {detail.assessmentType === 'TRYOUT' && (
-                  <Link className="button-link" href="/admin/tryout-batches">
-                    Batch Tryout
-                  </Link>
-                )}
-                {detail.assessmentType === 'TRYOUT' &&
-                  detail.status === 'PUBLISHED' &&
-                  detail.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
-                  (variantAvailable === true ? (
-                    <Link
-                      className="button-link"
-                      href={`/admin/assessments/tryout/${encodeURIComponent(detail.id)}/variant/new`}
-                    >
-                      Generate varian paket
-                    </Link>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      disabled
-                      title="Mapping generator belum lengkap untuk 25 focal soal."
-                    >
-                      {variantAvailable === null ? 'Memeriksa generator…' : 'Generate varian paket'}
-                    </Button>
-                  ))}
-                {detail.assessmentType === 'TRYOUT' && (
-                  <Button
-                    variant="secondary"
-                    disabled={!printableTryout}
-                    onClick={printTryout}
-                    title={
-                      printableTryout
-                        ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
-                        : 'Lengkapi seluruh soal paket sebelum mengekspor'
-                    }
-                  >
-                    Export PDF
-                  </Button>
-                )}
-                <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
-                  Komposisi paket
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setSettingsName(detail.name);
-                    setCompositionOpen(true);
-                  }}
-                >
-                  Pengaturan
-                </Button>
-                <Button onClick={() => setPublicationOpen(true)}>
-                  {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
-                </Button>
-              </div>
+              {!compactTryout && packageActions}
             </header>
             <div className="assessment-detail-metrics">
               <div>
@@ -934,8 +1007,10 @@ export function ContentPackageWorkspace({
                 </div>
               )}
               <p className="assessment-table-hint">
-                Buka detail soal untuk memeriksa isi, jawaban, dan pembahasan. Pretest divalidasi
-                otomatis saat diterbitkan.
+                Buka detail soal untuk memeriksa isi, jawaban, dan pembahasan.{' '}
+                {detail.assessmentType === 'TRYOUT'
+                  ? 'Kelengkapan Tryout diperiksa otomatis saat diterbitkan.'
+                  : 'Pretest divalidasi otomatis saat diterbitkan.'}
               </p>
               {detail.items.length > 0 && (
                 <div className="assessment-table-scroll">
@@ -1413,14 +1488,16 @@ export function ContentPackageWorkspace({
               className="assessment-detail-sidebar assessment-status-panels"
               aria-label="Kesiapan dan publikasi paket"
             >
-              <div className="assessment-information-actions">
-                <Button variant="secondary" onClick={() => setInformationOpen('access')}>
-                  <Icon name="users" width={18} height={18} /> Akses siswa
-                </Button>
-                <Button variant="secondary" onClick={() => setInformationOpen('readiness')}>
-                  <Icon name="clipboard" width={18} height={18} /> Syarat penerbitan
-                </Button>
-              </div>
+              {!compactTryout && (
+                <div className="assessment-information-actions">
+                  <Button variant="secondary" onClick={() => setInformationOpen('access')}>
+                    <Icon name="users" width={18} height={18} /> Akses siswa
+                  </Button>
+                  <Button variant="secondary" onClick={() => setInformationOpen('readiness')}>
+                    <Icon name="clipboard" width={18} height={18} /> Syarat penerbitan
+                  </Button>
+                </div>
+              )}
               <Dialog
                 open={informationOpen !== null}
                 onClose={() => setInformationOpen(null)}

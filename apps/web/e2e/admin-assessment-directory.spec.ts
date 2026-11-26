@@ -24,17 +24,57 @@ test('Tryout ACTIVE includes drafts and published packages but excludes archives
 
 test('Tryout uses the compact Pretest layout and delegates scheduling to batches', async ({
   page,
-}) => {
-  await setupAssessments(page);
+}, testInfo) => {
+  const { fixture } = await setupAssessments(page);
+  const title = 'SHAFWAN MAU TRY OUT - Variant Production 1 - Revisi Kurikulum';
+  fixture.packs.find((pack) => pack.assessmentType === 'TRYOUT')!.name = title;
   await page.goto('/admin/assessments/tryout');
   await expect(page.locator('.assessment-directory-compact')).toBeVisible();
   await expect(page.locator('.admin-full-width-shell')).toBeVisible();
   await expect(page.locator('.assessment-directory-filters')).toHaveCount(0);
   await expect(page.getByRole('columnheader', { name: 'Rilis', exact: true })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Tryout TEST', exact: true }).click();
+  await page.getByRole('link', { name: title, exact: true }).click();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await expect(page.getByRole('heading', { name: 'Tryout TEST', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+    const toolbar = page.locator('.tryout-package-toolbar');
+    await expect(toolbar.getByRole('link', { name: /Kembali ke daftar/ })).toBeVisible();
+    await expect(toolbar.getByRole('button', { name: 'Penerbitan', exact: true })).toBeVisible();
+    const more = toolbar.getByRole('button', { name: 'Tindakan lainnya' });
+    const composition = page.getByRole('button', { name: 'Komposisi paket', exact: true });
+    await expect(composition).toBeHidden();
+    await more.click();
+    await expect(composition).toBeVisible();
+    const menu = page.locator('#tryout-package-actions');
+    const menuBounds = await menu.boundingBox();
+    expect(menuBounds!.x).toBeGreaterThanOrEqual(0);
+    expect(menuBounds!.x + menuBounds!.width).toBeLessThanOrEqual(width);
+    await page.screenshot({ path: testInfo.outputPath(`tryout-menu-${width}.png`) });
+    await more.press('Escape');
+    await expect(composition).toBeHidden();
+    await expect(more).toBeFocused();
+    await more.click();
+    await composition.click();
+    await expect(page.getByRole('dialog', { name: 'Komposisi paket', exact: true })).toBeVisible();
+    await expect(menu).toBeHidden();
+    await page.getByRole('dialog').press('Escape');
+    await more.click();
+    await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
+    await expect(
+      page.getByRole('dialog', { name: 'Akses siswa dan informasi versi' }),
+    ).toBeVisible();
+    await page.getByRole('dialog').press('Escape');
+    if (width === 1440) {
+      const back = await toolbar.getByRole('link', { name: /Kembali ke daftar/ }).boundingBox();
+      const publish = await toolbar
+        .getByRole('button', { name: 'Penerbitan', exact: true })
+        .boundingBox();
+      expect(Math.abs(back!.y - publish!.y)).toBeLessThan(12);
+    }
+    await page.screenshot({
+      path: testInfo.outputPath(`tryout-detail-${width}.png`),
+      fullPage: true,
+    });
     await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
     await expect(
       page.getByRole('link', { name: 'Batch Tryout', exact: true }).last(),
@@ -114,7 +154,8 @@ test('detail redirects the wrong kind, renames DRAFT, and never fetches a packag
   const { fixture } = await setupAssessments(page);
   await page.goto(`/admin/assessments/pretest/${id(9100)}?offset=10`);
   await expect(page).toHaveURL(new RegExp(`/tryout/${id(9100)}\\?offset=10`));
-  await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
+  await page.getByRole('button', { name: 'Tindakan lainnya' }).click();
+  await page.getByRole('button', { name: 'Komposisi paket', exact: true }).click();
   await page.getByLabel('Nama paket', { exact: true }).fill('Renamed TEST');
   await page.getByRole('button', { name: 'Simpan nama', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Renamed TEST', exact: true })).toBeVisible();

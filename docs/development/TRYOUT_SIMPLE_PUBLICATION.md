@@ -30,6 +30,12 @@ menghasilkan 40 assignment per paket.
 
 ## Kontrak
 
+**ENGINEERING DECISION — instruksi UI pemilik, 26 November 2026.** Detail paket
+Tryout menempatkan publikasi dan ekspor PDF pada bar atas bersama Kembali ke
+daftar. Batch Tryout, komposisi/pengaturan, akses siswa, syarat penerbitan dan
+generator berada dalam menu titik tiga. Identitas dan kelengkapan memakai
+ringkasan padat yang menyesuaikan layar. Aturan API dan otorisasi tetap berlaku.
+
 - `packageIds`: 1–5 UUID unik.
 - `schools`: `{ schoolId, packageIds }[]`; subset tidak boleh kosong.
 - `mandiriPackageIds`: subset; array kosong menutup target Mandiri.
