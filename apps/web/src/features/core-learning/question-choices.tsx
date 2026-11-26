@@ -136,9 +136,10 @@ export function QuestionChoices({
             key={option.id}
             className="practice-option"
             onClick={(event) => {
+              if (!(event.target instanceof Element)) return;
+              const nestedControl = event.target.closest(nestedControls);
               if (
-                !(event.target instanceof Element) ||
-                event.target.closest(nestedControls) ||
+                (nestedControl && event.currentTarget.contains(nestedControl)) ||
                 window.getSelection()?.toString()
               )
                 return;

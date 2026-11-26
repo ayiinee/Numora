@@ -4,28 +4,39 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { QuestionChoices } from './question-choices';
 afterEach(cleanup);
 
-it('selects a single answer by clicking a scrollable formula and respects disabled choices', () => {
+it('selects from a focusable page and respects disabled choices', () => {
   const onChange = vi.fn();
-  const renderChoice = (text: string) => <span role="region" tabIndex={0}>{text}</span>;
+  const renderChoice = (text: string) => (
+    <span role="region" tabIndex={0}>
+      {text}
+    </span>
+  );
   const fixture = (disabled = false) => (
-    <QuestionChoices
-      assessment
-      kind="SINGLE_CHOICE"
-      name="answer"
-      options={[{ id: 'A', text: 'Rumus jawaban' }]}
-      renderContent={renderChoice}
-      value={null}
-      onChange={onChange}
-      disabled={disabled}
-    />
+    <main tabIndex={-1}>
+      <QuestionChoices
+        assessment
+        kind="SINGLE_CHOICE"
+        name="answer"
+        options={[
+          { id: 'A', text: 'Rumus jawaban' },
+          { id: 'B', text: 'Angka biasa' },
+        ]}
+        renderContent={(text, id) => (id === 'A' ? renderChoice(text) : <span>{text}</span>)}
+        value={null}
+        onChange={onChange}
+        disabled={disabled}
+      />
+    </main>
   );
   const view = render(fixture());
   fireEvent.click(screen.getByText('Rumus jawaban'));
   expect(onChange).toHaveBeenCalledExactlyOnceWith('A');
+  fireEvent.click(screen.getByText('Angka biasa'));
+  expect(onChange).toHaveBeenLastCalledWith('B');
 
   view.rerender(fixture(true));
   fireEvent.click(screen.getByText('Rumus jawaban'));
-  expect(onChange).toHaveBeenCalledTimes(1);
+  expect(onChange).toHaveBeenCalledTimes(2);
 });
 
 it('changes multiple selections independently and preserves option order', () => {
