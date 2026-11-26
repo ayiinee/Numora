@@ -81,6 +81,9 @@ export function QuestionChoices({
   }
   const multiple = kind === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER';
   const selected = Array.isArray(value) ? value : [];
+  const nestedControls = multiple
+    ? 'input, button, a, [tabindex]'
+    : 'input, button, a, [tabindex]:not([role="region"])';
   return (
     <fieldset
       disabled={disabled}
@@ -135,7 +138,7 @@ export function QuestionChoices({
             onClick={(event) => {
               if (
                 !(event.target instanceof Element) ||
-                event.target.closest('input, button, a, [tabindex]') ||
+                event.target.closest(nestedControls) ||
                 window.getSelection()?.toString()
               )
                 return;
