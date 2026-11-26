@@ -3319,9 +3319,17 @@ describe.skipIf(!testUrl)(
       const correctOptionId = q.answer.optionId;
       const packageIds: string[] = [];
       let questionIds: string[] = [];
+      const generatedFamily = `GENERATOR-${suffix}`;
+      const generated = await ok<{ id: string }>('admin/content/packages', 'POST', {
+        familyCode: generatedFamily,
+        packageVersion: 1,
+        name: 'TEST ONLY generated source before curriculum revision',
+        assessmentType: 'TRYOUT',
+        source,
+      });
       for (let n = 0; n < 3; n++) {
         const p = await ok<{ id: string }>('admin/content/packages', 'POST', {
-          familyCode: `BATCH-${suffix}`,
+          familyCode: n === 1 ? generatedFamily : `BATCH-${suffix}`,
           packageVersion: n + 1,
           name: `TEST ONLY batch package ${n}`,
           assessmentType: 'TRYOUT',
@@ -3373,6 +3381,31 @@ describe.skipIf(!testUrl)(
         });
         await ok(`admin/content/packages/${p.id}/publish`, 'POST', { expectedRevision: 1 });
       }
+      const pairCheck = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+        title: 'TEST ONLY cross-family revision',
+        newWaveTitle: 'TEST ONLY cross-family revision',
+        startsAt: new Date(Date.now() + 3600000).toISOString(),
+        closesAt: new Date(Date.now() + 7200000).toISOString(),
+        packageIds: packageIds.slice(0, 2),
+        mandiriPackageId: packageIds[0],
+        schools: [],
+      });
+      const unlinked = await request(`admin/tryout-batches/${pairCheck.id}/publish`, 'POST', {
+        expectedRevision: 1,
+      });
+      expect(unlinked.status).toBe(400);
+      expect(await unlinked.text()).toContain('relasi original/varian');
+      const [reviewer] = await owner`SELECT id FROM users WHERE display_name='admin'`;
+      const refs = JSON.stringify(Array.from({ length: 30 }, () => randomUUID()));
+      await owner`INSERT INTO generator_packages(actor_user_id,operation_key,operation_fingerprint,assessment_type,title,expected_count,source_package_id,mapping_ids,request_ids,canonical_package_id)
+        VALUES(${reviewer!.id},${randomUUID()},'TEST ONLY','TRYOUT','TEST ONLY generator provenance',30,${packageIds[0]!},${refs}::jsonb,${refs}::jsonb,${generated.id})`;
+      // Selected revision has a different ID from the generator's canonical package, same generated family.
+      expect(generated.id).not.toBe(packageIds[1]);
+      await ok(`admin/tryout-batches/${pairCheck.id}/publish`, 'POST', { expectedRevision: 1 });
+      await ok(`admin/tryout-batches/${pairCheck.id}/cancel`, 'POST', {
+        expectedRevision: 2,
+        reason: 'TEST ONLY pair verified',
+      });
       const schoolA = randomUUID(),
         schoolB = randomUUID(),
         schoolC = randomUUID();

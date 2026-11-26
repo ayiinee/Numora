@@ -618,14 +618,15 @@ function BatchForm({
     (p) =>
       (!waveMode || (!form.waveId && form.packageIds.length < 2)) &&
       !form.packageIds.includes(p.id) &&
-      (!primaryPackage ||
+      (waveMode ||
+        !primaryPackage ||
         (Boolean(primaryPackage.familyCode) && p.familyCode === primaryPackage.familyCode)),
   );
   useEffect(() => {
     let active = true;
     setOptionLoading(true);
     apiRequest<TryoutBatchOptionsDto>(
-      `admin/tryout-batches/options?limit=100&offset=0&search=${encodeURIComponent(search)}${primaryPackage?.familyCode ? `&familyCode=${encodeURIComponent(primaryPackage.familyCode)}` : ''}`,
+      `admin/tryout-batches/options?limit=100&offset=0&search=${encodeURIComponent(search)}${!waveMode && primaryPackage?.familyCode ? `&familyCode=${encodeURIComponent(primaryPackage.familyCode)}` : ''}`,
       token,
     )
       .then((v) => {
@@ -655,7 +656,7 @@ function BatchForm({
     return () => {
       active = false;
     };
-  }, [token, search, primaryPackage?.familyCode, accessError]);
+  }, [token, search, primaryPackage?.familyCode, waveMode, accessError]);
   async function save() {
     setPending(true);
     onBusy?.(true);
@@ -1191,8 +1192,8 @@ function BatchExtensionForm({
           />
         </label>
         <p>
-          Perpanjangan berlaku untuk jadwal batch. Sesi yang sudah dimulai tetap memakai batas
-          waktu awal.
+          Perpanjangan berlaku untuk jadwal batch. Sesi yang sudah dimulai tetap memakai batas waktu
+          awal.
         </p>
         <p>Batas penerbitan hasil mengikuti waktu tutup baru +72 jam.</p>
         {error && <p role="alert">{error}</p>}

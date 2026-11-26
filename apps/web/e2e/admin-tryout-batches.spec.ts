@@ -57,7 +57,13 @@ test('batch creation, school delegation and compact detail work across viewports
   const packageInfo = { familyCode: 'TEST', status: 'PUBLISHED', usedBatchCount: 2, valid: true };
   const packages = [
     { ...packageInfo, id: id(9401), name: 'TEST Original', packageVersion: 1 },
-    { ...packageInfo, id: id(9402), name: 'TEST Variant', packageVersion: 1 },
+    {
+      ...packageInfo,
+      familyCode: 'GENERATOR_TEST',
+      id: id(9402),
+      name: 'TEST Variant',
+      packageVersion: 2,
+    },
   ];
   const schools = [
     { schoolId: id(9501), schoolName: 'TEST School A' },
@@ -67,8 +73,10 @@ test('batch creation, school delegation and compact detail work across viewports
   await page.route('**/api/v1/admin/tryout-batches**', async (route) => {
     const req = route.request();
     const url = new URL(req.url());
-    if (url.pathname.endsWith('/options'))
+    if (url.pathname.endsWith('/options')) {
+      expect(url.searchParams.has('familyCode')).toBe(false);
       return route.fulfill({ json: { packages, schools, packageTotal: 2, schoolTotal: 2 } });
+    }
     if (req.method() === 'POST' && url.pathname.endsWith('/publish')) {
       batch = { ...batch!, state: 'SCHEDULED', revision: batch!.revision + 1 };
       return route.fulfill({ json: { id: batch.id } });
@@ -157,11 +165,6 @@ test('batch creation, school delegation and compact detail work across viewports
   );
   await page.getByRole('button', { name: 'Cari', exact: true }).click();
   await searched;
-  const familyRequest = page.waitForRequest(
-    (r) =>
-      r.url().includes('/tryout-batches/options?') &&
-      new URL(r.url()).searchParams.get('familyCode') === 'TEST',
-  );
   for (const [index, p] of packages.entries()) {
     if (index > 0)
       await page.getByRole('button', { name: 'Tambah paket tambahan', exact: true }).click();
@@ -172,7 +175,6 @@ test('batch creation, school delegation and compact detail work across viewports
       .click();
     await expect(page.getByRole('dialog')).not.toBeVisible();
   }
-  await familyRequest;
   const selectedPanel = await page
     .getByRole('region', { name: 'Paket soal', exact: true })
     .boundingBox();
