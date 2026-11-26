@@ -329,6 +329,29 @@ test('wave opportunity used hides start and explains eligibility', async ({ page
   await expect(page.getByRole('button', { name: 'Mulai Tryout', exact: true })).toHaveCount(0);
 });
 
+test('late school member can start published batch without a roster assignment', async ({ page }) => {
+  await fixture(page);
+  await page.route('**/api/v1/tryout/batches', (route) => route.fulfill({ json: {
+    routingActive: true, items: [{ id: past, title: 'TEST published before enrollment', state: 'OPEN',
+      startsAt: '2026-01-01T00:00:00Z', closesAt: '2099-01-01T00:00:00Z', resultDueAt: '2099-01-04T00:00:00Z',
+      schools: [{ schoolId: chapter, schoolName: 'TEST School A' }], mandiri: false,
+      attemptId: null, attemptStatus: null, startBlockedReason: null }],
+  } }));
+  let selected: unknown;
+  await page.route(`**/api/v1/tryout/batches/${past}/attempts`, async (route) => {
+    selected = route.request().postDataJSON();
+    await route.fulfill({ status: 201, json: { id: attempt } });
+  });
+  await page.goto('/student/tryout');
+  await expect(page.getByRole('heading', { name: 'TEST published before enrollment' })).toBeVisible();
+  await page.getByRole('button', { name: 'Mulai Tryout', exact: true }).click();
+  const rules = page.getByRole('dialog', { name: 'Aturan pengerjaan Tryout' });
+  await rules.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
+  await rules.getByRole('button', { name: 'Mulai pengerjaan' }).click();
+  await expect(page).toHaveURL(`/student/tryout/${attempt}`);
+  expect(selected).toEqual({ schoolId: chapter });
+});
+
 test('delegated Tryout asks multi-school students to choose one school before starting', async ({
   page,
 }) => {

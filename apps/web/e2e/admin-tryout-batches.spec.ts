@@ -179,6 +179,7 @@ test('batch creation, school delegation and compact detail work across viewports
   expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
   await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
   await expect(page.getByText(/Hanya sekolah terpilih yang mendapat akses/)).toBeVisible();
+  await expect(page.getByText(/Siswa boleh bergabung setelah publikasi/)).toBeVisible();
   await page.getByLabel('Nama gelombang', { exact: true }).fill('TEST wave');
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
   await page.getByLabel('Mulai (WIB)', { exact: true }).fill('2099-01-01T08:00');

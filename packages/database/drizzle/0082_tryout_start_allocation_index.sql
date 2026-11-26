@@ -1,0 +1,1 @@
+CREATE INDEX "tryout_assignments_batch_school_package_idx" ON "tryout_student_assignments" USING btree ("batch_id","school_id","package_id");
