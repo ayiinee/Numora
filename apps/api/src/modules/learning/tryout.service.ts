@@ -128,17 +128,15 @@ export class TryoutService {
     const packs = await db
       .select({
         id: assessmentPackages.id,
-        curriculumApproval: assessmentPackages.curriculumApproval,
-        blueprintVersionId: assessmentPackages.blueprintVersionId,
-        frozenAt: assessmentPackages.frozenAt,
-        manifestDigest: assessmentPackages.manifestDigest,
         scoringPolicyVersionId: assessmentPackages.scoringPolicyVersionId,
+        technicallyReady:
+          sql<boolean>`not exists(select 1 from public.tryout_package_issues(${assessmentPackages.id}) where code <> 'SCORING')`.mapWith(
+            Boolean,
+          ),
       })
       .from(assessmentPackages)
       .where(inArray(assessmentPackages.id, packageIds));
-    const eligible = [];
-    for (const pack of packs)
-      if (!(await tryoutTechnicalIssues(db, pack.id)).length) eligible.push(pack);
+    const eligible = packs.filter((pack) => pack.technicallyReady);
     const stats =
       statistics ??
       (await this.itemStatistics(
