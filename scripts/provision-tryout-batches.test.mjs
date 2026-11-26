@@ -18,7 +18,7 @@ function fixture() {
         waves: state.waves,
         packages: [config.originalPackageId, config.variantPackageId].map((packageId) => ({
           id: packageId,
-          familyCode: 'FAMILY',
+          familyCode: packageId === config.originalPackageId ? 'UPLOAD-TEST' : 'GENERATOR_TEST',
           valid: true,
           status: 'PUBLISHED',
         })),

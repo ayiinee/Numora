@@ -1,3 +1,5 @@
+**ENGINEERING DECISION — 26 November 2026:** pasangan Tryout generator/revisi boleh berbeda kode keluarga dari original jika relasi sumber generator durable cocok; gate publikasi/distribusi/policy tetap. Lihat docs/development/TRYOUT_SCHOOL_WAVES.md.
+
 **ENGINEERING DECISION - pemilik, 26 November 2026:** alokasi sekolah BALANCED_50_50 dilakukan saat start berdasarkan assignment attempt per batch/sekolah, termasuk batch existing. Publikasi tidak membekukan siswa; keanggotaan aktif diperiksa saat start. Sesi dan snapshot historis dipertahankan. [Aturan dan rollout](../development/TRYOUT_SCHOOL_WAVES.md).
 
 **ENGINEERING DECISION - konfigurasi pemilik, 26 November 2026:** [provisioning enam batch sekolah](../development/TRYOUT_SCHOOL_WAVES.md#provisioning-vps-setelah-pull) memakai satu gelombang dan pasangan paket yang ditentukan, 26 November 04.00 WIB sampai 3 Desember 04.00 WIB. Publikasi melalui API Admin setelah aktivasi VPS; bukan bukti data produksi sudah dibuat.

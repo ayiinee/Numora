@@ -75,10 +75,7 @@ export async function provision(config, api, { apply = false, now = Date.now() }
     selected.every((p) => p?.valid && p.status === 'PUBLISHED'),
     'Kedua paket harus terbit, non-demo dan tersedia.',
   );
-  assert(
-    selected[0].familyCode === selected[1].familyCode,
-    'Parent code paket berbeda; publikasi akan ditolak API.',
-  );
+  // Pair lineage is validated by the backend; generated variants have a different family code.
   const waves = options.waves.filter((w) => normalize(w.title) === normalize(config.waveTitle));
   assert(waves.length <= 1, 'Nama gelombang ambigu.');
   let waveId = waves[0]?.id;

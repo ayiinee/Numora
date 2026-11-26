@@ -1,5 +1,7 @@
 # Gelombang dan akses Tryout - 25 November 2026
 
+**ENGINEERING DECISION — perbaikan validasi pasangan, 26 November 2026:** kode keluarga impor bukan identitas pasangan original/varian. Paket generated dan revisi Kurikulumnya boleh berbeda family code dari original bila relasi sumber generator tersimpan menghubungkan pasangan tersebut. Backend memverifikasi relasi generator durable, bukan nama paket atau metadata bebas. Validasi publikasi, policy, distribusi dan pasangan gelombang tetap berlaku. Parent code sama tidak membuktikan linking/kelayakan statistik IRT.
+
 **ENGINEERING DECISION - instruksi pemilik, 26 November 2026:** provisioning enam sekolah memakai konfigurasi `scripts/tryout-schools-20261126.json`, original `331115ad-8569-468d-9382-e8577c7afd55` dan varian revisi Kurikulum `5fc03163-4ca0-4c17-8db5-eaa86b825ae7`. Nama batch `TRY OUT TKA <NAMA SEKOLAH>`, mulai 26 November 2026 04.00 WIB dan tutup 3 Desember 2026 04.00 WIB, langsung publikasi. Satu gelombang bersama, tanpa penerima Mandiri. Ini konfigurasi operasional, bukan bukti data produksi sudah dibuat.
 
 **ENGINEERING DECISION - persetujuan pemilik:** batch baru memakai gelombang Admin dengan pasangan versi original/varian tetap. Target adalah sekolah terpilih atau Mandiri, tanpa fallback sekolah lain. Identitas sekolah berasal dari keanggotaan kelas aktif; sekolah nonaktif tidak menjadi Mandiri. Satu kesempatan per akun/sekolah/gelombang atau satu Mandiri; lintas sekolah boleh, lintas sekolah-Mandiri tidak. Kesempatan terpakai saat attempt dibuat, termasuk bila kemudian dihentikan. Gelombang baru tidak menghapus exposure.
@@ -14,7 +16,7 @@ Konfigurasi dan penerima batch bergelombang dikunci saat publikasi untuk menjaga
 
 ### Provisioning VPS setelah pull
 
-Jalankan dari root repo sesudah dependency, migrasi hingga `0082`, build dan restart API/worker selesai. Sekolah harus sudah aktif, nama harus cocok (case/spasi dinormalisasi), paket harus terbit dan punya parent code sama. Siswa boleh bergabung setelah publikasi; wajib memiliki keanggotaan kelas aktif sekolah tujuan saat mulai. Script tidak membuat sekolah, akun, paket atau keanggotaan kelas.
+Jalankan dari root repo sesudah dependency, migrasi hingga `0082`, build dan restart API/worker selesai. Sekolah harus sudah aktif, nama harus cocok (case/spasi dinormalisasi), paket harus terbit dan satu keluarga atau memiliki relasi sumber generator yang tercatat. Siswa boleh bergabung setelah publikasi; wajib memiliki keanggotaan kelas aktif sekolah tujuan saat mulai. Script tidak membuat sekolah, akun, paket atau keanggotaan kelas.
 
 Gunakan token sesi Admin berizin `CONTENT_MANAGE`; jangan kirim token lewat chat atau commit. Isi `NUMORA_API_URL` dengan URL API NestJS sebenarnya yang berakhiran `/api/v1` (bukan URL frontend). HTTPS wajib kecuali localhost. Contoh Bash di VPS, input token disembunyikan:
 

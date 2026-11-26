@@ -396,10 +396,31 @@ export class TryoutBatchesService {
       .select({ familyCode: assessmentPackages.familyCode })
       .from(assessmentPackages)
       .where(inArray(assessmentPackages.id, body.packageIds));
-    if (new Set(selected.map((p) => p.familyCode)).size > 1)
-      throw new BadRequestException(
-        'Semua paket dalam batch harus memiliki parent code yang sama agar anchor IRT seimbang.',
-      );
+    if (new Set(selected.map((p) => p.familyCode)).size > 1) {
+      // Generated revisions retain their generated family, not the source family's code.
+      const [lineage] =
+        body.packageIds.length === 2
+          ? await tx.execute<{ related: boolean }>(sql`
+            SELECT EXISTS (
+              SELECT 1 FROM (
+                SELECT source_package_id, canonical_package_id AS generated_package_id
+                FROM generator_packages WHERE canonical_package_id IS NOT NULL
+                UNION ALL
+                SELECT source_package_id, generated_package_id
+                FROM tryout_variant_generation_processes WHERE generated_package_id IS NOT NULL
+              ) g
+              JOIN assessment_packages generated ON generated.id=g.generated_package_id
+              JOIN assessment_packages candidate ON candidate.family_code=generated.family_code
+              WHERE (g.source_package_id=${body.packageIds[0]}::uuid AND candidate.id=${body.packageIds[1]}::uuid)
+                 OR (g.source_package_id=${body.packageIds[1]}::uuid AND candidate.id=${body.packageIds[0]}::uuid)
+            ) AS related
+          `)
+          : [];
+      if (!lineage?.related)
+        throw new BadRequestException(
+          'Paket harus satu keluarga atau memiliki relasi original/varian generator yang tercatat.',
+        );
+    }
   }
   extend(actor: string, id: string, body: ExtendTryoutBatchDto) {
     const audit = { ...body, previousClosesAt: '' };
