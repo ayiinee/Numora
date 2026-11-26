@@ -110,7 +110,7 @@ test('Tryout package publication delegates scheduling to Batch Tryout', async ({
   await expect(publication.getByLabel('Bukti persetujuan tim kurikulum')).toHaveCount(0);
   await publish.click();
   await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
-  await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeDisabled();
+  await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toHaveCount(0);
   expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
     expectedRevision: 1,
   });
