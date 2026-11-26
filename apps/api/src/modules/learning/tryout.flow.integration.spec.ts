@@ -398,7 +398,10 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, a.id));
     expect(beforeClockSkew!.deadlineAt?.getTime()).toBe(
-      Math.min(beforeClockSkew!.startedAt.getTime() + 1_800_000, tryoutBatchCloseAt(releaseAt).getTime()),
+      Math.min(
+        beforeClockSkew!.startedAt.getTime() + 4_500_000,
+        tryoutBatchCloseAt(releaseAt).getTime(),
+      ),
     );
     const wallTime = Date.now();
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -413,7 +416,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       expect(resumed.deadlineAt).toBe(a.deadlineAt);
       expect(await tryout.current('student')).toMatchObject({
         state: 'inProgress',
-        durationSeconds: 1800,
+        durationSeconds: 4500,
       });
     } finally {
       vi.useRealTimers();
