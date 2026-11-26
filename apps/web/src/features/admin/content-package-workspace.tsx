@@ -633,7 +633,9 @@ export function ContentPackageWorkspace({
             </label>
           )}
           {usage === 'TRYOUT' && (
-            <p>Tryout dapat memuat soal lintas bab. Blueprint Curriculum menentukan komposisi.</p>
+            <p>
+              Tryout memuat 30 soal. Lengkapi soal, jawaban dan pembahasan untuk menerbitkan paket.
+            </p>
           )}
           <label>
             Kode sumber stabil
@@ -695,7 +697,11 @@ export function ContentPackageWorkspace({
                       Generate varian paket
                     </Link>
                   ) : (
-                    <Button variant="secondary" disabled title="Mapping generator belum lengkap untuk 25 focal soal.">
+                    <Button
+                      variant="secondary"
+                      disabled
+                      title="Mapping generator belum lengkap untuk 25 focal soal."
+                    >
                       {variantAvailable === null ? 'Memeriksa generator…' : 'Generate varian paket'}
                     </Button>
                   ))}
@@ -716,13 +722,18 @@ export function ContentPackageWorkspace({
                 <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
                   Komposisi paket
                 </Button>
-                <Button variant="secondary" onClick={() => { setSettingsName(detail.name); setCompositionOpen(true); }}>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSettingsName(detail.name);
+                    setCompositionOpen(true);
+                  }}
+                >
                   Pengaturan
                 </Button>
                 <Button onClick={() => setPublicationOpen(true)}>
                   {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
                 </Button>
-
               </div>
             </header>
             <div className="assessment-detail-metrics">
@@ -735,12 +746,12 @@ export function ContentPackageWorkspace({
               </div>
               <div>
                 <span>
-                  {detail.assessmentType === 'PRETEST' ? 'Isi soal valid' : 'Soal ditinjau'}
+                  {detail.assessmentType !== 'DRILL' ? 'Isi soal valid' : 'Soal ditinjau'}
                 </span>
                 <strong>
                   {
                     detail.items.filter((item) =>
-                      detail.assessmentType === 'PRETEST'
+                      detail.assessmentType !== 'DRILL'
                         ? item.question && !item.validationIssues?.length
                         : item.reviewedAt,
                     ).length
@@ -766,7 +777,7 @@ export function ContentPackageWorkspace({
               </p>
             </div>
           )}
-          {detail.assessmentType !== 'PRETEST' &&
+          {detail.assessmentType === 'DRILL' &&
             detail.status === 'DRAFT' &&
             detail.items.some((item) => !item.reviewedAt) && (
               <div className="assessment-inline-warning" role="status">
@@ -813,8 +824,29 @@ export function ContentPackageWorkspace({
             className="admin-management-dialog assessment-settings-dialog"
           >
             <div className="assessment-detail-workspace assessment-detail-settings-body">
-              <label>Nama paket<input aria-label="Nama paket" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></label>
-              <Button variant="secondary" onClick={() => void run(async () => { await updateContentPackage(token, detail.id, { name: settingsName, expectedRevision: detail.contentRevision, questionVersionIds: detail.items.map((item) => item.questionVersionId) }); await choose(detail.id); })}>Simpan nama</Button>
+              <label>
+                Nama paket
+                <input
+                  aria-label="Nama paket"
+                  value={settingsName}
+                  onChange={(e) => setSettingsName(e.target.value)}
+                />
+              </label>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  void run(async () => {
+                    await updateContentPackage(token, detail.id, {
+                      name: settingsName,
+                      expectedRevision: detail.contentRevision,
+                      questionVersionIds: detail.items.map((item) => item.questionVersionId),
+                    });
+                    await choose(detail.id);
+                  })
+                }
+              >
+                Simpan nama
+              </Button>
               <p>
                 {[
                   detail.chapterName,
@@ -907,11 +939,11 @@ export function ContentPackageWorkspace({
                       <tr>
                         <th scope="col">No.</th>
                         <th scope="col">Soal</th>
-                        {detail.assessmentType !== 'PRETEST' && <th scope="col">Kelengkapan</th>}
+                        {detail.assessmentType === 'DRILL' && <th scope="col">Kelengkapan</th>}
                         <th scope="col">
-                          {detail.assessmentType === 'PRETEST' ? 'Validasi' : 'Tinjauan'}
+                          {detail.assessmentType !== 'DRILL' ? 'Validasi' : 'Tinjauan'}
                         </th>
-                        {detail.assessmentType === 'PRETEST' && <th scope="col">Masalah</th>}
+                        {detail.assessmentType !== 'DRILL' && <th scope="col">Masalah</th>}
                         <th scope="col">Aksi</th>
                       </tr>
                     </thead>
@@ -929,7 +961,7 @@ export function ContentPackageWorkspace({
                                 : 'Data soal perlu diperiksa'}
                             </small>
                           </td>
-                          {detail.assessmentType !== 'PRETEST' && (
+                          {detail.assessmentType === 'DRILL' && (
                             <td>
                               <Badge variant={item.question ? 'success' : 'warning'}>
                                 {item.question ? 'Isi terbaca' : 'Perlu diperbaiki'}
@@ -939,7 +971,7 @@ export function ContentPackageWorkspace({
                           <td>
                             <Badge
                               variant={
-                                detail.assessmentType === 'PRETEST'
+                                detail.assessmentType !== 'DRILL'
                                   ? item.question && !item.validationIssues?.length
                                     ? 'success'
                                     : 'warning'
@@ -948,7 +980,7 @@ export function ContentPackageWorkspace({
                                     : 'default'
                               }
                             >
-                              {detail.assessmentType === 'PRETEST'
+                              {detail.assessmentType !== 'DRILL'
                                 ? item.question && !item.validationIssues?.length
                                   ? 'Aman'
                                   : 'Perlu diperbaiki'
@@ -957,7 +989,7 @@ export function ContentPackageWorkspace({
                                   : 'Belum ditinjau'}
                             </Badge>
                           </td>
-                          {detail.assessmentType === 'PRETEST' && (
+                          {detail.assessmentType !== 'DRILL' && (
                             <td>
                               {item.validationIssues?.length || !item.question ? (
                                 <ul>
@@ -974,7 +1006,7 @@ export function ContentPackageWorkspace({
                             </td>
                           )}
                           <td>
-                            {detail.assessmentType === 'PRETEST' &&
+                            {detail.assessmentType !== 'DRILL' &&
                             (item.validationIssues?.length || !item.question) ? (
                               <>
                                 {detail.status === 'DRAFT' && item.scoringRepairRequired ? (
@@ -1005,7 +1037,7 @@ export function ContentPackageWorkspace({
                                   setReviewStep(1);
                                 }}
                               >
-                                {detail.assessmentType === 'PRETEST' ? 'Lihat soal' : 'Tinjau'}
+                                {detail.assessmentType !== 'DRILL' ? 'Lihat soal' : 'Tinjau'}
                               </Button>
                             )}
                           </td>
@@ -1069,18 +1101,16 @@ export function ContentPackageWorkspace({
                       Berikutnya
                     </Button>
                   </div>
-                  {detail.items.some(
-                    (item) => {
-                      const question = item.question;
-                      return Boolean(
-                        item.questionVersionId === inspectingId &&
-                          question &&
-                          (question.metadata.assetManifest.length ||
-                            question.stem.text.includes('[[asset:') ||
-                            question.explanation.text.includes('[[asset:')),
-                      );
-                    },
-                  ) && (
+                  {detail.items.some((item) => {
+                    const question = item.question;
+                    return Boolean(
+                      item.questionVersionId === inspectingId &&
+                      question &&
+                      (question.metadata.assetManifest.length ||
+                        question.stem.text.includes('[[asset:') ||
+                        question.explanation.text.includes('[[asset:')),
+                    );
+                  }) && (
                     <Button variant="secondary" onClick={loadMedia} disabled={locked}>
                       Muat gambar
                     </Button>
@@ -1116,7 +1146,9 @@ export function ContentPackageWorkspace({
                             {assets.map((asset) => (
                               <li key={asset.assetId}>
                                 <strong>{asset.assetId}</strong>
-                                <span>{ready.has(asset.assetId) ? 'Siap' : 'Perlu diperbaiki'}</span>
+                                <span>
+                                  {ready.has(asset.assetId) ? 'Siap' : 'Perlu diperbaiki'}
+                                </span>
                                 <small>{asset.altText}</small>
                               </li>
                             ))}
@@ -1140,211 +1172,229 @@ export function ContentPackageWorkspace({
                         const issues = selected?.validationIssues ?? [];
                         return issues.length ? (
                           <ul className="content-blocker-list">
-                            {issues.map((issue) => <li key={issue}><small>{issue}</small></li>)}
+                            {issues.map((issue) => (
+                              <li key={issue}>
+                                <small>{issue}</small>
+                              </li>
+                            ))}
                           </ul>
                         ) : (
-                          <p>Validasi isi soal lulus. Periksa kembali gambar, kunci, dan pembahasan.</p>
+                          <p>
+                            Validasi isi soal lulus. Periksa kembali gambar, kunci, dan pembahasan.
+                          </p>
                         );
                       })()}
-                      <Button variant="secondary" onClick={() => void choose(detail.id)} disabled={locked}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => void choose(detail.id)}
+                        disabled={locked}
+                      >
                         Validasi ulang
                       </Button>
                     </section>
                   )}
-                  {(reviewStep === 1 || reviewStep === 4) && <ul className="monitoring-list assessment-detail-question-list">
-                    {detail.items
-                      .filter((item) => item.questionVersionId === inspectingId)
-                      .map((item) => (
-                        <li key={item.questionVersionId}>
-                          <div className="assessment-question-heading">
-                            <strong>Soal {item.displayOrder}</strong>
-                            <Badge variant={item.reviewedAt ? 'success' : 'warning'}>
-                              {detail.assessmentType === 'PRETEST'
-                                ? item.question && !item.validationIssues?.length
-                                  ? 'Aman'
-                                  : 'Perlu diperbaiki'
-                                : item.reviewedAt
-                                  ? 'Sudah ditinjau'
-                                  : 'Belum ditinjau'}
-                            </Badge>
-                          </div>
-                          <small className="assessment-question-code">
-                            Kode soal: {item.question?.externalId ?? item.questionVersionId}
-                          </small>
-                          {item.question ? (
-                            <>
-                              <Button variant="secondary" onClick={() => void loadMedia()}>Tampilkan gambar soal</Button>
-                              <ContentRichText
-                                text={item.question.stem.text}
-                                media={media}
-                                retry={loadMedia}
-                                renderBareMath
-                              />
-                              <ol>
-                                {item.question.options.map((o) => (
-                                  <li key={o.id}>
-                                    <strong>{o.id}.</strong>{' '}
+                  {(reviewStep === 1 || reviewStep === 4) && (
+                    <ul className="monitoring-list assessment-detail-question-list">
+                      {detail.items
+                        .filter((item) => item.questionVersionId === inspectingId)
+                        .map((item) => (
+                          <li key={item.questionVersionId}>
+                            <div className="assessment-question-heading">
+                              <strong>Soal {item.displayOrder}</strong>
+                              <Badge variant={item.reviewedAt ? 'success' : 'warning'}>
+                                {detail.assessmentType !== 'DRILL'
+                                  ? item.question && !item.validationIssues?.length
+                                    ? 'Aman'
+                                    : 'Perlu diperbaiki'
+                                  : item.reviewedAt
+                                    ? 'Sudah ditinjau'
+                                    : 'Belum ditinjau'}
+                              </Badge>
+                            </div>
+                            <small className="assessment-question-code">
+                              Kode soal: {item.question?.externalId ?? item.questionVersionId}
+                            </small>
+                            {item.question ? (
+                              <>
+                                <Button variant="secondary" onClick={() => void loadMedia()}>
+                                  Tampilkan gambar soal
+                                </Button>
+                                <ContentRichText
+                                  text={item.question.stem.text}
+                                  media={media}
+                                  retry={loadMedia}
+                                  renderBareMath
+                                />
+                                <ol>
+                                  {item.question.options.map((o) => (
+                                    <li key={o.id}>
+                                      <strong>{o.id}.</strong>{' '}
+                                      <ContentRichText
+                                        text={o.content.text}
+                                        media={media}
+                                        retry={loadMedia}
+                                        renderBareMath
+                                      />
+                                    </li>
+                                  ))}
+                                </ol>
+                                <details className="assessment-question-answer">
+                                  <summary>Jawaban dan pembahasan</summary>
+                                  <div>
+                                    <p>
+                                      <strong>Jawaban:</strong>{' '}
+                                      {Object.entries(item.question.answer)
+                                        .filter(([key]) => key !== 'type')
+                                        .map(([_key, value]) =>
+                                          typeof value === 'object' && value !== null
+                                            ? Array.isArray(value)
+                                              ? value.join(', ')
+                                              : Object.entries(value)
+                                                  .map(
+                                                    ([label, answer]) =>
+                                                      label + ': ' + String(answer),
+                                                  )
+                                                  .join('; ')
+                                            : String(value),
+                                        )
+                                        .join(' ? ')}
+                                    </p>
                                     <ContentRichText
-                                      text={o.content.text}
+                                      text={item.question.explanation.text}
                                       media={media}
                                       retry={loadMedia}
                                       renderBareMath
                                     />
-                                  </li>
-                                ))}
-                              </ol>
-                              <details className="assessment-question-answer">
-                                <summary>Jawaban dan pembahasan</summary>
-                                <div>
-                                  <p>
-                                    <strong>Jawaban:</strong>{' '}
-                                    {Object.entries(item.question.answer)
-                                      .filter(([key]) => key !== 'type')
-                                      .map(([_key, value]) =>
-                                        typeof value === 'object' && value !== null
-                                          ? Array.isArray(value)
-                                            ? value.join(', ')
-                                            : Object.entries(value)
-                                                .map(
-                                                  ([label, answer]) =>
-                                                    label + ': ' + String(answer),
-                                                )
-                                                .join('; ')
-                                          : String(value),
-                                      )
-                                      .join(' ? ')}
-                                  </p>
-                                  <ContentRichText
-                                    text={item.question.explanation.text}
-                                    media={media}
-                                    retry={loadMedia}
-                                    renderBareMath
-                                  />
-                                </div>
-                              </details>
-                            </>
-                          ) : (
-                            <div className="assessment-question-problem">
-                              <h4>Soal belum bisa ditinjau</h4>
-                              <p>
-                                Data soal ini belum lolos validasi. Buka pemeriksaan versi untuk
-                                melihat isi, metadata, dan langkah revisinya. Menandai review belum
-                                dapat dilakukan sebelum data valid.
-                              </p>
-                              {detail.legacyPreparation ? (
-                                <Button
-                                  variant="secondary"
-                                  onClick={() => {
-                                    setInspectingId(null);
-                                    setCompositionOpen(true);
-                                  }}
-                                >
-                                  Lengkapi sumber untuk impor perbaikan
-                                </Button>
-                              ) : (
+                                  </div>
+                                </details>
+                              </>
+                            ) : (
+                              <div className="assessment-question-problem">
+                                <h4>Soal belum bisa ditinjau</h4>
+                                <p>
+                                  Data soal ini belum lolos validasi. Buka pemeriksaan versi untuk
+                                  melihat isi, metadata, dan langkah revisinya. Menandai review
+                                  belum dapat dilakukan sebelum data valid.
+                                </p>
+                                {detail.legacyPreparation ? (
+                                  <Button
+                                    variant="secondary"
+                                    onClick={() => {
+                                      setInspectingId(null);
+                                      setCompositionOpen(true);
+                                    }}
+                                  >
+                                    Lengkapi sumber untuk impor perbaikan
+                                  </Button>
+                                ) : (
+                                  <Link
+                                    className="numora-button numora-button--secondary"
+                                    href={`/admin/content/imports?mode=json&type=${detail.assessmentType}&package=${encodeURIComponent(detail.id)}`}
+                                  >
+                                    Perbaiki melalui impor
+                                  </Link>
+                                )}
                                 <Link
                                   className="numora-button numora-button--secondary"
-                                  href={`/admin/content/imports?mode=json&type=${detail.assessmentType}&package=${encodeURIComponent(detail.id)}`}
+                                  href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
                                 >
-                                  Perbaiki melalui impor
+                                  Periksa / perbaiki soal
                                 </Link>
-                              )}
+                              </div>
+                            )}
+                            <p>
+                              {item.reviewedAt
+                                ? `Ditinjau pada ${new Date(item.reviewedAt).toLocaleString('id-ID')}`
+                                : 'Belum ditinjau'}{' '}
+                              · {item.contentStatus}
+                            </p>
+                            {item.question && (
                               <Link
-                                className="numora-button numora-button--secondary"
                                 href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
                               >
-                                Periksa / perbaiki soal
+                                Perbaiki soal
                               </Link>
-                            </div>
-                          )}
-                          <p>
-                            {item.reviewedAt
-                              ? `Ditinjau pada ${new Date(item.reviewedAt).toLocaleString('id-ID')}`
-                              : 'Belum ditinjau'}{' '}
-                            · {item.contentStatus}
-                          </p>
-                          {item.question && (
-                            <Link
-                              href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
-                            >
-                              Perbaiki soal
-                            </Link>
-                          )}
-                          <p className="assessment-question-removal-help">
-                            Mengeluarkan soal hanya mengubah isi paket ini. Soal tetap tersimpan di
-                            bank konten.
-                          </p>
-                          {detail.assessmentType !== 'PRETEST' && (
-                            <div className="assessment-question-review-note">
-                              {' '}
-                              <label>
-                                Catatan pemeriksaan soal ini
-                                <textarea
-                                  value={notes}
-                                  maxLength={1000}
-                                  rows={2}
-                                  placeholder="Catat hasil pemeriksaan materi, jawaban, dan pembahasan"
-                                  onChange={(event) => setNotes(event.target.value)}
-                                  disabled={locked || detail.status !== 'DRAFT'}
-                                />
-                              </label>
-                              <p className="assessment-review-help">
-                                Catatan ini hanya disimpan untuk soal yang sedang ditinjau.
-                              </p>
-                            </div>
-                          )}
-                          <div className="admin-content-actions">
-                            {detail.assessmentType !== 'PRETEST' && (
+                            )}
+                            <p className="assessment-question-removal-help">
+                              Mengeluarkan soal hanya mengubah isi paket ini. Soal tetap tersimpan
+                              di bank konten.
+                            </p>
+                            {detail.assessmentType === 'DRILL' && (
+                              <div className="assessment-question-review-note">
+                                {' '}
+                                <label>
+                                  Catatan pemeriksaan soal ini
+                                  <textarea
+                                    value={notes}
+                                    maxLength={1000}
+                                    rows={2}
+                                    placeholder="Catat hasil pemeriksaan materi, jawaban, dan pembahasan"
+                                    onChange={(event) => setNotes(event.target.value)}
+                                    disabled={locked || detail.status !== 'DRAFT'}
+                                  />
+                                </label>
+                                <p className="assessment-review-help">
+                                  Catatan ini hanya disimpan untuk soal yang sedang ditinjau.
+                                </p>
+                              </div>
+                            )}
+                            <div className="admin-content-actions">
+                              {detail.assessmentType === 'DRILL' && (
+                                <Button
+                                  variant="secondary"
+                                  disabled={locked || !item.question || detail.status !== 'DRAFT'}
+                                  onClick={() =>
+                                    void run(async () => {
+                                      await reviewImportedQuestion(
+                                        token,
+                                        item.questionVersionId,
+                                        notes,
+                                        detail.id,
+                                      );
+                                      await choose(detail.id);
+                                      setNotice(
+                                        `Soal ${item.displayOrder} ditandai sudah ditinjau.`,
+                                      );
+                                    })
+                                  }
+                                >
+                                  Tandai soal {item.displayOrder} sudah ditinjau
+                                </Button>
+                              )}
+                              {detail.assessmentType === 'DRILL' &&
+                                !item.reviewedAt &&
+                                detail.status === 'DRAFT' && (
+                                  <small className="assessment-review-help">
+                                    {!item.question
+                                      ? 'Soal belum lolos validasi; buka Periksa / perbaiki soal.'
+                                      : 'Soal siap ditandai sudah ditinjau. Catatan opsional.'}
+                                  </small>
+                                )}
                               <Button
                                 variant="secondary"
-                                disabled={locked || !item.question || detail.status !== 'DRAFT'}
+                                disabled={locked || detail.status !== 'DRAFT'}
                                 onClick={() =>
                                   void run(async () => {
-                                    await reviewImportedQuestion(
-                                      token,
-                                      item.questionVersionId,
-                                      notes,
-                                      detail.id,
-                                    );
+                                    await updateContentPackage(token, detail.id, {
+                                      name: detail.name,
+                                      expectedRevision: detail.contentRevision,
+                                      questionVersionIds: detail.items
+                                        .filter(
+                                          (i) => i.questionVersionId !== item.questionVersionId,
+                                        )
+                                        .map((i) => i.questionVersionId),
+                                    });
                                     await choose(detail.id);
-                                    setNotice(`Soal ${item.displayOrder} ditandai sudah ditinjau.`);
                                   })
                                 }
                               >
-                                Tandai soal {item.displayOrder} sudah ditinjau
+                                Keluarkan soal {item.displayOrder} dari paket
                               </Button>
-                            )}
-                            {detail.assessmentType !== 'PRETEST' &&
-                              !item.reviewedAt &&
-                              detail.status === 'DRAFT' && (
-                                <small className="assessment-review-help">
-                                  {!item.question
-                                    ? 'Soal belum lolos validasi; buka Periksa / perbaiki soal.'
-                                    : 'Soal siap ditandai sudah ditinjau. Catatan opsional.'}
-                                </small>
-                              )}
-                            <Button
-                              variant="secondary"
-                              disabled={locked || detail.status !== 'DRAFT'}
-                              onClick={() =>
-                                void run(async () => {
-                                  await updateContentPackage(token, detail.id, {
-                                    name: detail.name,
-                                    expectedRevision: detail.contentRevision,
-                                    questionVersionIds: detail.items
-                                      .filter((i) => i.questionVersionId !== item.questionVersionId)
-                                      .map((i) => i.questionVersionId),
-                                  });
-                                  await choose(detail.id);
-                                })
-                              }
-                            >
-                              Keluarkan soal {item.displayOrder} dari paket
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                  </ul>}
+                            </div>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                   {error && <p role="alert">{error}</p>}
                 </div>
               </Dialog>
@@ -1427,7 +1477,7 @@ export function ContentPackageWorkspace({
                           .
                         </p>
                       )}
-                    {detail.curriculumApproval && (
+                    {detail.assessmentType !== 'TRYOUT' && detail.curriculumApproval && (
                       <p>
                         Persetujuan tim kurikulum: {detail.curriculumApproval.reference} ·{' '}
                         {new Date(detail.curriculumApproval.approvedAt).toLocaleString('id-ID')}
@@ -1449,12 +1499,12 @@ export function ContentPackageWorkspace({
                 >
                   <h3>
                     {detail.status === 'DRAFT'
-                      ? detail.assessmentType === 'PRETEST'
-                        ? 'Terbitkan Pretest'
+                      ? detail.assessmentType !== 'DRILL'
+                        ? 'Terbitkan paket'
                         : 'Persetujuan dan penerbitan'
                       : 'Pengelolaan publikasi'}
                   </h3>
-                  {detail.status === 'DRAFT' && detail.assessmentType !== 'PRETEST' && (
+                  {detail.status === 'DRAFT' && detail.assessmentType === 'DRILL' && (
                     <div className="content-import-card">
                       <p className="assessment-publication-summary">
                         {detail.readiness.canPublish
@@ -1504,12 +1554,6 @@ export function ContentPackageWorkspace({
                       </details>
                       <div className="assessment-publish-step">
                         <h4>2. Terbitkan paket</h4>
-                        {detail.assessmentType === 'TRYOUT' && (
-                          <p>
-                            Publikasi menyiapkan konten. Atur jadwal dan peserta melalui{' '}
-                            <Link href="/admin/tryout-batches">Batch Tryout</Link>.
-                          </p>
-                        )}
                         <label>
                           <input
                             type="checkbox"
@@ -1536,7 +1580,7 @@ export function ContentPackageWorkspace({
                       </div>
                     </div>
                   )}
-                  {detail.status === 'DRAFT' && detail.assessmentType === 'PRETEST' && (
+                  {detail.status === 'DRAFT' && detail.assessmentType !== 'DRILL' && (
                     <div className="content-import-card">
                       {publicationProblems.length > 0 ? (
                         <div className="assessment-publication-problems" role="alert">

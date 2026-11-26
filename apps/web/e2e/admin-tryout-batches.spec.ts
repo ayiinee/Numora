@@ -78,7 +78,13 @@ test('batch creation, school delegation and compact detail work across viewports
       return route.fulfill({ json: { packages, schools, packageTotal: 2, schoolTotal: 2 } });
     }
     if (req.method() === 'POST' && url.pathname.endsWith('/publish')) {
-      batch = { ...batch!, state: 'SCHEDULED', revision: batch!.revision + 1 };
+      batch = {
+        ...batch!,
+        state: 'SCHEDULED',
+        editable: false,
+        delegationsEditable: false,
+        revision: batch!.revision + 1,
+      };
       return route.fulfill({ json: { id: batch.id } });
     }
     if (req.method() === 'POST' || req.method() === 'PATCH') {
@@ -105,10 +111,12 @@ test('batch creation, school delegation and compact detail work across viewports
         delegationsEditable: true,
         extendable: false,
         revision: 1,
-        mandiriPackageId: b.mandiriPackageId ?? null,
+        mandiriPackageId: b.mandiriPackageIds?.[0] ?? b.mandiriPackageId ?? null,
+        mandiriPackageIds: b.mandiriPackageIds ?? [],
         packages: packages.filter((p) => b.packageIds.includes(p.id)),
         schools: b.schools.map((s) => ({
           ...s,
+          packageId: s.packageIds?.[0] ?? s.packageId!,
           allocationMode: s.allocationMode ?? 'SINGLE_PACKAGE',
           variantPackageId: s.variantPackageId ?? null,
           schoolName: schools.find((k) => k.schoolId === s.schoolId)!.schoolName,
@@ -180,35 +188,29 @@ test('batch creation, school delegation and compact detail work across viewports
     .boundingBox();
   expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
   await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
-  await expect(page.getByText(/Hanya sekolah terpilih yang mendapat akses/)).toBeVisible();
+  await expect(page.getByText(/Pilih subset paket per sekolah/)).toBeVisible();
   await expect(page.getByText(/Siswa boleh bergabung setelah publikasi/)).toBeVisible();
   await page.getByLabel('Nama gelombang', { exact: true }).fill('TEST wave');
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
   await page.getByLabel('Mulai (WIB)', { exact: true }).fill('2099-01-01T08:00');
   await expect(page.getByLabel('Tutup (WIB)', { exact: true })).toHaveValue('2099-01-08T08:00');
   await page.getByLabel('Tutup (WIB)', { exact: true }).fill('2099-01-07T20:00');
-  await expect(
-    page.getByRole('combobox', { name: 'Akses Mandiri (original + varian seimbang)', exact: true }),
-  ).toBeEnabled();
-  for (const school of schools)
+  const mandiri = page.getByRole('group', { name: 'Paket siswa Mandiri', exact: true });
+  await expect(mandiri.getByRole('checkbox')).toHaveCount(2);
+  for (const school of schools) {
     await page
       .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
       .selectOption(school.schoolId);
-  await expect(
-    page.getByRole('combobox', { name: 'Akses Mandiri (original + varian seimbang)', exact: true }),
-  ).toBeDisabled();
-  for (const mode of await page
-    .getByRole('combobox', { name: 'Mode alokasi', exact: true })
-    .all()) {
-    await expect(mode).toHaveValue('BALANCED_50_50');
-    await expect(mode).toBeDisabled();
+    const group = page.getByRole('group', { name: school.schoolName, exact: true });
+    await expect(group.getByRole('checkbox', { checked: true })).toHaveCount(2);
   }
+  await expect(mandiri.getByRole('checkbox').first()).toBeEnabled();
   await page.getByRole('button', { name: 'Simpan draft', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'TEST ONLY Minggu 1', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('cell', { name: 'TEST Original / TEST Variant (50/50)', exact: true }),
+    page.getByRole('cell', { name: 'TEST Original / TEST Variant', exact: true }),
   ).toHaveCount(2);
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -236,20 +238,9 @@ test('batch creation, school delegation and compact detail work across viewports
   await expect(page.getByRole('link', { name: 'TEST ONLY Minggu 1', exact: true })).toBeVisible();
 });
 
-test('open batch can change recipients without editing frozen settings, and retains failed changes', async ({
-  page,
-}) => {
+test('published batch keeps package and recipient configuration locked', async ({ page }) => {
   await setup(page);
-  const packages = [1, 2].map((n) => ({
-    id: id(9400 + n),
-    name: `TEST Package ${n}`,
-    packageVersion: n,
-    familyCode: 'TEST',
-    status: 'PUBLISHED',
-    usedBatchCount: 1,
-    valid: true,
-  }));
-  let batch: TryoutBatchDto = {
+  const batch: TryoutBatchDto = {
     id: id(9400),
     title: 'TEST OPEN',
     startsAt: '2026-01-01T00:00:00Z',
@@ -258,79 +249,24 @@ test('open batch can change recipients without editing frozen settings, and reta
     revision: 3,
     state: 'OPEN',
     editable: false,
-    delegationsEditable: true,
+    delegationsEditable: false,
     extendable: false,
     mandiriPackageId: null,
-    packages,
+    mandiriPackageIds: [],
+    packages: [],
     schools: [],
     participants: [],
     resultsState: 'BLOCKED',
     resultBlockers: [],
   };
-  let fail = true;
-  const writes: unknown[] = [];
-  await page.route('**/api/v1/admin/tryout-batches**', async (route) => {
-    const req = route.request(),
-      url = new URL(req.url());
-    if (url.pathname.endsWith('/options'))
-      return route.fulfill({
-        json: {
-          packages,
-          schools: [{ schoolId: id(9501), schoolName: 'TEST New School' }],
-          schoolTotal: 1,
-          packageTotal: 2,
-        },
-      });
-    if (req.method() === 'PATCH') {
-      expect(url.pathname).toBe(`/api/v1/admin/tryout-batches/${batch.id}/delegations`);
-      const body = req.postDataJSON();
-      writes.push(body);
-      expect(body).toEqual({
-        expectedRevision: 3,
-        mandiriPackageId: null,
-        schools: [
-          {
-            schoolId: id(9501),
-            packageId: packages[1]!.id,
-            allocationMode: 'SINGLE_PACKAGE',
-            variantPackageId: null,
-          },
-        ],
-      });
-      if (fail)
-        return route.fulfill({ status: 409, json: { detail: 'TEST conflict. Coba lagi.' } });
-      batch = {
-        ...batch,
-        revision: 4,
-        schools: [{ ...body.schools[0], schoolName: 'TEST New School' }],
-      };
-      return route.fulfill({ json: { id: batch.id } });
-    }
-    expect(req.method()).toBe('GET');
+  await page.route('**/api/v1/admin/tryout-batches**', (route) => {
+    expect(route.request().method()).toBe('GET');
     return route.fulfill({ json: batch });
   });
   await page.goto(`/admin/tryout-batches/${batch.id}`);
-  await page.getByRole('button', { name: 'Atur penerima', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(
-    dialog.getByRole('heading', { name: 'Pengaturan batch', exact: true }),
-  ).toBeVisible();
-  await expect(dialog.getByLabel('Judul batch', { exact: true })).toHaveCount(0);
-  await expect(dialog.getByRole('button', { name: 'Tambah paket tambahan' })).toHaveCount(0);
-  await dialog
-    .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
-    .selectOption(id(9501));
-  await dialog.getByLabel('Paket TEST New School', { exact: true }).selectOption(packages[1]!.id);
-  await dialog.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
-  await expect(dialog.getByRole('alert')).toContainText('TEST conflict');
-  await expect(dialog.getByLabel('Paket TEST New School', { exact: true })).toHaveValue(
-    packages[1]!.id,
-  );
-  fail = false;
-  await dialog.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-  await expect(page.getByRole('cell', { name: 'TEST New School', exact: true })).toBeVisible();
-  expect(writes).toHaveLength(2);
+  await expect(page.getByRole('button', { name: 'Atur penerima', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Stop batch', exact: true })).toBeEnabled();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
 test('extend dialog preserves failed input, shows progress and updates closing time without reopening closed batches', async ({

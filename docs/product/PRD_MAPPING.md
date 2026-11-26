@@ -1,3 +1,5 @@
+**ENGINEERING DECISION - owner-approved redesign, 26 November 2026:** Tryout publication requires technical completeness only, without curriculum approval, manual item review, import history or scientific linking gates. Each new batch supports 1-5 packages with a subset per school/Mandiri, allocated evenly on start. Existing packages use the new checks; historical attempts/results stay pinned. See [Tryout redesign](../development/TRYOUT_SIMPLE_PUBLICATION.md).
+
 **ENGINEERING DECISION - owner instruction, 26 November 2026:** New Tryout attempts receive 75 minutes (4,500 seconds), capped by batch/package close. Existing attempt deadlines stay pinned. Batch package selection/publication no longer requires matching parent/family codes or generator lineage. Content, distribution, scoring policy, wave pair identity, school access and balanced allocation gates remain. Pair selection does not certify IRT linking. Supersedes the 25 November duration and previous parent restrictions.
 
 **ENGINEERING DECISION — 26 November 2026:** pasangan Tryout generator/revisi boleh berbeda kode keluarga dari original jika relasi sumber generator durable cocok; gate publikasi/distribusi/policy tetap. Lihat docs/development/TRYOUT_SCHOOL_WAVES.md.
@@ -28,14 +30,14 @@
 
 **ENGINEERING DECISION — pemilik, 8 November 2026:** [amendemen v2](../AI_IRT_V2_CONTEXT.md) menggantikan target lama yang bertentangan. Pemetaan berikut membedakan keputusan target dari implementasi pada commit acuan; tabel historis di bawah tidak membatalkannya.
 
-| Perubahan target yang disetujui | Area implementasi terkait | Gate yang belum selesai |
-|---|---|---|
-| Drill A/B reguler sejak awal, original+varian aktif, assignment tetap | Routing `learning/drill-distribution.ts`, assessment packages, assignment dan delivery | Approval paket dan penerimaan pilot di lingkungan tujuan |
-| Concurrent IRT Level dan adjustment hanya DRIFT; PASS freeze item | IRT snapshot/compute/adoption, generator config/version | Scientific engine, policy threshold/anchor, review Curriculum dan bounded adjuster |
-| Tryout multi-arm, satu attempt/siswa/batch | Tryout batch/package relation, allocation dan lifecycle | Multi-package contract, assignment/uniqueness dan frozen package list |
-| Nilai+pembahasan tanpa ranking; fallback per arm maksimal 72 jam | Participant result, mapping, finalization/readers dan UI | Respondent producer v3, mapping theta, detail policy fallback dan release per arm |
-| IRT Indikator dan Bab terpisah | Measurement contexts, linked evidence dan ability snapshots | Model/linking/coverage/precision tervalidasi; bukan rata-rata theta |
-| Histori tetap, review manusia awal, XP activity tetap | Version pins, approvals, XP ledger dan audit | Penerimaan integrasi; kompensasi insiden perlu keputusan eksplisit |
+| Perubahan target yang disetujui                                       | Area implementasi terkait                                                              | Gate yang belum selesai                                                            |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Drill A/B reguler sejak awal, original+varian aktif, assignment tetap | Routing `learning/drill-distribution.ts`, assessment packages, assignment dan delivery | Approval paket dan penerimaan pilot di lingkungan tujuan                           |
+| Concurrent IRT Level dan adjustment hanya DRIFT; PASS freeze item     | IRT snapshot/compute/adoption, generator config/version                                | Scientific engine, policy threshold/anchor, review Curriculum dan bounded adjuster |
+| Tryout multi-arm, satu attempt/siswa/batch                            | Tryout batch/package relation, allocation dan lifecycle                                | Multi-package contract, assignment/uniqueness dan frozen package list              |
+| Nilai+pembahasan tanpa ranking; fallback per arm maksimal 72 jam      | Participant result, mapping, finalization/readers dan UI                               | Respondent producer v3, mapping theta, detail policy fallback dan release per arm  |
+| IRT Indikator dan Bab terpisah                                        | Measurement contexts, linked evidence dan ability snapshots                            | Model/linking/coverage/precision tervalidasi; bukan rata-rata theta                |
+| Histori tetap, review manusia awal, XP activity tetap                 | Version pins, approvals, XP ledger dan audit                                           | Penerimaan integrasi; kompensasi insiden perlu keputusan eksplisit                 |
 
 **Klarifikasi operasional beta, 8 November 2026:** [keputusan terbaru](../AI_IRT_V2_CONTEXT.md#klarifikasi-dua-belas-kebijakan-operasional) mempersempit gate di atas: mapping IRT memakai prediksi paket acuan (detail estimator/numerik belum final); hasil serentak per batch, maksimum valid nol = UNSCORABLE; beta Drill menerima exposure lintas fitur seperti Pretest/PvP; komposisi Drill 3 anchor/7 focal dan Tryout 5/25. Gate review Curriculum, kecukupan/linking serta QA tetap berlaku. Nomor 7 telah diputuskan: original aktif boleh menjadi fallback distribusi sementara ketika varian dihentikan tanpa pengganti siap; catat assignment vs delivered arm, pin sesi, dan pisahkan crossover dari perbandingan utama. Saat pengganti siap, start berikutnya kembali mengikuti arm asal. Eksperimen baru tidak membuat siswa lama fresh.
 
@@ -43,18 +45,18 @@
 
 **ENGINEERING DECISION — konsolidasi Admin, 10 November 2026:** [PRD Admin v1.0](ADMIN_PRD.md) dan [Spesifikasi Teknis Admin](../architecture/ADMIN_TECHNICAL_SPEC.md) memetakan [ADM-DEC-001–076](ADMIN_REQUIREMENTS_DISCOVERY.md#21-keputusan-kebutuhan-dari-klarifikasi-pemilik) serta acceptance ADM-AC-001–081. Atribut/detail rutin memakai baseline existing sesuai instruksi terakhir pemilik; discovery menjadi arsip.
 
-| Area sumber PRD/amendemen | PRD Admin | Spesifikasi teknis / pekerjaan | Acceptance |
-| --- | --- | --- | --- |
-| §3.2–3.3/§19: subrole/izin | §2, §12–15 | §2–3, ADM-IMP-01/11/13/14; current capability dan limited DTO | 043–062 |
-| §7.1 dan penerbitan Pretest original | §3–4, §8 | §5–7, ADM-IMP-02/03/04; slot, policy pin, partial draft/Simpan | 001–005, 015, 018–022 |
-| §10 dan v2: Drill/varian | §5, §7–8 | §5–7, ADM-IMP-05/06; assigned/delivered arm, anchor dan immutable version | 006, 008–014, 079; konflik DEP-01 |
-| §11–13 dan v2: Tryout multipaket/hasil | §6–7 | §7.5/§8, ADM-IMP-07; unique student-batch, frozen packages, per-arm fallback dan coverage | 007, 080–081 |
-| §18/ADR-008: konten/master/intake | §3, §8, §19 | §4–9, ADM-IMP-02/03/04; field existing, autosave, duplikat, archive dependency, concurrency | 016–022, 063–067, 071–075, 078 |
-| §10.2/§18: moderasi | §9 | §7.6, ADM-IMP-08; case+source reports, close reason, reopen history | 023–027, 070; konflik DEP-02 |
-| §10.1/§18: video | §10 | §4/§7.6, ADM-IMP-09; manual, satu subbab, maksimal tiga, urutan otomatis | 028–032, 068–069 |
-| §4–6: sekolah/token/membership | §11–12 | §7.7–7.8, ADM-IMP-10/11; bulk/reissue, cutoff, reactivate | 033–047 |
-| Dashboard/audit/UX: keputusan pemilik | §13, §15, §18 | §10–14, ADM-IMP-12/14; filters/comparison, scoped unavailable,5menit, mobile dan list context | 048–052, 058–061, 075–078 |
-| Persetujuan dan dependensi lanjutan | §17 | §13–14; gap bukan klaim implementasi | ADM-DEP-01–06 |
+| Area sumber PRD/amendemen              | PRD Admin     | Spesifikasi teknis / pekerjaan                                                                | Acceptance                        |
+| -------------------------------------- | ------------- | --------------------------------------------------------------------------------------------- | --------------------------------- |
+| §3.2–3.3/§19: subrole/izin             | §2, §12–15    | §2–3, ADM-IMP-01/11/13/14; current capability dan limited DTO                                 | 043–062                           |
+| §7.1 dan penerbitan Pretest original   | §3–4, §8      | §5–7, ADM-IMP-02/03/04; slot, policy pin, partial draft/Simpan                                | 001–005, 015, 018–022             |
+| §10 dan v2: Drill/varian               | §5, §7–8      | §5–7, ADM-IMP-05/06; assigned/delivered arm, anchor dan immutable version                     | 006, 008–014, 079; konflik DEP-01 |
+| §11–13 dan v2: Tryout multipaket/hasil | §6–7          | §7.5/§8, ADM-IMP-07; unique student-batch, frozen packages, per-arm fallback dan coverage     | 007, 080–081                      |
+| §18/ADR-008: konten/master/intake      | §3, §8, §19   | §4–9, ADM-IMP-02/03/04; field existing, autosave, duplikat, archive dependency, concurrency   | 016–022, 063–067, 071–075, 078    |
+| §10.2/§18: moderasi                    | §9            | §7.6, ADM-IMP-08; case+source reports, close reason, reopen history                           | 023–027, 070; konflik DEP-02      |
+| §10.1/§18: video                       | §10           | §4/§7.6, ADM-IMP-09; manual, satu subbab, maksimal tiga, urutan otomatis                      | 028–032, 068–069                  |
+| §4–6: sekolah/token/membership         | §11–12        | §7.7–7.8, ADM-IMP-10/11; bulk/reissue, cutoff, reactivate                                     | 033–047                           |
+| Dashboard/audit/UX: keputusan pemilik  | §13, §15, §18 | §10–14, ADM-IMP-12/14; filters/comparison, scoped unavailable,5menit, mobile dan list context | 048–052, 058–061, 075–078         |
+| Persetujuan dan dependensi lanjutan    | §17           | §13–14; gap bukan klaim implementasi                                                          | ADM-DEP-01–06                     |
 
 V2 telah menetapkan batas attempt/batch, freeze, komposisi3+7/5+25, metode mapping paket acuan dan fallback per arm; kontrak payload v1 sudah tersedia. Rekonsiliasi distribusi/availability dan penyerahan ilmiah/operasional tetap eksplisit. Daftar ADM-IMP-01–14 bukan laporan hasil tes. Tidak ada perubahan kontrak/schema/aplikasi dalam pekerjaan dokumentasi ini. Catatan Admin/navigasi lama yang bertentangan menjadi riwayat; route awal semua subrole sekarang Dashboard.
 
@@ -302,37 +304,31 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 
 **ENGINEERING DECISION — owner request:** combine package generation and results in one menu; completion opens /admin/content/imports directly at Preview & tujuan (step 2). Reuse import validation and guarded publication; generated lineage stays immutable.
 
-
 ## Batch Tryout dan delegasi ? 10 November 2026
 
 **ENGINEERING DECISION ? persetujuan pemilik:** bank paket terpisah dari batch pelaksanaan. Batch memiliki judul, rentang mulai/tutup bebas dalam WIB, beberapa versi paket dan delegasi Mandiri/sekolah. Batch terbit boleh berjalan bersamaan. Siswa Mandiri tidak memiliki kelas aktif; sekolah tanpa delegasi tidak mendapat akses. Siswa multisekolah memilih satu sekolah yang sah saat mulai; assignment/attempt dikunci per siswa/batch. Beberapa penerima boleh memakai paket sama. Konfigurasi dapat direvisi sebelum mulai, terkunci saat mulai. Pembatalan sebelum mulai; stop dengan alasan saat berjalan. Durasi attempt sepuluh menit, dibatasi penutupan batch.
 
 **ENGINEERING DECISION:** delegasi adalah alokasi Admin, bukan randomisasi A/B. Paket historis, attempt dan XP tidak ditulis ulang. Aktivasi start berbasis batch terjadi setelah batch Admin pertama diterbitkan; endpoint start paket lama kemudian menolak start baru. Resume/histori tetap tersedia. Hasil multi-paket menunggu finalisasi seluruh batch dengan kontrak/policy sah; kegagalan tidak menghasilkan nilai buatan.
 
-## ENGINEERING DECISION � pemilik, 10 November 2026: publikasi Pretest sederhana
+## ENGINEERING DECISION � pemilik, 10 November 2026: publikasi Pretest sederhana
 
 Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetujuan Curriculum tambahan untuk paket Pretest. Sumber soal disiapkan Curriculum. Admin dapat langsung menerbitkan DRAFT yang lolos seluruh validasi server: jumlah 20, struktur/kunci/pembahasan, metadata/cakupan, provenance/media dan kompatibilitas scoring. Impor tetap menyimpan DRAFT, bukan publikasi otomatis. Masalah validasi tetap memblokir publikasi dan ditampilkan melalui checklist. Tidak mengubah aturan Drill/Tryout, penempatan Pretest, XP, paket terbit atau histori siswa. Snapshot/blueprint internal existing tetap dibuat secara transaksional saat publikasi; bukan langkah persetujuan manual baru.
-
 
 ## Automatic Pretest rubric - 10 November 2026
 
 **ENGINEERING DECISION - owner-approved plan:** Pretest imports use SEALED `PRETEST_PGK_PARTIAL_V1` rubrics validated by the scoring engine. Unchanged content with an invalid rubric creates a new version. `POST /api/v1/admin/content/packages/{id}/prepare-scoring` accepts `expectedRevision`, requires Content Admin and a DRAFT Pretest package. One audited transaction replaces only affected question-version references, preserving content, answers, order and count. Repeats at the current revision create no versions; stale revisions are rejected. Published packages, attempts, results and historical policy pins remain unchanged. Preparation does not publish. Scoring problems link to preparation rather than content editing.
 
-
 ## Audit Tryout - 10 November 2026
 
 **ENGINEERING DECISION - perbaikan aturan existing:** Draft belum terbit dapat dijadwal ulang saat tanggal lewat; batch terbit tetap terkunci saat mulai. Sekolah delegasi divalidasi ulang saat publikasi. Operasional dapat membaca daftar/detail batch; options dan mutasi khusus Content/Super. [Temuan dan verifikasi](../development/TRYOUT_AUDIT_2026-11-10.md). **OPEN:** rilis hasil canonical multi-paket masih dependency delivery; guard tidak dibuka dan policy tidak dikarang.
-
 
 ## Fallback paket utama - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.
 
-
 ## Delegasi batch terbit - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** penerima sekolah/Mandiri dapat diubah selama batch belum berakhir atau dibatalkan, termasuk saat berjalan. Perubahan hanya memengaruhi start baru. Daftar versi paket, paket utama, isi, jadwal mulai dan attempt existing tetap dipin. Mutasi khusus penerima memakai Content capability, expectedRevision, row lock, transaksi dan audit; batch tutup/batal ditolak.
-
 
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
@@ -355,7 +351,6 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) memetakan 10 EASY/16 MEDIUM/4 HARD dan tiga revisi ke manifest 30 versi baru; HOLD dipisahkan, histori/pin serta konfigurasi runtime tetap dipertahankan.
 
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) memetakan 9 EASY/17 MEDIUM/4 HARD dan empat revisi ke manifest 30 versi baru; HOLD tetap dipisahkan, histori/pin dan konfigurasi runtime tetap.
-
 
 **ENGINEERING DECISION — 15 November 2026:** batch sekolah tunggal dapat memakai snapshot alokasi per siswa dengan mode `BALANCED_50_50`; implementasi memakai migration `0075_tryout_balanced_school_allocations`, DTO delegasi, dan assignment snapshot durable. Hasil multi-paket tetap mengikuti gate IRT yang berlaku.
 **ENGINEERING DECISION — 25 November 2026:** new PvP rooms use six-character codes and existing twelve-character codes remain valid. The lobby offers to resume an active room and checks server membership after create/join timeouts. [Realtime PvP contract](../architecture/REALTIME_PVP.md#websocket-contract).

@@ -9,6 +9,8 @@ import { and, asc, count, desc, eq, ilike, inArray, isNotNull, isNull, sql } fro
 import {
   assessmentAttempts,
   assessmentPackages,
+  packageItems,
+  questionVersions,
   classes,
   classStudentBans,
   classMemberships,
@@ -16,8 +18,11 @@ import {
   schools,
   tryoutBatches,
   tryoutWaves,
+  tryoutWavePackages,
+  tryoutAllocationPools,
+  tryoutPoolPackages,
+  tryoutTechnicalIssues,
   tryoutWaveClaims,
-  tryoutBatchStudentAllocations,
   tryoutBatchPackages,
   tryoutSchoolDelegations,
   tryoutStudentAssignments,
@@ -64,31 +69,73 @@ export function validateBatchInput(body: SaveTryoutBatchDto, now?: Date) {
     Date.parse(body.closesAt) <= Date.parse(body.startsAt)
   )
     throw new BadRequestException('Judul dan rentang waktu batch wajib valid.');
-  if (now && Date.parse(body.startsAt) <= now.getTime())
-    throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
+  if (now && Date.parse(body.closesAt) <= now.getTime())
+    throw new BadRequestException('Waktu tutup batch harus di masa mendatang.');
+  if (
+    !body.packageIds.length ||
+    body.packageIds.length > 5 ||
+    new Set(body.packageIds).size !== body.packageIds.length
+  )
+    throw new BadRequestException('Pilih 1-5 paket unik.');
   if (new Set(body.schools.map((s) => s.schoolId)).size !== body.schools.length)
     throw new BadRequestException('Sekolah hanya boleh memiliki satu delegasi.');
   const selected = new Set(body.packageIds);
-  for (const school of body.schools) {
-    const mode = school.allocationMode ?? 'SINGLE_PACKAGE';
-    if (mode === 'BALANCED_50_50') {
-      if (!school.variantPackageId || school.variantPackageId === school.packageId)
-        throw new BadRequestException(
-          'Alokasi 50/50 wajib memiliki paket original dan varian berbeda.',
-        );
-    } else if (school.variantPackageId) {
-      throw new BadRequestException('Paket varian hanya boleh dipakai pada alokasi 50/50.');
-    }
+  for (const target of [...body.schools.map((s) => schoolPackages(s)), mandiriPackages(body)]) {
+    if (
+      target.length > 5 ||
+      new Set(target).size !== target.length ||
+      target.some((id) => !selected.has(id))
+    )
+      throw new BadRequestException(
+        'Paket target harus subset unik dari paket batch (maksimal 5).',
+      );
   }
-  const delegated = [
-    ...body.schools.map((s) => s.packageId),
-    ...body.schools
-      .filter((s) => (s.allocationMode ?? 'SINGLE_PACKAGE') === 'BALANCED_50_50')
-      .map((s) => s.variantPackageId!),
-    ...(body.mandiriPackageId ? [body.mandiriPackageId] : []),
-  ];
-  if (delegated.some((id) => !selected.has(id)))
-    throw new BadRequestException('Paket delegasi harus termasuk paket batch.');
+  if (body.schools.some((s) => schoolPackages(s).length === 0))
+    throw new BadRequestException('Sekolah wajib memiliki minimal satu paket.');
+}
+
+export function schoolPackages(s: SaveTryoutBatchDto['schools'][number]): string[] {
+  if (
+    !s.packageIds &&
+    ((s.allocationMode === 'BALANCED_50_50' &&
+      (!s.variantPackageId || s.variantPackageId === s.packageId)) ||
+      (s.allocationMode !== 'BALANCED_50_50' && s.variantPackageId))
+  )
+    throw new BadRequestException('Konfigurasi paket lama tidak valid.');
+  const legacy = s.packageId
+    ? [
+        s.packageId,
+        ...(s.allocationMode === 'BALANCED_50_50' && s.variantPackageId
+          ? [s.variantPackageId]
+          : []),
+      ]
+    : [];
+  if (
+    s.packageIds &&
+    legacy.length &&
+    (legacy.length !== s.packageIds.length || legacy.some((id) => !s.packageIds!.includes(id)))
+  )
+    throw new BadRequestException('Konfigurasi paket sekolah lama dan baru bertentangan.');
+  return s.packageIds ?? legacy;
+}
+export function mandiriPackages(body: {
+  mandiriPackageId?: string | null;
+  mandiriPackageIds?: string[];
+}): string[] {
+  if (
+    body.mandiriPackageIds &&
+    body.mandiriPackageId &&
+    !body.mandiriPackageIds.includes(body.mandiriPackageId)
+  )
+    throw new BadRequestException('Konfigurasi Mandiri lama dan baru bertentangan.');
+  return body.mandiriPackageIds ?? (body.mandiriPackageId ? [body.mandiriPackageId] : []);
+}
+export function balancedPoolPackage(counts: { packageId: string; n: number }[]): string {
+  if (!counts.length || counts.some((c) => !Number.isSafeInteger(c.n) || c.n < 0))
+    throw new BadRequestException('Pool alokasi tidak valid.');
+  const smallest = Math.min(...counts.map((c) => c.n));
+  const tied = counts.filter((c) => c.n === smallest);
+  return tied[randomInt(tied.length)]!.packageId;
 }
 
 export function waveClaimBlocksSchool(claimSchoolId: string | null, schoolId: string | null) {
@@ -165,10 +212,7 @@ export class TryoutBatchesService {
             sql<number>`(select count(*) from tryout_batch_packages tbp where tbp.package_id = ${assessmentPackages.id})`.mapWith(
               Number,
             ),
-          valid:
-            sql<boolean>`${assessmentPackages.status} = 'PUBLISHED' and not ${assessmentPackages.isDemo}`.mapWith(
-              Boolean,
-            ),
+          valid: sql<boolean>`${tryoutDistributionEligibility()}`.mapWith(Boolean),
         })
         .from(assessmentPackages)
         .where(packageWhere)
@@ -176,7 +220,7 @@ export class TryoutBatchesService {
         .limit(query.limit)
         .offset(query.offset),
       db
-        .select({ schoolId: schools.id, schoolName: schools.name })
+        .select({ schoolId: schools.id, schoolName: schools.name, schoolCode: schools.code })
         .from(schools)
         .where(schoolWhere)
         .orderBy(asc(schools.name), asc(schools.id))
@@ -185,18 +229,34 @@ export class TryoutBatchesService {
       db.select({ total: count() }).from(assessmentPackages).where(packageWhere),
       db.select({ total: count() }).from(schools).where(schoolWhere),
     ]);
+    const packageOptions = await Promise.all(
+      packages.map(async (p) => {
+        const blockers = (await tryoutTechnicalIssues(db, p.id)).map(
+          (i) => `${i.questionNumber ? `Soal ${i.questionNumber}: ` : ''}${i.message}`,
+        );
+        if (!p.valid) blockers.push('Paket harus terbit, non-demo dan lengkap.');
+        if (p.valid) {
+          try {
+            await this.ready(db, [p.id]);
+          } catch (error) {
+            blockers.push(error instanceof Error ? error.message : 'Scoring belum siap.');
+          }
+        }
+        return { ...p, valid: !blockers.length, blockers };
+      }),
+    );
     const waves = await db
       .select()
       .from(tryoutWaves)
       .orderBy(desc(tryoutWaves.createdAt))
       .limit(1000);
-    const wavePackageIds = [
-      ...new Set(waves.flatMap((w) => [w.originalPackageId, w.variantPackageId])),
-    ];
+    const waveLinks = await db.select().from(tryoutWavePackages);
+    const wavePackageIds = [...new Set(waveLinks.map((w) => w.packageId))];
     const wavePackages = wavePackageIds.length
       ? await db
           .select({
             p: assessmentPackages,
+            valid: tryoutDistributionEligibility().mapWith(Boolean),
             usedBatchCount:
               sql<number>`(select count(*) from tryout_batch_packages tbp where tbp.package_id = ${assessmentPackages.id})`.mapWith(
                 Number,
@@ -206,25 +266,36 @@ export class TryoutBatchesService {
           .where(inArray(assessmentPackages.id, wavePackageIds))
       : [];
     return {
-      packages,
+      packages: packageOptions,
       waves: waves.map((w) => ({
         ...w,
         packages: wavePackages
-          .filter(({ p }) => p.id === w.originalPackageId || p.id === w.variantPackageId)
-          .map(({ p, usedBatchCount }) => ({
+          .filter(({ p }) => waveLinks.some((l) => l.waveId === w.id && l.packageId === p.id))
+          .map(({ p, usedBatchCount, valid }) => ({
             id: p.id,
             name: p.name,
             packageVersion: p.packageVersion,
             familyCode: p.familyCode,
             status: p.status,
             usedBatchCount,
-            valid: p.status === 'PUBLISHED' && !p.isDemo,
+            valid,
           })),
       })),
       schools: delegated,
       packageTotal: packageCount[0]!.total,
       schoolTotal: schoolCount[0]!.total,
     };
+  }
+  private pools(tx: Pick<AdminTransaction, 'select'>, batchId: string) {
+    return tx
+      .select({
+        poolId: tryoutAllocationPools.id,
+        schoolId: tryoutAllocationPools.schoolId,
+        packageId: tryoutPoolPackages.packageId,
+      })
+      .from(tryoutAllocationPools)
+      .innerJoin(tryoutPoolPackages, eq(tryoutPoolPackages.poolId, tryoutAllocationPools.id))
+      .where(eq(tryoutAllocationPools.batchId, batchId));
   }
   async routingActive(tx: Pick<AdminTransaction, 'select'> = getDatabase().db) {
     const [row] = await tx
@@ -277,10 +348,7 @@ export class TryoutBatchesService {
             sql<number>`(select count(*) from tryout_batch_packages tbp where tbp.package_id = ${assessmentPackages.id})`.mapWith(
               Number,
             ),
-          valid:
-            sql<boolean>`${assessmentPackages.status} = 'PUBLISHED' and not ${assessmentPackages.isDemo}`.mapWith(
-              Boolean,
-            ),
+          valid: sql<boolean>`${tryoutDistributionEligibility()}`.mapWith(Boolean),
         })
         .from(tryoutBatchPackages)
         .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatchPackages.packageId))
@@ -293,6 +361,7 @@ export class TryoutBatchesService {
         .select({
           schoolId: schools.id,
           schoolName: schools.name,
+          schoolCode: schools.code,
           packageId: tryoutSchoolDelegations.packageId,
           allocationMode: tryoutSchoolDelegations.allocationMode,
           variantPackageId: tryoutSchoolDelegations.variantPackageId,
@@ -301,6 +370,7 @@ export class TryoutBatchesService {
         .innerJoin(schools, eq(schools.id, tryoutSchoolDelegations.schoolId))
         .where(eq(tryoutSchoolDelegations.batchId, id))
         .orderBy(asc(schools.name));
+      const poolLinks = await this.pools(tx, id);
       const participants = await tx
         .select({
           packageId: tryoutStudentAssignments.packageId,
@@ -323,10 +393,8 @@ export class TryoutBatchesService {
         resultDueAt: b.resultDueAt.toISOString(),
         revision: b.configRevision,
         state: batchState(b, now),
-        editable: !(b.waveId && b.adminPublishedAt) && batchEditable(b, now),
-        delegationsEditable:
-          !(b.waveId && b.adminPublishedAt) &&
-          ['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, now)),
+        editable: !b.adminPublishedAt && batchEditable(b, now),
+        delegationsEditable: !b.adminPublishedAt && !b.cancelledAt,
         extendable: batchState(b, now) === 'OPEN' && ['PLANNED', 'OPEN'].includes(b.status),
         waveId: b.waveId,
         waveTitle: b.waveId
@@ -335,7 +403,11 @@ export class TryoutBatchesService {
           : null,
         mandiriPackageId: b.mandiriPackageId,
         packages,
-        schools: delegated,
+        schools: delegated.map((s) => ({
+          ...s,
+          packageIds: poolLinks.filter((p) => p.schoolId === s.schoolId).map((p) => p.packageId),
+        })),
+        mandiriPackageIds: poolLinks.filter((p) => p.schoolId === null).map((p) => p.packageId),
         participants,
         resultsState: readiness.resultState,
         resultBlockers: [
@@ -354,7 +426,12 @@ export class TryoutBatchesService {
     if (!b) throw new NotFoundException('Batch Tryout tidak ditemukan.');
     return b;
   }
-  private async ready(tx: AdminTransaction, ids: string[]) {
+  private async ready(tx: Pick<AdminTransaction, 'select' | 'execute'>, ids: string[]) {
+    for (const id of ids) {
+      const issues = await tryoutTechnicalIssues(tx, id);
+      if (issues.length)
+        throw new BadRequestException({ code: 'TRYOUT_PACKAGE_INCOMPLETE', packageId: id, issues });
+    }
     const rows = await tx
       .select({ p: assessmentPackages, eligible: tryoutDistributionEligibility().mapWith(Boolean) })
       .from(assessmentPackages)
@@ -379,7 +456,14 @@ export class TryoutBatchesService {
         : [];
       try {
         if (!policy) throw Error();
-        readApprovedPolicy(policy, 'TRYOUT');
+        const supported = readApprovedPolicy(policy, 'TRYOUT');
+        const types = await tx
+          .select({ type: questionVersions.questionType })
+          .from(packageItems)
+          .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+          .where(eq(packageItems.packageId, p.id));
+        if (types.some(({ type }) => supported.itemWeights[type] === undefined))
+          throw Error('Policy tidak mendukung jenis soal paket.');
       } catch {
         throw new BadRequestException(`Policy penilaian paket ${p.name} belum sah.`);
       }
@@ -388,8 +472,8 @@ export class TryoutBatchesService {
   private async validatePublished(tx: AdminTransaction, id: string, body: SaveTryoutBatchDto) {
     await this.validateSchools(tx, body.schools);
     const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
-    if (new Date(body.startsAt) <= new Date(clock!.now))
-      throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
+    if (new Date(body.closesAt) <= new Date(clock!.now))
+      throw new BadRequestException('Waktu tutup batch harus di masa mendatang.');
     await this.ready(tx, body.packageIds);
     if (body.waveId) await this.validateWave(tx, body.waveId, body);
   }
@@ -430,7 +514,7 @@ export class TryoutBatchesService {
       async (tx) => {
         await lockTryoutBatchSchedule(tx);
         const old = id ? await this.batch(tx, id, 'update') : null;
-        if (old?.waveId && old.adminPublishedAt)
+        if (old?.adminPublishedAt)
           throw new ConflictException('Konfigurasi gelombang sudah dikunci saat publikasi.');
         if (old) await this.mutable(tx, old, body.expectedRevision);
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
@@ -455,19 +539,20 @@ export class TryoutBatchesService {
           if (waveId && body.newWaveTitle)
             throw new BadRequestException('Pilih atau buat satu gelombang.');
           if (!waveId) {
-            if (!body.newWaveTitle?.trim() || body.packageIds.length !== 2)
-              throw new BadRequestException(
-                'Batch baru wajib memakai gelombang dengan original dan varian.',
-              );
+            if (!body.newWaveTitle?.trim())
+              throw new BadRequestException('Batch baru wajib memilih atau membuat gelombang.');
             const [wave] = await tx
               .insert(tryoutWaves)
               .values({
                 title: body.newWaveTitle.trim(),
                 originalPackageId: body.packageIds[0]!,
-                variantPackageId: body.packageIds[1]!,
+                variantPackageId: body.packageIds[1] ?? null,
               })
               .returning();
             waveId = wave!.id;
+            await tx
+              .insert(tryoutWavePackages)
+              .values(body.packageIds.map((packageId) => ({ waveId: wave!.id, packageId })));
           }
           await this.validateWave(tx, waveId, body);
         }
@@ -479,7 +564,7 @@ export class TryoutBatchesService {
           closesAt: new Date(body.closesAt),
           cutoffAt: new Date(body.closesAt),
           resultDueAt: new Date(Date.parse(body.closesAt) + 72 * 3600000),
-          mandiriPackageId: body.mandiriPackageId ?? null,
+          mandiriPackageId: mandiriPackages(body)[0] ?? null,
         };
         const [row] = old
           ? await tx
@@ -489,6 +574,8 @@ export class TryoutBatchesService {
               .returning()
           : await tx.insert(tryoutBatches).values(values).returning();
         const batchId = row!.id;
+        await tx.delete(tryoutPoolPackages).where(eq(tryoutPoolPackages.batchId, batchId));
+        await tx.delete(tryoutAllocationPools).where(eq(tryoutAllocationPools.batchId, batchId));
         await tx
           .delete(tryoutSchoolDelegations)
           .where(eq(tryoutSchoolDelegations.batchId, batchId));
@@ -496,106 +583,82 @@ export class TryoutBatchesService {
         await tx
           .insert(tryoutBatchPackages)
           .values(body.packageIds.map((packageId) => ({ batchId, packageId })));
+        if (!body.mandiriPackageIds && body.mandiriPackageId && waveId)
+          body = { ...body, mandiriPackageIds: body.packageIds };
         if (body.schools.length)
+          await tx.insert(tryoutSchoolDelegations).values(
+            body.schools.map((s) => {
+              const ids = schoolPackages(s);
+              return {
+                batchId,
+                schoolId: s.schoolId,
+                packageId: ids[0]!,
+                allocationMode: ids.length === 2 ? 'BALANCED_50_50' : 'SINGLE_PACKAGE',
+                variantPackageId: ids.length === 2 ? ids[1]! : null,
+              };
+            }),
+          );
+        for (const target of [
+          ...body.schools.map((s) => ({ schoolId: s.schoolId, ids: schoolPackages(s) })),
+          ...(mandiriPackages(body).length ? [{ schoolId: null, ids: mandiriPackages(body) }] : []),
+        ]) {
+          const [pool] = await tx
+            .insert(tryoutAllocationPools)
+            .values({ batchId, schoolId: target.schoolId })
+            .returning();
           await tx
-            .insert(tryoutSchoolDelegations)
-            .values(body.schools.map((s) => ({ ...s, batchId })));
+            .insert(tryoutPoolPackages)
+            .values(target.ids.map((packageId) => ({ poolId: pool!.id, batchId, packageId })));
+        }
         return { id: batchId };
       },
       { configuration: body, allocationMethod: 'ADMIN_DELEGATION' },
     );
   }
-  updateDelegations(actor: string, id: string, body: UpdateTryoutDelegationsDto) {
-    return adminMutation(
+  async updateDelegations(actor: string, id: string, body: UpdateTryoutDelegationsDto) {
+    const b = await this.detail(id);
+    if (b.state !== 'DRAFT')
+      throw new ConflictException('Penerima dan paket dikunci setelah publikasi.');
+    return this.save(
       actor,
-      'tryout_batch_delegations_updated',
-      'tryout_batch',
-      async (tx) => {
-        const b = await this.batch(tx, id, 'update');
-        if (b.waveId && b.adminPublishedAt)
-          throw new ConflictException(
-            'Penerima dan roster gelombang sudah dikunci saat publikasi.',
-          );
-        const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
-        if (!['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, new Date(clock!.now))))
-          throw new ConflictException('Penerima hanya dapat diubah sebelum batch berakhir.');
-        if (body.expectedRevision !== b.configRevision)
-          throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
-        const [snapshot] = await tx
-          .select({ count: count() })
-          .from(tryoutBatchStudentAllocations)
-          .where(eq(tryoutBatchStudentAllocations.batchId, id));
-        if (Number(snapshot?.count ?? 0) > 0)
-          throw new ConflictException(
-            'Snapshot pembagian siswa sudah dikunci saat batch diterbitkan.',
-          );
-        const packages = await tx
-          .select()
-          .from(tryoutBatchPackages)
-          .where(eq(tryoutBatchPackages.batchId, id));
-        const input = {
-          waveId: b.waveId,
-          title: b.adminTitle!,
-          startsAt: b.startsAt.toISOString(),
-          closesAt: b.closesAt.toISOString(),
-          packageIds: packages.map((p) => p.packageId),
-          ...body,
-        };
-        validateBatchInput(input);
-        if (b.waveId) await this.validateWave(tx, b.waveId, input);
-        await this.validateSchools(tx, body.schools);
-        await tx.delete(tryoutSchoolDelegations).where(eq(tryoutSchoolDelegations.batchId, id));
-        if (body.schools.length)
-          await tx
-            .insert(tryoutSchoolDelegations)
-            .values(body.schools.map((s) => ({ ...s, batchId: id })));
-        await tx
-          .update(tryoutBatches)
-          .set({
-            mandiriPackageId: body.mandiriPackageId ?? null,
-            configRevision: b.configRevision + 1,
-          })
-          .where(eq(tryoutBatches.id, id));
-        return { id };
+      {
+        ...body,
+        waveId: b.waveId ?? null,
+        title: b.title,
+        startsAt: b.startsAt,
+        closesAt: b.closesAt,
+        packageIds: b.packages.map((p) => p.id),
       },
-      { configuration: body, appliesTo: 'NEW_STARTS_ONLY' },
+      id,
     );
   }
   private async validateWave(
     tx: AdminTransaction,
     waveId: string,
-    body: Pick<SaveTryoutBatchDto, 'packageIds' | 'schools' | 'mandiriPackageId'>,
+    body: Pick<
+      SaveTryoutBatchDto,
+      'packageIds' | 'schools' | 'mandiriPackageId' | 'mandiriPackageIds'
+    >,
   ) {
     const [wave] = await tx
       .select()
       .from(tryoutWaves)
       .where(eq(tryoutWaves.id, waveId))
       .for('share');
+    const links = await tx
+      .select()
+      .from(tryoutWavePackages)
+      .where(eq(tryoutWavePackages.waveId, waveId));
     if (
       !wave ||
-      body.packageIds.length !== 2 ||
-      !body.packageIds.includes(wave.originalPackageId) ||
-      !body.packageIds.includes(wave.variantPackageId)
+      links.length !== body.packageIds.length ||
+      links.some((l) => !body.packageIds.includes(l.packageId))
     )
-      throw new BadRequestException(
-        'Paket batch harus sama dengan pasangan original/varian gelombang.',
-      );
-    if (!!body.mandiriPackageId === !!body.schools.length)
-      throw new BadRequestException('Pilih penerima sekolah atau Mandiri, bukan keduanya.');
-    if (body.mandiriPackageId && body.mandiriPackageId !== wave.originalPackageId)
-      throw new BadRequestException('Paket Mandiri harus memakai original gelombang.');
-    if (
-      body.schools.some(
-        (s) =>
-          s.allocationMode !== 'BALANCED_50_50' ||
-          s.packageId !== wave.originalPackageId ||
-          s.variantPackageId !== wave.variantPackageId,
-      )
-    )
-      throw new BadRequestException(
-        'Sekolah gelombang wajib memakai pasangan original/varian 50/50.',
-      );
+      throw new BadRequestException('Paket batch harus sama dengan daftar paket gelombang.');
+    if (!mandiriPackages(body).length && !body.schools.length)
+      throw new BadRequestException('Pilih minimal satu target sekolah atau Mandiri.');
   }
+
   async waveBlock(
     tx: AdminTransaction,
     studentId: string,
@@ -652,9 +715,10 @@ export class TryoutBatchesService {
         .select()
         .from(tryoutSchoolDelegations)
         .where(eq(tryoutSchoolDelegations.batchId, id));
-      const delegationInput = delegated.map((school) => ({
-        ...school,
-        allocationMode: school.allocationMode as 'SINGLE_PACKAGE' | 'BALANCED_50_50',
+      const pools = await this.pools(tx, id);
+      const delegationInput = delegated.map((s) => ({
+        schoolId: s.schoolId,
+        packageIds: pools.filter((p) => p.schoolId === s.schoolId).map((p) => p.packageId),
       }));
       await this.validatePublished(tx, id, {
         waveId: b.waveId,
@@ -662,7 +726,7 @@ export class TryoutBatchesService {
         startsAt: b.startsAt.toISOString(),
         closesAt: b.closesAt.toISOString(),
         packageIds: packages.map((p) => p.packageId),
-        mandiriPackageId: b.mandiriPackageId,
+        mandiriPackageIds: pools.filter((p) => p.schoolId === null).map((p) => p.packageId),
         schools: delegationInput,
       });
       await tx
@@ -797,11 +861,16 @@ export class TryoutBatchesService {
       const { ready } = await releases.studentPublications(attempts, now, tx);
       const waveBatchIds = batches.filter((b) => b.waveId).map((b) => b.id);
       const [recipients, claims] = await Promise.all([
-        waveBatchIds.length
+        batches.length
           ? tx
               .select()
               .from(tryoutSchoolDelegations)
-              .where(inArray(tryoutSchoolDelegations.batchId, waveBatchIds))
+              .where(
+                inArray(
+                  tryoutSchoolDelegations.batchId,
+                  batches.map((b) => b.id),
+                ),
+              )
           : [],
         waveBatchIds.length
           ? tx.select().from(tryoutWaveClaims).where(eq(tryoutWaveClaims.studentId, studentId))
@@ -820,13 +889,13 @@ export class TryoutBatchesService {
           ).values(),
         ];
         let startBlockedReason: string | null = null;
-        if (b.waveId) {
+        {
           delegated = delegated.filter((m) =>
             recipients.some((r) => r.batchId === b.id && r.schoolId === m.schoolId),
           );
           const allowed = [];
           for (const m of delegated) {
-            if (!used(b.waveId, m.schoolId)) allowed.push(m);
+            if (!b.waveId || !used(b.waveId, m.schoolId)) allowed.push(m);
           }
           if (delegated.length && !allowed.length)
             startBlockedReason = 'Kesempatan gelombang sudah digunakan.';
@@ -900,11 +969,9 @@ export class TryoutBatchesService {
     if (batchState(b, new Date(clock!.now)) !== 'OPEN')
       throw new ConflictException('Batch belum dimulai atau sudah ditutup.');
     const memberships = await this.studentSchools(tx, studentId);
-    let packageId: string | null = null;
     let contextSchool: string | null = null;
     if (!memberships.length) {
       if (schoolId) throw new BadRequestException('Sekolah tidak sesuai keanggotaan siswa.');
-      packageId = b.mandiriPackageId;
     } else {
       const eligible = [
         ...new Map(memberships.filter((m) => m.schoolActive).map((m) => [m.schoolId, m])).values(),
@@ -915,73 +982,47 @@ export class TryoutBatchesService {
           ? eligible[0]
           : undefined;
       if (!selected) throw new BadRequestException('Pilih sekolah sesuai keanggotaan aktif.');
-      const [delegation] = await tx
-        .select()
-        .from(tryoutSchoolDelegations)
-        .where(
-          and(
-            eq(tryoutSchoolDelegations.batchId, batchId),
-            eq(tryoutSchoolDelegations.schoolId, selected.schoolId),
-          ),
-        );
-      if (delegation?.allocationMode === 'BALANCED_50_50') {
-        // Keep this transaction lock until the attempt and assignment commit.
-        await tx
-          .select({ schoolId: tryoutSchoolDelegations.schoolId })
-          .from(tryoutSchoolDelegations)
-          .where(
-            and(
-              eq(tryoutSchoolDelegations.batchId, batchId),
-              eq(tryoutSchoolDelegations.schoolId, selected.schoolId),
-            ),
-          )
-          .for('update');
-        const counts = await tx
-          .select({ packageId: tryoutStudentAssignments.packageId, n: count() })
-          .from(tryoutStudentAssignments)
-          .where(
-            and(
-              eq(tryoutStudentAssignments.batchId, batchId),
-              eq(tryoutStudentAssignments.schoolId, selected.schoolId),
-            ),
-          )
-          .groupBy(tryoutStudentAssignments.packageId);
-        const n = (id: string) => Number(counts.find((c) => c.packageId === id)?.n ?? 0);
-        const originalCount = n(delegation.packageId);
-        const variantCount = n(delegation.variantPackageId!);
-        packageId = balancedPackageForCounts(
-          originalCount,
-          variantCount,
-          delegation.packageId,
-          delegation.variantPackageId!,
-        );
-      } else {
-        packageId = delegation?.packageId ?? (b.waveId ? null : b.packageId);
-      }
       contextSchool = selected.schoolId;
     }
+    const [pool] = await tx
+      .select()
+      .from(tryoutAllocationPools)
+      .where(
+        and(
+          eq(tryoutAllocationPools.batchId, batchId),
+          contextSchool
+            ? eq(tryoutAllocationPools.schoolId, contextSchool)
+            : isNull(tryoutAllocationPools.schoolId),
+        ),
+      )
+      .for('update');
+    const links = pool
+      ? await tx.select().from(tryoutPoolPackages).where(eq(tryoutPoolPackages.poolId, pool.id))
+      : [];
+    const counts = await tx
+      .select({ packageId: tryoutStudentAssignments.packageId, n: count() })
+      .from(tryoutStudentAssignments)
+      .where(
+        and(
+          eq(tryoutStudentAssignments.batchId, batchId),
+          contextSchool
+            ? eq(tryoutStudentAssignments.schoolId, contextSchool)
+            : isNull(tryoutStudentAssignments.schoolId),
+        ),
+      )
+      .groupBy(tryoutStudentAssignments.packageId);
+    const packageId = links.length
+      ? balancedPoolPackage(
+          links.map((l) => ({
+            packageId: l.packageId,
+            n: Number(counts.find((c) => c.packageId === l.packageId)?.n ?? 0),
+          })),
+        )
+      : null;
     if (!packageId) throw new BadRequestException('Batch tidak tersedia untuk kelompok siswa ini.');
     if (b.waveId) {
       if (await this.waveBlock(tx, studentId, b.waveId, contextSchool))
         throw new ConflictException('Kesempatan gelombang ini sudah digunakan.');
-      if (!contextSchool) {
-        // Serialize allocations across Mandiri starts so counts differ by at most one.
-        const [wave] = await tx
-          .select()
-          .from(tryoutWaves)
-          .where(eq(tryoutWaves.id, b.waveId))
-          .for('update');
-        const counts = await tx
-          .select({ packageId: tryoutWaveClaims.packageId, n: count() })
-          .from(tryoutWaveClaims)
-          .where(and(eq(tryoutWaveClaims.waveId, b.waveId), isNull(tryoutWaveClaims.schoolId)))
-          .groupBy(tryoutWaveClaims.packageId);
-        const n = (id: string) => Number(counts.find((c) => c.packageId === id)?.n ?? 0);
-        packageId =
-          n(wave!.originalPackageId) <= n(wave!.variantPackageId)
-            ? wave!.originalPackageId
-            : wave!.variantPackageId;
-      }
     }
     await this.ready(tx, [packageId]);
     return {

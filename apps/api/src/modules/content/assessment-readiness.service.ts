@@ -16,6 +16,7 @@ import {
 } from '@tka/assessment-engine';
 import type { AdminTransaction } from '../audit/admin-mutation';
 import { ContentLifecycleService } from './content-lifecycle.service';
+import { ensureTryoutRubric } from './tryout-rubric';
 @Injectable()
 export class AssessmentReadinessService {
   constructor(@Inject(ContentLifecycleService) private readonly content: ContentLifecycleService) {}
@@ -25,6 +26,7 @@ export class AssessmentReadinessService {
     count: number,
     policy: ApprovedPolicy | null,
     scope?: { subchapterId?: string; chapterId?: string; levelNumber?: number },
+    technicalActor?: string,
   ) {
     if (ids.length !== count || new Set(ids).size !== count)
       throw new ConflictException({
@@ -58,8 +60,9 @@ export class AssessmentReadinessService {
         (scope?.levelNumber && r.question.curriculumLevelNumber !== scope.levelNumber)
       )
         throw new ConflictException({ code: 'ASSESSMENT_CONTENT_SCOPE_INVALID' });
-      const readiness = await this.content.readiness(tx, id);
-      if (readiness.publicationBlockers.length)
+      const technicalTryout = policy?.assessmentType === 'TRYOUT' && !!technicalActor;
+      const readiness = technicalTryout ? null : await this.content.readiness(tx, id);
+      if (readiness?.publicationBlockers.length)
         throw new ConflictException({
           code: 'ASSESSMENT_CONTENT_NOT_READY',
           detail: readiness.publicationBlockers.join(', '),
@@ -76,16 +79,19 @@ export class AssessmentReadinessService {
       }
       let rubric: typeof scoringRubricVersions.$inferSelect | undefined;
       if (r.version.questionType !== 'SINGLE_CHOICE') {
-        [rubric] = await tx
-          .select()
-          .from(scoringRubricVersions)
-          .where(
-            and(
-              eq(scoringRubricVersions.id, r.version.scoringRubricVersionId!),
-              eq(scoringRubricVersions.status, 'SEALED'),
-            ),
-          )
-          .for('share');
+        if (technicalTryout)
+          rubric = (await ensureTryoutRubric(tx, technicalActor!, decoded)) ?? undefined;
+        else
+          [rubric] = await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(
+              and(
+                eq(scoringRubricVersions.id, r.version.scoringRubricVersionId!),
+                eq(scoringRubricVersions.status, 'SEALED'),
+              ),
+            )
+            .for('share');
         try {
           if (policy?.ownerTryoutPartial) validateTryoutPartialRubric(decoded, rubric);
           else validateRubricCoverage(decoded, rubric);

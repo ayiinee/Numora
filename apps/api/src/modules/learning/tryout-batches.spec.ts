@@ -1,3 +1,4 @@
+import { balancedPoolPackage, schoolPackages, mandiriPackages } from './tryout-batches.service';
 import { describe, expect, it } from 'vitest';
 import {
   batchEditable,
@@ -55,8 +56,8 @@ describe('Tryout batch boundaries', () => {
     expect(batchState({ ...batch, adminPublishedAt: null }, batch.startsAt)).toBe('DRAFT');
     expect(batchState({ ...batch, cancelledAt: batch.startsAt }, batch.startsAt)).toBe('CANCELLED');
   });
-  it('rejects a start at or before server time while allowing a custom closing date', () => {
-    expect(() => validateBatchInput(input, new Date(input.startsAt))).toThrow();
+  it('allows an already started window and rejects an expired closing date', () => {
+    expect(() => validateBatchInput(input, new Date(input.startsAt))).not.toThrow();
     expect(() => validateBatchInput(input, new Date(input.closesAt))).toThrow();
     expect(() => validateBatchInput(input, new Date('2026-11-09T00:00:00Z'))).not.toThrow();
   });
@@ -149,5 +150,33 @@ describe('Tryout batch boundaries', () => {
     expect(batchStoppable(b, b.closesAt)).toBe(false);
     expect(batchStoppable({ ...b, cancelledAt: b.startsAt }, b.startsAt)).toBe(false);
     expect(batchStoppable({ ...b, status: 'PUBLISHED' }, b.startsAt)).toBe(false);
+  });
+});
+
+describe('Tryout 1-5 package pool contract', () => {
+  it('balances 200 assignments across five packages and counts abandoned starts', () => {
+    const counts = Array.from({ length: 5 }, (_, i) => ({ packageId: `p${i}`, n: 0 }));
+    for (let n = 0; n < 200; n++) {
+      const selected = balancedPoolPackage(counts);
+      counts.find((c) => c.packageId === selected)!.n++;
+    }
+    expect(counts.map((c) => c.n)).toEqual([40, 40, 40, 40, 40]);
+    expect(
+      balancedPoolPackage([
+        { packageId: 'a', n: 2 },
+        { packageId: 'b', n: 1 },
+      ]),
+    ).toBe('b');
+  });
+  it('accepts subsets and rejects conflicting legacy payloads', () => {
+    expect(schoolPackages({ schoolId: 'school', packageIds: ['a', 'b', 'c'] })).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
+    expect(() =>
+      schoolPackages({ schoolId: 'school', packageId: 'a', packageIds: ['b'] }),
+    ).toThrow();
+    expect(() => mandiriPackages({ mandiriPackageId: 'a', mandiriPackageIds: [] })).toThrow();
   });
 });

@@ -590,7 +590,10 @@ export const irtArtifactAdoptionReceiptsV1 = pgTable(
     uniqueIndex('irt_artifact_adoption_receipts_request_uq').on(t.requestId),
     uniqueIndex('irt_artifact_adoption_receipts_artifact_uq').on(t.artifactId),
     uniqueIndex('irt_artifact_adoption_receipts_batch_uq').on(t.batchId),
-    check('irt_artifact_adoption_receipts_status_ck', sql`${t.status} in ('RECEIVED','ADOPTED','FAILED')`),
+    check(
+      'irt_artifact_adoption_receipts_status_ck',
+      sql`${t.status} in ('RECEIVED','ADOPTED','FAILED')`,
+    ),
   ],
 ).enableRLS();
 
@@ -635,7 +638,10 @@ export const irtArtifactAdoptionAttemptsV1 = pgTable(
     uniqueIndex('irt_artifact_adoption_attempts_respondent_uq').on(t.receiptId, t.respondentId),
     index('irt_artifact_adoption_attempts_attempt_idx').on(t.attemptId),
     check('irt_artifact_adoption_attempts_version_ck', sql`${t.packageVersion} > 0`),
-    check('irt_artifact_adoption_attempts_status_ck', sql`${t.resultStatus} in ('SCORED','INSUFFICIENT','NOT_COMPARABLE','UNSCORABLE')`),
+    check(
+      'irt_artifact_adoption_attempts_status_ck',
+      sql`${t.resultStatus} in ('SCORED','INSUFFICIENT','NOT_COMPARABLE','UNSCORABLE')`,
+    ),
   ],
 ).enableRLS();
 
@@ -655,7 +661,10 @@ export const irtFinalizationRunsV1 = pgTable(
   (t) => [
     uniqueIndex('irt_finalization_runs_receipt_uq').on(t.receiptId),
     uniqueIndex('irt_finalization_runs_batch_version_uq').on(t.batchId, t.version),
-    check('irt_finalization_runs_status_ck', sql`${t.status} in ('PENDING','RUNNING','READY','FAILED','CANCELLED')`),
+    check(
+      'irt_finalization_runs_status_ck',
+      sql`${t.status} in ('PENDING','RUNNING','READY','FAILED','CANCELLED')`,
+    ),
     check('irt_finalization_runs_version_ck', sql`${t.version} > 0`),
   ],
 ).enableRLS();
@@ -676,9 +685,18 @@ export const irtFinalizationResultsV1 = pgTable(
   },
   (t) => [
     uniqueIndex('irt_finalization_results_run_attempt_uq').on(t.runId, t.attemptId),
-    check('irt_finalization_results_mode_ck', sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE','INSUFFICIENT','NOT_COMPARABLE')`),
-    check('irt_finalization_results_score_ck', sql`${t.score} is null or ${t.score} between 0 and 100`),
-    check('irt_finalization_results_irt_ck', sql`${t.mode} <> 'IRT' or (${t.score} is not null and ${t.theta} is not null)`),
+    check(
+      'irt_finalization_results_mode_ck',
+      sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE','INSUFFICIENT','NOT_COMPARABLE')`,
+    ),
+    check(
+      'irt_finalization_results_score_ck',
+      sql`${t.score} is null or ${t.score} between 0 and 100`,
+    ),
+    check(
+      'irt_finalization_results_irt_ck',
+      sql`${t.mode} <> 'IRT' or (${t.score} is not null and ${t.theta} is not null)`,
+    ),
   ],
 ).enableRLS();
 
@@ -810,7 +828,7 @@ export const tryoutWaves = pgTable(
     id: id(),
     title: text('title').notNull(),
     originalPackageId: ref('original_package_id', () => assessmentPackages.id).notNull(),
-    variantPackageId: ref('variant_package_id', () => assessmentPackages.id).notNull(),
+    variantPackageId: ref('variant_package_id', () => assessmentPackages.id),
     createdAt: createdAt(),
   },
   (t) => [check('tryout_waves_pair_ck', sql`${t.originalPackageId} <> ${t.variantPackageId}`)],
@@ -892,8 +910,14 @@ export const tryoutResultFinalizations = pgTable(
     uniqueIndex('tryout_result_finalizations_published_uq')
       .on(t.batchId)
       .where(sql`${t.publishedAt} is not null`),
-    check('tryout_result_finalizations_mode_ck', sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE','MIXED')`),
-    check('tryout_result_finalizations_mixed_ck', sql`${t.mode} <> 'MIXED' or ${t.sourceCalibrationRequestId} is not null`),
+    check(
+      'tryout_result_finalizations_mode_ck',
+      sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE','MIXED')`,
+    ),
+    check(
+      'tryout_result_finalizations_mixed_ck',
+      sql`${t.mode} <> 'MIXED' or ${t.sourceCalibrationRequestId} is not null`,
+    ),
     check(
       'tryout_result_finalizations_irt_ck',
       sql`${t.mode} <> 'IRT' or ((${t.sourceOutputId} is not null or ${t.sourceCalibrationRequestId} is not null) and ${t.mappingApprovalId} is not null)`,
@@ -938,7 +962,10 @@ export const tryoutAttemptResults = pgTable(
   },
   (t) => [
     uniqueIndex('tryout_attempt_results_attempt_uq').on(t.finalizationId, t.attemptId),
-    check('tryout_attempt_results_result_mode_check', sql`${t.resultMode} in ('IRT','FALLBACK','UNSCORABLE')`),
+    check(
+      'tryout_attempt_results_result_mode_check',
+      sql`${t.resultMode} in ('IRT','FALLBACK','UNSCORABLE')`,
+    ),
     check(
       'tryout_attempt_results_bounds_ck',
       sql`(${t.rank} is null or ${t.rank} > 0) and (${t.percentile} is null or ${t.percentile} between 0 and 100) and (${t.standardError} is null or ${t.standardError} >= 0)`,

@@ -151,6 +151,7 @@ const groups = [
       'PackageSourceDto',
       'PackageCheckDto',
       'PackageValidationDto',
+      'TryoutTechnicalIssueDto',
       'CreateContentPackageDto',
       'ApproveContentPackageDto',
       'PublishContentPackageDto',

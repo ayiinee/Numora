@@ -152,9 +152,7 @@ export class TryoutVariantGenerationService {
       blockers.add('SOURCE_PACKAGE_NOT_ORIGINAL');
     if (rows.some((row) => row.usage_type !== 'TRYOUT'))
       blockers.add('SOURCE_PACKAGE_USAGE_MISMATCH');
-    if (
-      rows.some((row) => row.content_status !== 'READY' || row.validation_state !== 'CONTENT_VALID')
-    )
+    if (rows.some((row) => row.content_status === 'ARCHIVED'))
       blockers.add('SOURCE_PACKAGE_CONTENT_INVALID');
     if (anchors.length !== 5) blockers.add('ANCHOR_COUNT_INVALID');
     if (anchors.some((id) => !rows.some((row) => row.question_version_id === id)))

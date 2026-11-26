@@ -28,11 +28,21 @@ export async function provision(config, api, { apply = false, now = Date.now() }
       config.waveTitle.trim(),
     'Nama gelombang wajib, maksimal 160 karakter.',
   );
+  const pair = config.packageIds ?? [config.originalPackageId, config.variantPackageId];
+  if (config.packageIds && (config.originalPackageId || config.variantPackageId))
+    assert(
+      pair.length === 2 &&
+        pair.includes(config.originalPackageId) &&
+        pair.includes(config.variantPackageId),
+      'Konfigurasi paket lama dan baru bertentangan.',
+    );
   assert(
-    uuid.test(config.originalPackageId) &&
-      uuid.test(config.variantPackageId) &&
-      config.originalPackageId !== config.variantPackageId,
-    'Dua UUID paket berbeda diperlukan.',
+    Array.isArray(pair) &&
+      pair.length >= 1 &&
+      pair.length <= 5 &&
+      new Set(pair).size === pair.length &&
+      pair.every((id) => uuid.test(id)),
+    'Pilih 1-5 UUID paket unik.',
   );
   for (const value of [config.startsAt, config.closesAt])
     assert(
@@ -46,17 +56,38 @@ export async function provision(config, api, { apply = false, now = Date.now() }
     'Jadwal tutup harus setelah mulai.',
   );
   assert(
-    Array.isArray(config.schools) && config.schools.length > 0 && config.schools.length <= 1000,
+    Array.isArray(config.schools) &&
+      config.schools.length <= 1000 &&
+      (config.schools.length > 0 || config.mandiriPackageIds?.length > 0),
     'Daftar sekolah wajib.',
   );
+  const mandiriIds = config.mandiriPackageIds ?? [];
   assert(
-    config.schools.every(
-      (s) => typeof s === 'string' && s.trim() && `TRY OUT TKA ${s}`.length <= 160,
+    Array.isArray(mandiriIds) &&
+      mandiriIds.length <= 5 &&
+      new Set(mandiriIds).size === mandiriIds.length &&
+      mandiriIds.every((id) => pair.includes(id)),
+    'Subset Mandiri tidak valid.',
+  );
+  assert(
+    config.schools.every((s) =>
+      typeof s === 'string'
+        ? !!s.trim() && `TRY OUT TKA ${s}`.length <= 160
+        : s &&
+          uuid.test(s.schoolId) &&
+          typeof s.name === 'string' &&
+          s.name.trim() &&
+          (!s.packageIds ||
+            (Array.isArray(s.packageIds) &&
+              s.packageIds.length > 0 &&
+              new Set(s.packageIds).size === s.packageIds.length &&
+              s.packageIds.every((id) => pair.includes(id)))),
     ),
     'Nama sekolah tidak sah.',
   );
   assert(
-    new Set(config.schools.map(normalize)).size === config.schools.length,
+    new Set(config.schools.map((s) => (typeof s === 'string' ? normalize(s) : s.schoolId))).size ===
+      config.schools.length,
     'Sekolah duplikat.',
   );
 
@@ -69,24 +100,40 @@ export async function provision(config, api, { apply = false, now = Date.now() }
   const packages = await pages(api, `${base}/options`, 'packages', 'packageTotal');
   const schools = await pages(api, `${base}/options`, 'schools', 'schoolTotal');
   const batches = await pages(api, base, 'items', 'total');
-  const pair = [config.originalPackageId, config.variantPackageId];
   const selected = pair.map((id) => packages.find((p) => p.id === id));
   assert(
     selected.every((p) => p?.valid && p.status === 'PUBLISHED'),
-    'Kedua paket harus terbit, non-demo dan tersedia.',
+    'Semua paket harus terbit dan lengkap.',
   );
-  // Pair lineage is validated by the backend; generated variants have a different family code.
+
   const waves = options.waves.filter((w) => normalize(w.title) === normalize(config.waveTitle));
   assert(waves.length <= 1, 'Nama gelombang ambigu.');
   let waveId = waves[0]?.id;
   if (waveId)
     assert(
-      waves[0].originalPackageId === pair[0] && waves[0].variantPackageId === pair[1],
+      (
+        waves[0].packages?.map((p) => p.id) ??
+        [waves[0].originalPackageId, waves[0].variantPackageId].filter(Boolean)
+      ).length === pair.length &&
+        pair.every((id) =>
+          (
+            waves[0].packages?.map((p) => p.id) ?? [
+              waves[0].originalPackageId,
+              waves[0].variantPackageId,
+            ]
+          ).includes(id),
+        ),
       'Pasangan gelombang existing berbeda.',
     );
 
-  const plan = config.schools.map((name) => {
-    const matches = schools.filter((s) => normalize(s.schoolName) === normalize(name));
+  const plan = config.schools.map((target) => {
+    const name = typeof target === 'string' ? target : target.name;
+    const targetIds = typeof target === 'string' ? pair : (target.packageIds ?? pair);
+    const matches = schools.filter((s) =>
+      typeof target === 'string'
+        ? normalize(s.schoolName) === normalize(name)
+        : s.schoolId === target.schoolId,
+    );
     assert(
       matches.length === 1 && uuid.test(matches[0].schoolId),
       `Sekolah tidak ditemukan atau ambigu: ${name}`,
@@ -108,7 +155,7 @@ export async function provision(config, api, { apply = false, now = Date.now() }
         `Jadwal batch existing berbeda: ${title}`,
       );
       assert(
-        batch.packages.length === 2 &&
+        batch.packages.length === pair.length &&
           pair.every((id) => batch.packages.some((p) => p.id === id)) &&
           batch.mandiriPackageId === null,
         `Paket/penerima existing berbeda: ${title}`,
@@ -117,18 +164,47 @@ export async function provision(config, api, { apply = false, now = Date.now() }
       assert(
         batch.schools.length === 1 &&
           school.schoolId === matches[0].schoolId &&
-          school.packageId === pair[0] &&
-          school.variantPackageId === pair[1] &&
-          school.allocationMode === 'BALANCED_50_50',
+          (school.packageIds ?? [school.packageId, school.variantPackageId].filter(Boolean))
+            .length === targetIds.length &&
+          targetIds.every((id) =>
+            (school.packageIds ?? [school.packageId, school.variantPackageId]).includes(id),
+          ),
         `Delegasi existing berbeda: ${title}`,
       );
     }
-    return { title, schoolId: matches[0].schoolId, batch };
+    return { title, schoolId: matches[0].schoolId, batch, packageIds: targetIds };
   });
+  if (mandiriIds.length) {
+    const title = config.mandiriTitle ?? `TRY OUT TKA UMUM ${config.waveTitle}`;
+    assert(
+      typeof title === 'string' && title.trim() && title.length <= 160,
+      'Judul batch Mandiri tidak valid.',
+    );
+    const existing = batches.filter((b) => normalize(b.title) === normalize(title));
+    assert(existing.length <= 1, 'Batch Mandiri ambigu.');
+    const batch = existing[0];
+    if (batch) {
+      const ids = batch.mandiriPackageIds ?? (batch.mandiriPackageId ? pair : []);
+      assert(
+        waveId &&
+          batch.waveId === waveId &&
+          ['DRAFT', 'SCHEDULED', 'OPEN', 'CLOSED'].includes(batch.state) &&
+          Date.parse(batch.startsAt) === Date.parse(config.startsAt) &&
+          Date.parse(batch.closesAt) === Date.parse(config.closesAt) &&
+          !batch.schools.length &&
+          batch.packages.length === pair.length &&
+          pair.every((id) => batch.packages.some((p) => p.id === id)) &&
+          ids.length === mandiriIds.length &&
+          mandiriIds.every((id) => ids.includes(id)),
+        'Konfigurasi batch Mandiri existing berbeda.',
+      );
+    }
+    plan.push({ title, schoolId: null, batch, packageIds: mandiriIds });
+  }
   if (plan.some((p) => !p.batch || p.batch.state === 'DRAFT'))
     assert(
-      Date.parse(config.startsAt) > now,
-      'Waktu mulai sudah lewat; jadwal tidak diubah otomatis.',
+      Date.parse(config.closesAt) > now,
+      'Waktu tutup sudah lewat; jadwal tidak diubah otomatis.',
     );
   if (!apply)
     return plan.map((p) => ({
@@ -147,16 +223,22 @@ export async function provision(config, api, { apply = false, now = Date.now() }
         startsAt: config.startsAt,
         closesAt: config.closesAt,
         packageIds: pair,
-        mandiriPackageId: null,
+        ...(item.schoolId ? { mandiriPackageId: null } : { mandiriPackageIds: item.packageIds }),
         ...(waveId ? { waveId } : { newWaveTitle: config.waveTitle }),
-        schools: [
-          {
-            schoolId: item.schoolId,
-            packageId: pair[0],
-            variantPackageId: pair[1],
-            allocationMode: 'BALANCED_50_50',
-          },
-        ],
+        schools: item.schoolId
+          ? [
+              {
+                schoolId: item.schoolId,
+                ...(config.packageIds
+                  ? { packageIds: item.packageIds }
+                  : {
+                      packageId: pair[0],
+                      variantPackageId: pair[1],
+                      allocationMode: 'BALANCED_50_50',
+                    }),
+              },
+            ]
+          : [],
       });
       assert(
         uuid.test(created.id),

@@ -41,7 +41,7 @@ const initial: SaveTryoutBatchDto = {
   startsAt: '',
   closesAt: '',
   packageIds: [],
-  mandiriPackageId: null,
+  mandiriPackageIds: [],
   schools: [],
 };
 
@@ -364,35 +364,37 @@ function BatchWorkspace({
                     <tbody>
                       <tr>
                         <td>Sekolah tanpa delegasi</td>
-                        <td>
-                          {detail.waveId
-                            ? 'Akses dimatikan'
-                            : (detail.packages[0]?.name ?? 'Paket utama')}
-                        </td>
+                        <td>Akses dimatikan</td>
                       </tr>
                       <tr>
                         <td>Siswa Mandiri</td>
                         <td>
-                          {detail.waveId && detail.mandiriPackageId
-                            ? `${detail.packages.map((p) => p.name).join(' / ')} (50/50)`
-                            : (detail.packages.find((p) => p.id === detail.mandiriPackageId)
-                                ?.name ?? 'Akses dimatikan')}
+                          {detail.packages
+                            .filter((p) =>
+                              (
+                                detail.mandiriPackageIds ??
+                                (detail.mandiriPackageId ? [detail.mandiriPackageId] : [])
+                              ).includes(p.id),
+                            )
+                            .map((p) => p.name)
+                            .join(' / ') || 'Akses dimatikan'}
                         </td>
                       </tr>
                       {detail.schools.map((s) => (
                         <tr key={s.schoolId}>
                           <td>{s.schoolName}</td>
                           <td>
-                            {detail.packages.find((p) => p.id === s.packageId)?.name ??
-                              'Paket tidak ditemukan'}
-                            {s.allocationMode === 'BALANCED_50_50' && (
-                              <>
-                                {' / '}
-                                {detail.packages.find((p) => p.id === s.variantPackageId)?.name ??
-                                  'Varian tidak ditemukan'}
-                                {' (50/50)'}
-                              </>
-                            )}
+                            {detail.packages
+                              .filter((p) =>
+                                (
+                                  s.packageIds ?? [
+                                    s.packageId,
+                                    ...(s.variantPackageId ? [s.variantPackageId] : []),
+                                  ]
+                                ).includes(p.id),
+                              )
+                              .map((p) => p.name)
+                              .join(' / ') || 'Paket tidak ditemukan'}
                           </td>
                         </tr>
                       ))}
@@ -553,7 +555,10 @@ function BatchWorkspace({
                     </div>
                   </dl>
                   <p>Siswa mendapat akses sesuai delegasi saat jadwal mulai.</p>
-                  <p className="tryout-publish-notice">Pengaturan terkunci saat batch dimulai.</p>
+                  <p className="tryout-publish-notice">
+                    Daftar paket dan penerima terkunci setelah batch diterbitkan. Jadwal yang sudah
+                    dimulai langsung membuka akses.
+                  </p>
                 </div>
               )}
               {error && <p role="alert">{error}</p>}
@@ -588,12 +593,14 @@ function BatchForm({
           startsAt: local(batch.startsAt),
           closesAt: local(batch.closesAt),
           packageIds: batch.packages.map((p) => p.id),
-          mandiriPackageId: batch.mandiriPackageId,
+          mandiriPackageIds:
+            batch.mandiriPackageIds ?? (batch.mandiriPackageId ? [batch.mandiriPackageId] : []),
           schools: batch.schools.map((s) => ({
             schoolId: s.schoolId,
-            packageId: s.packageId,
-            allocationMode: s.allocationMode,
-            variantPackageId: s.variantPackageId,
+            packageIds: s.packageIds ?? [
+              s.packageId,
+              ...(s.variantPackageId ? [s.variantPackageId] : []),
+            ],
           })),
           expectedRevision: batch.revision,
         }
@@ -601,8 +608,12 @@ function BatchForm({
   );
   const [options, setOptions] = useState<TryoutBatchOptionsDto | null>(null);
   const [knownPackages, setKnownPackages] = useState(batch?.packages ?? []);
-  const [knownSchools, setKnownSchools] = useState(
-    batch?.schools.map((s) => ({ schoolId: s.schoolId, schoolName: s.schoolName })) ?? [],
+  const [knownSchools, setKnownSchools] = useState<TryoutBatchOptionsDto['schools']>(
+    batch?.schools.map((s) => ({
+      schoolId: s.schoolId,
+      schoolName: s.schoolName,
+      schoolCode: s.schoolCode ?? s.schoolId,
+    })) ?? [],
   );
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
@@ -616,7 +627,7 @@ function BatchForm({
   const waveMode = !batch || !!batch.waveId;
   const availablePackages = (options?.packages ?? []).filter(
     (p) =>
-      (!waveMode || (!form.waveId && form.packageIds.length < 2)) &&
+      (!waveMode || (!form.waveId && form.packageIds.length < 5)) &&
       !form.packageIds.includes(p.id),
   );
   useEffect(() => {
@@ -668,7 +679,7 @@ function BatchForm({
             recipientsOnly
               ? {
                   schools: form.schools,
-                  mandiriPackageId: form.mandiriPackageId,
+                  mandiriPackageIds: form.mandiriPackageIds,
                   expectedRevision: form.expectedRevision,
                 }
               : {
@@ -713,9 +724,9 @@ function BatchForm({
                       ...form,
                       waveId: wave?.id ?? null,
                       newWaveTitle: '',
-                      packageIds: wave ? [wave.originalPackageId, wave.variantPackageId] : [],
+                      packageIds: wave ? wave.packages.map((p) => p.id) : [],
                       schools: [],
-                      mandiriPackageId: null,
+                      mandiriPackageIds: [],
                     });
                   }}
                 >
@@ -835,10 +846,10 @@ function BatchForm({
                   <Badge>
                     {p.id === form.packageIds[0]
                       ? waveMode
-                        ? 'Original'
+                        ? 'Paket 1'
                         : 'Utama'
                       : waveMode
-                        ? 'Varian'
+                        ? 'Paket tambahan'
                         : 'Tambahan'}
                   </Badge>
                   <Link href={`/admin/assessments/tryout/${p.id}`}>
@@ -851,10 +862,8 @@ function BatchForm({
                       disabled={
                         (waveMode && !!form.waveId) ||
                         (p.id === form.packageIds[0] && form.packageIds.length > 1) ||
-                        form.schools.some(
-                          (s) => s.packageId === p.id || s.variantPackageId === p.id,
-                        ) ||
-                        form.mandiriPackageId === p.id
+                        form.schools.some((s) => s.packageIds?.includes(p.id)) ||
+                        form.mandiriPackageIds?.includes(p.id)
                       }
                       onClick={() =>
                         setForm({
@@ -877,118 +886,61 @@ function BatchForm({
               </header>
               <p className="tryout-batch-recipient-info">
                 {waveMode
-                  ? 'Hanya sekolah terpilih yang mendapat akses. Pilih sekolah atau Mandiri. Paket dibagi seimbang saat siswa mulai. Siswa boleh bergabung setelah publikasi.'
-                  : 'Pilih satu paket per sekolah, atau aktifkan pembagian 50/50. Akses Mandiri diatur terpisah.'}
+                  ? 'Pilih subset paket per sekolah dan untuk Mandiri. Paket dibagi rata saat siswa mulai. Siswa boleh bergabung setelah publikasi.'
+                  : 'Pilih subset paket per target. Akses Mandiri diatur terpisah.'}
               </p>
               <div className="tryout-batch-recipient-controls">
-                <label>
-                  {waveMode ? 'Akses Mandiri (original + varian seimbang)' : 'Paket siswa Mandiri'}
-                  <select
-                    disabled={waveMode && form.schools.length > 0}
-                    value={form.mandiriPackageId ?? ''}
-                    onChange={(e) => setForm({ ...form, mandiriPackageId: e.target.value || null })}
-                  >
-                    <option value="">Akses dimatikan</option>
-                    {(waveMode ? selectedPackages.slice(0, 1) : selectedPackages).map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <fieldset>
+                  <legend>Paket siswa Mandiri</legend>
+                  <p>Kosong berarti akses dimatikan. Paket terpilih dibagi rata.</p>
+                  {selectedPackages.map((p) => (
+                    <label key={p.id}>
+                      <input
+                        type="checkbox"
+                        checked={form.mandiriPackageIds?.includes(p.id) ?? false}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            mandiriPackageIds: e.target.checked
+                              ? [...(form.mandiriPackageIds ?? []), p.id]
+                              : (form.mandiriPackageIds ?? []).filter((id) => id !== p.id),
+                          })
+                        }
+                      />
+                      {p.name}
+                    </label>
+                  ))}
+                </fieldset>
                 {form.schools.map((s) => (
-                  <div className="tryout-batch-choice tryout-batch-delegation" key={s.schoolId}>
-                    <label>
+                  <fieldset key={s.schoolId}>
+                    <legend>
                       {knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ?? 'Sekolah'}
-                      <select
-                        disabled={waveMode}
-                        aria-label={`Paket ${knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ?? 'sekolah'}`}
-                        value={s.packageId}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            schools: form.schools.map((old) =>
-                              old.schoolId === s.schoolId
-                                ? {
-                                    ...old,
-                                    packageId: e.target.value,
-                                    variantPackageId:
-                                      old.variantPackageId === e.target.value
-                                        ? null
-                                        : (old.variantPackageId ?? null),
-                                  }
-                                : old,
-                            ),
-                          })
-                        }
-                      >
-                        {selectedPackages.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Mode alokasi
-                      <select
-                        disabled={waveMode}
-                        value={s.allocationMode ?? 'SINGLE_PACKAGE'}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            schools: form.schools.map((old) =>
-                              old.schoolId === s.schoolId
-                                ? {
-                                    ...old,
-                                    allocationMode: e.target.value as
-                                      'SINGLE_PACKAGE' | 'BALANCED_50_50',
-                                    variantPackageId:
-                                      e.target.value === 'BALANCED_50_50'
-                                        ? (old.variantPackageId ??
-                                          selectedPackages.find((p) => p.id !== old.packageId)
-                                            ?.id ??
-                                          null)
-                                        : null,
-                                  }
-                                : old,
-                            ),
-                          })
-                        }
-                      >
-                        <option value="SINGLE_PACKAGE">Satu paket</option>
-                        <option value="BALANCED_50_50">Seimbang 50/50</option>
-                      </select>
-                    </label>
-                    {s.allocationMode === 'BALANCED_50_50' && (
-                      <label>
-                        Paket varian
-                        <select
-                          required
-                          disabled={waveMode}
-                          value={s.variantPackageId ?? ''}
+                    </legend>
+                    <p>Pilih 1–5 paket. Pembagian otomatis rata saat siswa mulai.</p>
+                    {selectedPackages.map((p) => (
+                      <label key={p.id}>
+                        <input
+                          type="checkbox"
+                          checked={s.packageIds?.includes(p.id) ?? false}
                           onChange={(e) =>
                             setForm({
                               ...form,
                               schools: form.schools.map((old) =>
                                 old.schoolId === s.schoolId
-                                  ? { ...old, variantPackageId: e.target.value || null }
+                                  ? {
+                                      schoolId: old.schoolId,
+                                      packageIds: e.target.checked
+                                        ? [...(old.packageIds ?? []), p.id]
+                                        : (old.packageIds ?? []).filter((id) => id !== p.id),
+                                    }
                                   : old,
                               ),
                             })
                           }
-                        >
-                          <option value="">Pilih paket varian</option>
-                          {selectedPackages
-                            .filter((p) => p.id !== s.packageId)
-                            .map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                        </select>
+                        />
+                        {p.name}
                       </label>
-                    )}
+                    ))}
                     <Button
                       type="button"
                       variant="secondary"
@@ -1001,16 +953,13 @@ function BatchForm({
                     >
                       Hapus delegasi
                     </Button>
-                  </div>
+                  </fieldset>
                 ))}
                 <label>
                   Tambahkan sekolah
                   <select
                     value=""
-                    disabled={
-                      !form.packageIds.length ||
-                      (waveMode && (!!form.mandiriPackageId || form.packageIds.length !== 2))
-                    }
+                    disabled={!form.packageIds.length}
                     onChange={(e) => {
                       if (e.target.value)
                         setForm({
@@ -1019,9 +968,7 @@ function BatchForm({
                             ...form.schools,
                             {
                               schoolId: e.target.value,
-                              packageId: form.packageIds[0]!,
-                              allocationMode: waveMode ? 'BALANCED_50_50' : 'SINGLE_PACKAGE',
-                              variantPackageId: waveMode ? form.packageIds[1]! : null,
+                              packageIds: [...form.packageIds],
                             },
                           ],
                         });
@@ -1032,7 +979,7 @@ function BatchForm({
                       .filter((s) => !form.schools.some((old) => old.schoolId === s.schoolId))
                       .map((s) => (
                         <option key={s.schoolId} value={s.schoolId}>
-                          {s.schoolName}
+                          {s.schoolName} · {s.schoolCode ?? s.schoolId}
                         </option>
                       ))}
                   </select>
@@ -1046,13 +993,7 @@ function BatchForm({
               <strong>
                 {form.packageIds.length} paket / {form.schools.length} sekolah
               </strong>
-              <p>
-                {recipientsOnly
-                  ? 'Perubahan berlaku untuk siswa yang belum mulai. Attempt yang sudah dimulai tetap memakai paket awal.'
-                  : batch && batch.state !== 'DRAFT'
-                    ? 'Pengaturan umum dapat diubah sebelum batch dimulai.'
-                    : 'Disimpan sebagai draft. Terbitkan setelah pengaturan selesai.'}
-              </p>
+              <p>Disimpan sebagai draft. Paket dan target dikunci setelah publikasi.</p>
             </div>
             <div className="admin-content-actions">
               <Button type="submit" disabled={!form.packageIds.length}>
@@ -1105,12 +1046,18 @@ function BatchForm({
                   <span>
                     {p.usedBatchCount} batch · {p.valid ? 'Valid' : 'Belum valid'}
                   </span>
+                  {!p.valid && (
+                    <p>
+                      {p.blockers?.join(' ') ||
+                        'Terbitkan paket yang sudah lengkap terlebih dahulu.'}
+                    </p>
+                  )}
                 </div>
                 <Button
                   type="button"
                   variant="secondary"
                   className="tryout-batch-package-select"
-                  disabled={pending || optionLoading}
+                  disabled={pending || optionLoading || !p.valid}
                   onClick={() => {
                     setForm({ ...form, packageIds: [...form.packageIds, p.id] });
                     setPackageModalOpen(false);

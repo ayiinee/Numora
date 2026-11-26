@@ -402,7 +402,7 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
       { packageId: fixture.tryoutPackageId },
       'tryout',
     );
-    expect(started.status).toBe(201);
+    expect(started.status, JSON.stringify(started.body)).toBe(201);
     const attempt = started.body;
     expect(attempt.questions).toHaveLength(30);
     expect(attempt.xpPolicyVersion).toBeNull();

@@ -11,18 +11,19 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
 function fixture() {
   const state = { waves: [], batches: [], writes: 0, losePublishResponse: false };
+  state.packageIds = [config.originalPackageId, config.variantPackageId];
   state.schools = config.schools.map((schoolName, i) => ({ schoolName, schoolId: id(i + 1) }));
   const api = async (path, body) => {
     if (path.includes('/options?'))
       return {
         waves: state.waves,
-        packages: [config.originalPackageId, config.variantPackageId].map((packageId) => ({
+        packages: state.packageIds.map((packageId) => ({
           id: packageId,
           familyCode: packageId === config.originalPackageId ? 'UPLOAD-TEST' : 'GENERATOR_TEST',
           valid: true,
           status: 'PUBLISHED',
         })),
-        packageTotal: 2,
+        packageTotal: state.packageIds.length,
         schools: state.schools,
         schoolTotal: state.schools.length,
       };
@@ -46,6 +47,7 @@ function fixture() {
           title: body.newWaveTitle,
           originalPackageId: body.packageIds[0],
           variantPackageId: body.packageIds[1],
+          packages: body.packageIds.map((id) => ({ id })),
         });
       const batch = {
         ...body,
@@ -86,6 +88,40 @@ test('preview resolves six schools without mutations; publication and rerun pres
   assert.equal(state.writes, 12);
 });
 
+test('five-package pool uses school IDs, subsets and a separate Mandiri batch; rerun is idempotent', async () => {
+  const { state, api } = fixture();
+  state.packageIds = [1, 2, 3, 4, 5].map((n) => id(1000 + n));
+  const input = {
+    waveTitle: 'TEST pools',
+    startsAt: config.startsAt,
+    closesAt: config.closesAt,
+    packageIds: state.packageIds,
+    schools: [
+      {
+        schoolId: state.schools[0].schoolId,
+        name: 'TEST target by ID',
+        packageIds: state.packageIds.slice(0, 3),
+      },
+    ],
+    mandiriPackageIds: state.packageIds.slice(3),
+    mandiriTitle: 'TEST Mandiri',
+  };
+  await provision(input, api, { apply: true, now: Date.parse(config.startsAt) + 1000 });
+  assert.deepEqual(state.batches[0].schools[0].packageIds, state.packageIds.slice(0, 3));
+  assert.deepEqual(state.batches[1].mandiriPackageIds, state.packageIds.slice(3));
+  assert.deepEqual(state.batches[1].schools, []);
+  await provision(input, api, { apply: true, now });
+  assert.equal(state.writes, 4);
+  await assert.rejects(
+    provision({ ...input, packageIds: [...input.packageIds, id(1006)] }, api),
+    /1-5/,
+  );
+  await assert.rejects(
+    provision({ ...input, mandiriPackageIds: [id(9999)] }, api),
+    /Subset Mandiri/,
+  );
+});
+
 for (const lostResponse of ['losePublishResponse', 'loseCreateResponse'])
   test(`${lostResponse} resumes without duplicate batch or wave`, async () => {
     const { state, api } = fixture();
@@ -97,7 +133,7 @@ for (const lostResponse of ['losePublishResponse', 'loseCreateResponse'])
     assert.equal(state.writes, 12);
   });
 
-test('missing school, changed existing schedule and elapsed start all abort before mutation', async () => {
+test('missing school, changed existing schedule and elapsed close all abort before mutation', async () => {
   const { state, api } = fixture();
   state.schools.pop();
   await assert.rejects(provision(config, api, { apply: true, now }), /Sekolah tidak ditemukan/);
@@ -105,9 +141,9 @@ test('missing school, changed existing schedule and elapsed start all abort befo
   await assert.rejects(
     provision({ ...config, schools: config.schools.slice(0, 1) }, api, {
       apply: true,
-      now: Date.parse(config.startsAt),
+      now: Date.parse(config.closesAt),
     }),
-    /Waktu mulai sudah lewat/,
+    /Waktu tutup sudah lewat/,
   );
   assert.equal(state.writes, 0);
   await provision({ ...config, schools: config.schools.slice(0, 1) }, api, { apply: true, now });

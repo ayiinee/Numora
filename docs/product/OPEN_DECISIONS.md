@@ -1,3 +1,5 @@
+**ENGINEERING DECISION - owner-approved redesign, 26 November 2026:** Tryout publication requires technical completeness only, without curriculum approval, manual item review, import history or scientific linking gates. Each new batch supports 1-5 packages with a subset per school/Mandiri, allocated evenly on start. Existing packages use the new checks; historical attempts/results stay pinned. See [Tryout redesign](../development/TRYOUT_SIMPLE_PUBLICATION.md).
+
 **ENGINEERING DECISION - owner instruction, 26 November 2026:** New Tryout attempts receive 75 minutes (4,500 seconds), capped by batch/package close. Existing attempt deadlines stay pinned. Batch package selection/publication no longer requires matching parent/family codes or generator lineage. Content, distribution, scoring policy, wave pair identity, school access and balanced allocation gates remain. Pair selection does not certify IRT linking. Supersedes the 25 November duration and previous parent restrictions.
 
 **ENGINEERING DECISION — 26 November 2026:** pasangan Tryout generator/revisi boleh berbeda kode keluarga dari original jika relasi sumber generator durable cocok; gate publikasi/distribusi/policy tetap. Lihat docs/development/TRYOUT_SCHOOL_WAVES.md.
@@ -44,14 +46,14 @@ riset untuk produksi. ADM-DEP-01/02/06 juga tetap tercatat dalam sumber.
 
 **ENGINEERING DECISION — penutupan discovery rutin Admin, 10 November 2026:** [PRD Admin v1.0](ADMIN_PRD.md) dan [Spesifikasi Teknis Admin](../architecture/ADMIN_TECHNICAL_SPEC.md) mengonsolidasikan [ADM-DEC-001–076](ADMIN_REQUIREMENTS_DISCOVERY.md#21-keputusan-kebutuhan-dari-klarifikasi-pemilik). Instruksi terakhir pemilik: gunakan atribut/validator/pola existing; hentikan pertanyaan atribut. Daftar pertanyaan discovery hanya arsip. Metadata/urutan video, media, duplikat impor, arsip master, konteks daftar/draft, mobile dan notification center sudah dijawab; bukan OPEN lagi.
 
-| Dependency Admin aktif | Status dan batas |
-| --- | --- |
-| ADM-DEP-01 — distribusi Drill | OPEN: rekonsiliasi completion balancing/preferensi retry/default original ADM-DEC-010. Routing pilot mengimplementasikan kelompok persisten v2 dengan original dan varian aktif. Pemerataan completion dan rotasi lintas arm menunggu keputusan. |
-| ADM-DEP-02 — paket invalid/DRIFT | OPEN: rekonsiliasi keep-available ADM-DEC-024 dengan stop distribusi baru v2. Laporan masuk tidak otomatis invalid; sesi/histori tetap pinned. |
-| ADM-DEP-03 — dokumen varian/batch | DEFERRED/OPEN: jalur pembuatan varian, precedence alokasi sekolah/kelas, multisekolah/Mandiri dan perubahan membership. Anchor3/5, satu varian/proses, multipaket, satu attempt/batch dan freeze sebelum mulai sudah ditetapkan. |
-| ADM-DEP-04 — penyerahan akademik/ilmiah | OPEN: blueprint/review konten, review rubrik Drill, parameter/gate/linking/mapping numerik, informasi IRT katalog dan producer/adapter/adopter/publikasi yang belum lengkap. Payload v1 dan metode reference-package prediction sudah ditetapkan; rubrik Pretest original dan Tryout yang disahkan tidak dibuka ulang. |
-| ADM-DEP-05 — pihak berwenang | OPEN: nama pemberi persetujuan akhir/akademik/Data dan operator recovery; pemisahan pembuat/pemeriksa belum ditetapkan. Gate existing tetap, tanpa bypass. |
-| ADM-DEP-06 — histori sekolah lintas transisi | OPEN: kewenangan saat ownership berubah/periode nonaktif berulang/attempt melewati cutoff. Kelas read-only, membership tetap dihitung, hasil IRT terlambat untuk attempt selesai sebelum cutoff, dan reaktivasi hak sah otomatis sudah ditetapkan. |
+| Dependency Admin aktif                       | Status dan batas                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ADM-DEP-01 — distribusi Drill                | OPEN: rekonsiliasi completion balancing/preferensi retry/default original ADM-DEC-010. Routing pilot mengimplementasikan kelompok persisten v2 dengan original dan varian aktif. Pemerataan completion dan rotasi lintas arm menunggu keputusan.                                                                       |
+| ADM-DEP-02 — paket invalid/DRIFT             | OPEN: rekonsiliasi keep-available ADM-DEC-024 dengan stop distribusi baru v2. Laporan masuk tidak otomatis invalid; sesi/histori tetap pinned.                                                                                                                                                                         |
+| ADM-DEP-03 — dokumen varian/batch            | DEFERRED/OPEN: jalur pembuatan varian, precedence alokasi sekolah/kelas, multisekolah/Mandiri dan perubahan membership. Anchor3/5, satu varian/proses, multipaket, satu attempt/batch dan freeze sebelum mulai sudah ditetapkan.                                                                                       |
+| ADM-DEP-04 — penyerahan akademik/ilmiah      | OPEN: blueprint/review konten, review rubrik Drill, parameter/gate/linking/mapping numerik, informasi IRT katalog dan producer/adapter/adopter/publikasi yang belum lengkap. Payload v1 dan metode reference-package prediction sudah ditetapkan; rubrik Pretest original dan Tryout yang disahkan tidak dibuka ulang. |
+| ADM-DEP-05 — pihak berwenang                 | OPEN: nama pemberi persetujuan akhir/akademik/Data dan operator recovery; pemisahan pembuat/pemeriksa belum ditetapkan. Gate existing tetap, tanpa bypass.                                                                                                                                                             |
+| ADM-DEP-06 — histori sekolah lintas transisi | OPEN: kewenangan saat ownership berubah/periode nonaktif berulang/attempt melewati cutoff. Kelas read-only, membership tetap dihitung, hasil IRT terlambat untuk attempt selesai sebelum cutoff, dan reaktivasi hak sah otomatis sudah ditetapkan.                                                                     |
 
 Detail rutin memakai baseline dan penjabaran teknis yang diberi label sesuai statusnya; tidak dianggap penghalang dokumen atau alasan meminta jawaban atribut lagi. Monetisasi setelah demo ditunda. Tidak ada perubahan runtime atau hasil QA aplikasi dalam konsolidasi ini. Catatan Admin historis di bawah tidak menggantikan register aktif pada [PRD §17](ADMIN_PRD.md#17-ketergantungan-substantif-dan-rekonsiliasi).
 
@@ -291,37 +293,31 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 
 **ENGINEERING DECISION — owner request:** generator results share the generator workspace. Generated packages enter existing question-import URL at step 2 without manual file transfer; source approvals and publication dependencies remain unchanged.
 
-
 ## Batch Tryout dan delegasi ? 10 November 2026
 
 **ENGINEERING DECISION ? persetujuan pemilik:** bank paket terpisah dari batch pelaksanaan. Batch memiliki judul, rentang mulai/tutup bebas dalam WIB, beberapa versi paket dan delegasi Mandiri/sekolah. Batch terbit boleh berjalan bersamaan. Siswa Mandiri tidak memiliki kelas aktif; sekolah tanpa delegasi tidak mendapat akses. Siswa multisekolah memilih satu sekolah yang sah saat mulai; assignment/attempt dikunci per siswa/batch. Beberapa penerima boleh memakai paket sama. Konfigurasi dapat direvisi sebelum mulai, terkunci saat mulai. Pembatalan sebelum mulai; stop dengan alasan saat berjalan. Durasi attempt sepuluh menit, dibatasi penutupan batch.
 
 **ENGINEERING DECISION:** delegasi adalah alokasi Admin, bukan randomisasi A/B. Paket historis, attempt dan XP tidak ditulis ulang. Aktivasi start berbasis batch terjadi setelah batch Admin pertama diterbitkan; endpoint start paket lama kemudian menolak start baru. Resume/histori tetap tersedia. Hasil multi-paket menunggu finalisasi seluruh batch dengan kontrak/policy sah; kegagalan tidak menghasilkan nilai buatan.
 
-## ENGINEERING DECISION � pemilik, 10 November 2026: publikasi Pretest sederhana
+## ENGINEERING DECISION � pemilik, 10 November 2026: publikasi Pretest sederhana
 
 Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetujuan Curriculum tambahan untuk paket Pretest. Sumber soal disiapkan Curriculum. Admin dapat langsung menerbitkan DRAFT yang lolos seluruh validasi server: jumlah 20, struktur/kunci/pembahasan, metadata/cakupan, provenance/media dan kompatibilitas scoring. Impor tetap menyimpan DRAFT, bukan publikasi otomatis. Masalah validasi tetap memblokir publikasi dan ditampilkan melalui checklist. Tidak mengubah aturan Drill/Tryout, penempatan Pretest, XP, paket terbit atau histori siswa. Snapshot/blueprint internal existing tetap dibuat secara transaksional saat publikasi; bukan langkah persetujuan manual baru.
-
 
 ## Automatic Pretest rubric - 10 November 2026
 
 **ENGINEERING DECISION - owner-approved plan:** Pretest imports use SEALED `PRETEST_PGK_PARTIAL_V1` rubrics validated by the scoring engine. Unchanged content with an invalid rubric creates a new version. `POST /api/v1/admin/content/packages/{id}/prepare-scoring` accepts `expectedRevision`, requires Content Admin and a DRAFT Pretest package. One audited transaction replaces only affected question-version references, preserving content, answers, order and count. Repeats at the current revision create no versions; stale revisions are rejected. Published packages, attempts, results and historical policy pins remain unchanged. Preparation does not publish. Scoring problems link to preparation rather than content editing.
 
-
 ## Audit Tryout - 10 November 2026
 
 **ENGINEERING DECISION - perbaikan aturan existing:** Draft belum terbit dapat dijadwal ulang saat tanggal lewat; batch terbit tetap terkunci saat mulai. Sekolah delegasi divalidasi ulang saat publikasi. Operasional dapat membaca daftar/detail batch; options dan mutasi khusus Content/Super. [Temuan dan verifikasi](../development/TRYOUT_AUDIT_2026-11-10.md). **OPEN:** rilis hasil canonical multi-paket masih dependency delivery; guard tidak dibuka dan policy tidak dikarang.
-
 
 ## Fallback paket utama - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.
 
-
 ## Delegasi batch terbit - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** penerima sekolah/Mandiri dapat diubah selama batch belum berakhir atau dibatalkan, termasuk saat berjalan. Perubahan hanya memengaruhi start baru. Daftar versi paket, paket utama, isi, jadwal mulai dan attempt existing tetap dipin. Mutasi khusus penerima memakai Content capability, expectedRevision, row lock, transaksi dan audit; batch tutup/batal ditolak.
-
 
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
@@ -344,7 +340,6 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan tiga revisi; lima saran tetap opsional. HOLD Curriculum B6-17, kalibrasi empiris/IRT dan rollout official tetap terpisah.
 
 **ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan empat revisi; lima saran tetap opsional. HOLD Curriculum B6-17, kalibrasi empiris/IRT dan rollout official tetap terpisah.
-
 
 **ENGINEERING DECISION — 15 November 2026:** untuk batch sekolah tunggal, pemilik memilih snapshot roster saat posting. Mode BALANCED_50_50 membagi siswa aktif ke original/varian dengan selisih maksimal satu; assignment siswa dan paket dipin untuk batch tersebut. Ini menggantikan batas satu paket per sekolah hanya ketika mode balanced dipilih.
 **ENGINEERING DECISION — 25 November 2026:** six-character PvP room codes and active-room recovery are approved implementation details. See the [Realtime PvP contract](../architecture/REALTIME_PVP.md#websocket-contract).
