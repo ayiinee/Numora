@@ -106,7 +106,9 @@ test('Tryout package publication delegates scheduling to Batch Tryout', async ({
   );
   const publish = publication.getByRole('button', { name: 'Publikasikan paket', exact: true });
   await expect(publish).toBeEnabled();
-  await expect(publication.getByRole('checkbox')).toHaveCount(0);
+  await expect(
+    publication.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }),
+  ).toHaveCount(0);
   await expect(publication.getByLabel('Bukti persetujuan tim kurikulum')).toHaveCount(0);
   await publish.click();
   await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
