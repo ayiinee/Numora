@@ -644,10 +644,9 @@ export class ContentPackagesService {
           )
             scoringRepairs.add(r.version.id);
           if (
+            p.assessmentType === 'PRETEST' &&
             content.type !== 'SINGLE_CHOICE' &&
-            (p.assessmentType === 'PRETEST'
-              ? scoringRepairs.has(r.version.id)
-              : !r.version.scoringRubricVersionId)
+            scoringRepairs.has(r.version.id)
           )
             issues.push(
               'Aturan penilaian belum sesuai. Untuk Pretest Draft, tekan Siapkan penilaian otomatis.',
@@ -690,7 +689,14 @@ export class ContentPackagesService {
     const technicalIssues =
       p.assessmentType === 'TRYOUT' ? await tryoutTechnicalIssues(tx, id) : [];
     if (p.assessmentType === 'TRYOUT') {
-      runtimeIssues.clear();
+      for (const r of rows)
+        for (const message of runtimeIssues.get(r.version.id) ?? [])
+          technicalIssues.push({
+            code: 'RUNTIME',
+            questionNumber: r.item.displayOrder,
+            field: 'content',
+            message,
+          });
       checks.splice(0, checks.length, {
         code: 'TECHNICAL',
         passed: !technicalIssues.length,
