@@ -686,6 +686,11 @@ export function ContentPackageWorkspace({
                 </Badge>
               </div>
               <div className="assessment-header-actions">
+                {detail.assessmentType === 'TRYOUT' && (
+                  <Link className="button-link" href="/admin/tryout-batches">
+                    Batch Tryout
+                  </Link>
+                )}
                 {detail.assessmentType === 'TRYOUT' &&
                   detail.status === 'PUBLISHED' &&
                   detail.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
@@ -1116,7 +1121,10 @@ export function ContentPackageWorkspace({
                     </Button>
                   )}
                   <nav className="assessment-review-steps" aria-label="Tahap pemeriksaan soal">
-                    {(['Isi soal', 'Media', 'Validasi', 'Keputusan'] as const).map((label, i) => (
+                    {(detail.assessmentType === 'TRYOUT'
+                      ? ['Isi soal', 'Media', 'Validasi']
+                      : ['Isi soal', 'Media', 'Validasi', 'Keputusan']
+                    ).map((label, i) => (
                       <button
                         type="button"
                         key={label}
@@ -1302,12 +1310,14 @@ export function ContentPackageWorkspace({
                                 </Link>
                               </div>
                             )}
-                            <p>
-                              {item.reviewedAt
-                                ? `Ditinjau pada ${new Date(item.reviewedAt).toLocaleString('id-ID')}`
-                                : 'Belum ditinjau'}{' '}
-                              · {item.contentStatus}
-                            </p>
+                            {detail.assessmentType !== 'TRYOUT' && (
+                              <p>
+                                {item.reviewedAt
+                                  ? `Ditinjau pada ${new Date(item.reviewedAt).toLocaleString('id-ID')}`
+                                  : 'Belum ditinjau'}{' '}
+                                · {item.contentStatus}
+                              </p>
+                            )}
                             {item.question && (
                               <Link
                                 href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
@@ -1504,6 +1514,12 @@ export function ContentPackageWorkspace({
                         : 'Persetujuan dan penerbitan'
                       : 'Pengelolaan publikasi'}
                   </h3>
+                  {detail.assessmentType === 'TRYOUT' && (
+                    <p>
+                      Atur jadwal dan penerima setelah paket terbit melalui{' '}
+                      <Link href="/admin/tryout-batches">Batch Tryout</Link>.
+                    </p>
+                  )}
                   {detail.status === 'DRAFT' && detail.assessmentType === 'DRILL' && (
                     <div className="content-import-card">
                       <p className="assessment-publication-summary">
@@ -1679,7 +1695,9 @@ export function ContentPackageWorkspace({
                               void run(async () => {
                                 await publishContentPackage(token, detail.id, {
                                   expectedRevision: detail.contentRevision,
-                                  confirmed: true,
+                                  ...(detail.assessmentType === 'PRETEST'
+                                    ? { confirmed: true }
+                                    : {}),
                                 });
                                 await choose(detail.id);
                                 setReload((n) => n + 1);

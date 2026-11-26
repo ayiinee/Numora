@@ -105,9 +105,11 @@ test('Tryout package publication delegates scheduling to Batch Tryout', async ({
     '/admin/tryout-batches',
   );
   const publish = publication.getByRole('button', { name: 'Publikasikan paket', exact: true });
-  await expect(publish).toBeDisabled();
-  await page.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }).check();
+  await expect(publish).toBeEnabled();
+  await expect(publication.getByRole('checkbox')).toHaveCount(0);
+  await expect(publication.getByLabel('Bukti persetujuan tim kurikulum')).toHaveCount(0);
   await publish.click();
+  await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
   await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
   expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
     expectedRevision: 1,
