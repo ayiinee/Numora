@@ -32,8 +32,10 @@ menghasilkan 40 assignment per paket.
 
 **ENGINEERING DECISION — instruksi UI pemilik, 26 November 2026.** Detail paket
 Tryout menempatkan publikasi dan ekspor PDF pada bar atas bersama Kembali ke
-daftar. Batch Tryout, komposisi/pengaturan, akses siswa, syarat penerbitan dan
-generator berada dalam menu titik tiga. Identitas dan kelengkapan memakai
+daftar. Komposisi, pengaturan dan
+generator berada dalam menu titik tiga. Pintasan Batch Tryout dihapus dari detail
+paket. Komposisi langsung menampilkan data tanpa ekspansi atau formulir edit;
+edit nama, akses siswa dan informasi versi berada dalam Pengaturan. Identitas dan kelengkapan memakai
 ringkasan padat yang menyesuaikan layar. Aturan API dan otorisasi tetap berlaku.
 
 - `packageIds`: 1–5 UUID unik.
@@ -68,3 +70,10 @@ tidak membuktikan versi API yang sedang berjalan di VPS.
 IRT tetap memakai analisis dan fallback existing, dengan hasil paling lambat
 72 jam setelah tutup batch. Jangan membuat theta/linking atau approval palsu.
 Konten, hasil, XP dan deadline attempt historis tidak dihitung ulang.
+
+
+## Editor soal paket ? 26 November 2026
+
+**ENGINEERING DECISION ? instruksi pemilik:** penyuntingan soal paket memakai halaman khusus `/admin/content/versions/:id/edit`, terpisah dari halaman review/laporan. Tab Isi soal, Metadata dan Media mempertahankan draf lokal yang sama, dengan pratinjau pendamping desktop dan tombol pratinjau di layar kecil. Tautan kembali menuju paket asal. Perubahan belum disimpan diperingatkan ketika meninggalkan lewat tautan atau menutup/memuat ulang halaman.
+
+Penyimpanan memakai pemeriksaan dan API revisi impor existing, beserta pin versi sumber, revisi paket dan kunci idempotensi. Paket DRAFT menerima versi baru melalui target impor. Paket terbit tidak diubah: editor membuat versi soal baru di bank soal untuk dipakai pada revisi paket berikutnya. Soal arsip tetap terkunci. Review laporan tidak mencatat keputusan melalui editor ini.

@@ -41,61 +41,74 @@ const reasons: Record<string, string> = {
   PACKAGE_ARCHIVED: 'Paket sudah diarsipkan dan tidak bisa dipakai untuk memulai pengerjaan baru.',
 };
 export function PackageAvailability({ detail }: { detail: ContentPackageDto }) {
+  const VersionContainer = detail.assessmentType === 'TRYOUT' ? 'section' : 'details';
+  const VersionHeading = detail.assessmentType === 'TRYOUT' ? 'h4' : 'summary';
   return (
     <section className="package-availability" aria-label="Ketersediaan untuk siswa">
-      <h3>Ketersediaan untuk siswa</h3>
-      <p role="status" className="package-availability-status">
-        <Badge
-          variant={
-            detail.availability?.state === 'AVAILABLE' ||
-            detail.availability?.state === 'READY_FOR_BATCH'
-              ? 'success'
-              : 'default'
-          }
-        >
-          {detail.availability
-            ? packageAvailabilityLabel(detail.availability.state)
-            : 'Ketersediaan belum dapat diperiksa. Muat ulang paket.'}
-        </Badge>
-      </p>
-      {detail.releaseAt && (
-        <p>Rilis: {snapshotTime(detail.releaseAt)}</p>
-      )}
-      {detail.closeAt && (
-        <p>Tutup: {snapshotTime(detail.closeAt)}</p>
-      )}
-      {!!detail.availability?.blockers.length && (
-        <ul className="package-availability-reasons">
-          {detail.availability.blockers.map((code) => (
-            <li key={code}>
-              <Icon name="info" width={18} height={18} />
-              <span>
-                {code === 'PACKAGE_NOT_PUBLISHED' && detail.assessmentType === 'PRETEST'
-                  ? 'Paket masih berupa draf. Lengkapi soal dan selesaikan masalah validasi sebelum menerbitkannya.'
-                  : (reasons[code] ??
-                    'Ada syarat yang belum terpenuhi. Hubungi pengelola dengan kode: ' + code)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {detail.availability && (
-        <div className="package-availability-note">
-          <small>Diperiksa {snapshotTime(detail.availability.checkedAt)}.</small>
-          <p>Syarat pengerjaan siswa diperiksa kembali saat mulai.</p>
-        </div>
-      )}
-      <details className="package-version-details">
-        <summary>
+      <div className="package-access-summary">
+        <h3>{detail.assessmentType === 'TRYOUT' ? 'Akses siswa' : 'Ketersediaan untuk siswa'}</h3>
+        <p role="status" className="package-availability-status">
+          <Badge
+            variant={
+              detail.availability?.state === 'AVAILABLE' ||
+              detail.availability?.state === 'READY_FOR_BATCH'
+                ? 'success'
+                : 'default'
+            }
+          >
+            {detail.availability
+              ? packageAvailabilityLabel(detail.availability.state)
+              : 'Ketersediaan belum dapat diperiksa. Muat ulang paket.'}
+          </Badge>
+        </p>
+        {detail.assessmentType === 'TRYOUT' && (
+          <p className="package-availability-description">
+            Siswa dapat mulai sesuai jadwal dan target batch. Paket yang sudah terbit perlu
+            dimasukkan ke batch terlebih dahulu.
+          </p>
+        )}
+        {detail.releaseAt && <p>Rilis: {snapshotTime(detail.releaseAt)}</p>}
+        {detail.closeAt && <p>Tutup: {snapshotTime(detail.closeAt)}</p>}
+        {!!detail.availability?.blockers.length && (
+          <ul className="package-availability-reasons">
+            {detail.availability.blockers.map((code) => (
+              <li key={code}>
+                <Icon name="info" width={18} height={18} />
+                <span>
+                  {code === 'PACKAGE_NOT_PUBLISHED' &&
+                  (detail.assessmentType === 'PRETEST' || detail.assessmentType === 'TRYOUT')
+                    ? detail.assessmentType === 'TRYOUT'
+                      ? 'Langkah berikutnya: lengkapi soal, lalu pilih Penerbitan untuk menerbitkan paket.'
+                      : 'Paket masih berupa draf. Lengkapi soal dan selesaikan masalah validasi sebelum menerbitkannya.'
+                    : (reasons[code] ??
+                      'Ada syarat yang belum terpenuhi. Hubungi pengelola dengan kode: ' + code)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {detail.availability && (
+          <div className="package-availability-note">
+            <small>Diperiksa {snapshotTime(detail.availability.checkedAt)}.</small>
+            {detail.assessmentType !== 'TRYOUT' && (
+              <p>Syarat pengerjaan siswa diperiksa kembali saat mulai.</p>
+            )}
+          </div>
+        )}
+      </div>
+      <VersionContainer className="package-version-details">
+        <VersionHeading>
           <Icon name="settings" width={16} height={16} />
           Informasi teknis versi paket
-          <Icon name="chevron" width={16} height={16} />
-        </summary>
+          {detail.assessmentType !== 'TRYOUT' && <Icon name="chevron" width={16} height={16} />}
+        </VersionHeading>
         <dl>
-          <div>
-            <dt>Acuan susunan soal</dt>
-            <dd>{detail.blueprintVersionId ?? 'Belum ditetapkan'}</dd>
-          </div>
+          {detail.assessmentType !== 'TRYOUT' && (
+            <div>
+              <dt>Acuan susunan soal</dt>
+              <dd>{detail.blueprintVersionId ?? 'Belum ditetapkan'}</dd>
+            </div>
+          )}
           <div>
             <dt>Aturan penilaian</dt>
             <dd>{detail.scoringPolicyVersionId ?? 'Belum ditetapkan'}</dd>
@@ -105,7 +118,7 @@ export function PackageAvailability({ detail }: { detail: ContentPackageDto }) {
             <dd>{detail.frozenAt ? snapshotTime(detail.frozenAt) : 'Belum disimpan'}</dd>
           </div>
         </dl>
-      </details>
+      </VersionContainer>
     </section>
   );
 }

@@ -411,7 +411,7 @@ function AssessmentTable({
                         </td>
 
                         <td>
-                          <div className="assessment-row-actions">
+                          <div className={`assessment-row-actions${usage === 'TRYOUT' ? ' assessment-row-actions--inline' : ''}`}>
                             <Link
                               className="numora-button numora-button--secondary assessment-manage-button"
                               href={href}
@@ -426,11 +426,11 @@ function AssessmentTable({
                                   className="numora-button numora-button--secondary assessment-manage-button"
                                   href={`/admin/assessments/tryout/${encodeURIComponent(pack.id)}/variant/new`}
                                 >
-                                  Generate varian paket
+                                  Generate varian
                                 </Link>
                               ) : Object.hasOwn(variantAvailability, pack.id) ? (
                                 <Button variant="secondary" disabled title="Mapping generator belum lengkap untuk 25 focal soal.">
-                                  Generate varian paket
+                                  Generate varian
                                 </Button>
                               ) : (
                                 <Button variant="secondary" disabled>

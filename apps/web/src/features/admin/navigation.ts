@@ -154,7 +154,10 @@ export function activeAdminHref(pathname: string, groups: AdminNavigationGroup[]
   let target: string | undefined;
   if (/^\/admin\/content\/(imports|generator|preview-sessions)(\/|$)/.test(path))
     target = '/admin/content/imports';
-  else if (/^\/admin\/content\/versions\//.test(path)) target = '/admin/content?view=verification';
+  else if (/^\/admin\/content\/versions\//.test(path))
+    target = path.endsWith('/edit')
+      ? '/admin/content?view=questions'
+      : '/admin/content?view=verification';
   else if (/^\/admin\/reports\/(QUESTION|VIDEO)\//.test(path))
     target = '/admin/content?view=reports';
   else if (path === '/admin/content/pretest') target = '/admin/assessments/pretest';

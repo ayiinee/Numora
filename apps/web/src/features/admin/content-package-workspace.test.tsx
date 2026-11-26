@@ -106,9 +106,9 @@ it('allows a valid Pretest draft to publish without manual review or approval in
   expect(screen.queryByText('Bukti persetujuan tim kurikulum')).toBeNull();
   expect(screen.queryByText('Tinjau semua soal valid')).toBeNull();
   expect(
-    (screen.getByRole('button', { name: 'Publikasikan paket' }) as HTMLButtonElement).disabled,
+    (screen.getByRole('button', { name: 'Terbitkan paket' }) as HTMLButtonElement).disabled,
   ).toBe(false);
-  expect(screen.getByText(/Yakin ingin menerbitkan paket/)).toBeTruthy();
+  expect(screen.getByText(/Paket yang akan diterbitkan/)).toBeTruthy();
   cleanup();
   vi.mocked(getContentPackage).mockResolvedValue({
     ...pack,
@@ -144,15 +144,15 @@ it('allows a valid Pretest draft to publish without manual review or approval in
   );
   fireEvent.click(await screen.findByRole('button', { name: 'Penerbitan' }));
   expect(screen.getAllByText('19/20 soal.').length).toBeGreaterThan(0);
-  expect(screen.getByRole('button', { name: 'Validasi ulang' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Pemeriksaan ulang' })).toBeTruthy();
   expect(screen.getAllByText('Aturan penilaian belum terhubung.').length).toBeGreaterThan(0);
   expect(screen.getAllByRole('link', { name: /^Perbaiki$/ })[0]!.getAttribute('href')).toBe(
-    '/admin/content/versions/broken-version?package=pretest-test',
+    '/admin/content/versions/broken-version/edit?package=pretest-test',
   );
   expect(screen.getAllByRole('link', { name: /^Perbaiki$/ })[1]!.getAttribute('href')).toBe(
-    '/admin/content/versions/broken-version?package=pretest-test',
+    '/admin/content/versions/broken-version/edit?package=pretest-test',
   );
-  expect(screen.queryByRole('button', { name: 'Publikasikan paket' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Terbitkan paket' })).toBeNull();
 });
 
 it('enables Tryout PDF only when every package item is hydrated', async () => {
@@ -403,7 +403,6 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
     />,
   );
   fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
-  fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
   expect(await screen.findByAltText('Diagram soal')).toBeTruthy();
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   // JSDOM does not load remote images. Trigger failure explicitly instead of
@@ -412,9 +411,12 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
   fireEvent.error(screen.getByAltText('Diagram pembahasan'));
   const retryButtons = await screen.findAllByRole('button', { name: 'Coba muat gambar lagi' });
   fireEvent.click(retryButtons[1]!);
-  fireEvent.click(retryButtons[0]!);
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
-  expect(screen.getByAltText('Diagram soal')).toBeTruthy();
+  fireEvent.click(await screen.findByRole('button', { name: 'Coba muat gambar lagi' }));
+  await waitFor(() => {
+    expect(screen.getByAltText('Diagram pembahasan')).toBeTruthy();
+    expect(screen.getByAltText('Diagram soal')).toBeTruthy();
+  });
   expect(getContentVersionMedia).toHaveBeenCalled();
   expect(pack.items[0]!.reviewedAt).toBeNull();
   expect(pack.readiness.canPublish).toBe(false);

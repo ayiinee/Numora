@@ -17,7 +17,7 @@ export function adminBreadcrumbs(
     return [
       ...crumbs,
       { label: 'Soal', href: '/admin/content?view=questions' },
-      { label: 'Tinjau soal' },
+      { label: pathname.endsWith('/edit') ? 'Edit soal' : 'Tinjau soal' },
     ];
   if (pathname.startsWith('/admin/content/preview-sessions/'))
     return [
