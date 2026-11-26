@@ -30,6 +30,12 @@ A full self-hosted fallback needs a separate operational review. The choice of a
 
 Deployment must separate Development, Staging, and Production configuration/secrets.
 
+Each production web build embeds a release identifier. Tabs that already run the release check
+compare their identifier with `/release-version` every 30 seconds while visible and when returning
+to the foreground. Keep that endpoint uncached. The banner requests a manual reload and waits for
+unacknowledged assessment answers, assessment submission and active PvP participation. Tabs opened
+before the first deployment of this feature need one manual refresh to start checking.
+
 ## Deployment flow target
 
 ```text

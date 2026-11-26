@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { loadEnvConfig } from '@next/env';
 import type { NextConfig } from 'next';
@@ -8,6 +9,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Next.js inlines the same public identifier in the browser and the version route.
+  env: { NUMORA_WEB_RELEASE: isProduction ? randomUUID() : '' },
   poweredByHeader: false,
   // Reuse explicit development origins so LAN clients can load Next.js assets.
   allowedDevOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:3000')

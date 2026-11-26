@@ -33,6 +33,7 @@ import { useAuth } from '@/features/onboarding/auth';
 import { request } from '@/features/core-learning/api';
 import { useStudentToken } from '@/features/core-learning/student-session';
 import { useUnsavedWarning } from '@/features/core-learning/use-unsaved-warning';
+import { useBlockReleaseReload } from '@/components/release-update';
 import './pvp-lobby.css';
 import { DataState, LearningFrame, Status } from '@/features/core-learning/ui';
 import type {
@@ -362,6 +363,7 @@ export function PvpMatchScreen() {
     snapshot.status !== 'FINISHED' &&
     snapshot.status !== 'CANCELLED';
   const openLeave = useCallback(() => setConfirmLeave(true), []);
+  useBlockReleaseReload(isParticipating);
   useUnsavedWarning(false, false, undefined, {
     confirmNavigation: isParticipating,
     customDialog: true,

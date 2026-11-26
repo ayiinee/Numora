@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
 import { Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
+import { useBlockReleaseReload } from '@/components/release-update';
 import { useAssessmentDeadline } from './use-assessment-deadline';
 import { LearningApiError } from './api';
 import {
@@ -179,6 +180,7 @@ export function AssessmentSession({
     });
   }
   const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
+  useBlockReleaseReload(!submit.isSuccess && (unsaved !== null || submit.isPending));
   const question = questions[index];
   useEffect(() => {
     if (!resumeKey || !question || submit.isSuccess || deadline.expired) return;

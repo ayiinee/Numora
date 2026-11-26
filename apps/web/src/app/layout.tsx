@@ -20,6 +20,7 @@ import './admin-irt.css';
 import './admin-navigation.css';
 import './admin-foundation.css';
 import { AuthProvider } from '@/features/onboarding/auth';
+import { ReleaseUpdateProvider } from '@/components/release-update';
 import 'katex/dist/katex.min.css';
 
 const jakarta = localFont({
@@ -38,7 +39,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="id" className={jakarta.variable}>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <ReleaseUpdateProvider release={process.env.NUMORA_WEB_RELEASE}>
+          <AuthProvider>{children}</AuthProvider>
+        </ReleaseUpdateProvider>
       </body>
     </html>
   );
