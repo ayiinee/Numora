@@ -617,16 +617,13 @@ function BatchForm({
   const availablePackages = (options?.packages ?? []).filter(
     (p) =>
       (!waveMode || (!form.waveId && form.packageIds.length < 2)) &&
-      !form.packageIds.includes(p.id) &&
-      (waveMode ||
-        !primaryPackage ||
-        (Boolean(primaryPackage.familyCode) && p.familyCode === primaryPackage.familyCode)),
+      !form.packageIds.includes(p.id),
   );
   useEffect(() => {
     let active = true;
     setOptionLoading(true);
     apiRequest<TryoutBatchOptionsDto>(
-      `admin/tryout-batches/options?limit=100&offset=0&search=${encodeURIComponent(search)}${!waveMode && primaryPackage?.familyCode ? `&familyCode=${encodeURIComponent(primaryPackage.familyCode)}` : ''}`,
+      `admin/tryout-batches/options?limit=100&offset=0&search=${encodeURIComponent(search)}`,
       token,
     )
       .then((v) => {
@@ -656,7 +653,7 @@ function BatchForm({
     return () => {
       active = false;
     };
-  }, [token, search, primaryPackage?.familyCode, waveMode, accessError]);
+  }, [token, search, waveMode, accessError]);
   async function save() {
     setPending(true);
     onBusy?.(true);

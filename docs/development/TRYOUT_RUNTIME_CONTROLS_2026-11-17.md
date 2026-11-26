@@ -1,8 +1,10 @@
+**ENGINEERING DECISION - owner instruction, 26 November 2026:** New Tryout attempts receive 75 minutes (4,500 seconds), capped by batch/package close. Existing attempt deadlines stay pinned. Batch package selection/publication no longer requires matching parent/family codes or generator lineage. Content, distribution, scoring policy, wave pair identity, school access and balanced allocation gates remain. Pair selection does not certify IRT linking. Supersedes the 25 November duration and previous parent restrictions.
+
 # Tryout runtime controls — 17 November 2026
 
-**ENGINEERING DECISION — owner instruction, updated 25 November 2026:** New Tryout attempts receive up to 30 minutes (1,800 seconds), capped at the batch or legacy package closing time. This supersedes the 75-minute rule and the earlier 10-minute demo duration. The server applies the rule to managed batches, legacy packages, and demos. The duration recorded on a published package is historical metadata, and existing attempts keep their pinned deadlines.
+**ENGINEERING DECISION - owner instruction, updated 26 November 2026:** New Tryout attempts receive up to 75 minutes (4,500 seconds), capped at batch or legacy package close. This applies to managed batches, legacy packages and demos. Existing attempts keep their pinned deadlines; historical package metadata is not rewritten.
 
-The legacy Admin package publication request accepts the deprecated `durationSeconds` field with either the previous value of 4,500 or the current value of 1,800. Publication records 1,800 seconds in both cases.
+The deprecated publication field accepts 1,800 or 4,500 seconds for legacy clients. New publication records 4,500 seconds.
 
 **ENGINEERING DECISION — owner instruction:** Multiple published Tryout batches may overlap and remain open at the same time. Student assignment remains unique per student and batch.
 

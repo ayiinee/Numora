@@ -1711,7 +1711,7 @@ describe.skipIf(!testUrl)(
           expect(bank.items.some((v) => v.id === imported.items[0]!.questionVersionId)).toBe(true);
           const [schedule] =
             await owner`SELECT duration_seconds,close_at FROM assessment_packages WHERE id=${pack.id}`;
-          expect(schedule!.duration_seconds).toBe(1800);
+          expect(schedule!.duration_seconds).toBe(4500);
           expect(new Date(schedule!.close_at).toISOString()).toBe('2099-01-13T07:29:00.000Z');
         }
         expect(
@@ -3320,13 +3320,6 @@ describe.skipIf(!testUrl)(
       const packageIds: string[] = [];
       let questionIds: string[] = [];
       const generatedFamily = `GENERATOR-${suffix}`;
-      const generated = await ok<{ id: string }>('admin/content/packages', 'POST', {
-        familyCode: generatedFamily,
-        packageVersion: 1,
-        name: 'TEST ONLY generated source before curriculum revision',
-        assessmentType: 'TRYOUT',
-        source,
-      });
       for (let n = 0; n < 3; n++) {
         const p = await ok<{ id: string }>('admin/content/packages', 'POST', {
           familyCode: n === 1 ? generatedFamily : `BATCH-${suffix}`,
@@ -3390,17 +3383,7 @@ describe.skipIf(!testUrl)(
         mandiriPackageId: packageIds[0],
         schools: [],
       });
-      const unlinked = await request(`admin/tryout-batches/${pairCheck.id}/publish`, 'POST', {
-        expectedRevision: 1,
-      });
-      expect(unlinked.status).toBe(400);
-      expect(await unlinked.text()).toContain('relasi original/varian');
-      const [reviewer] = await owner`SELECT id FROM users WHERE display_name='admin'`;
-      const refs = JSON.stringify(Array.from({ length: 30 }, () => randomUUID()));
-      await owner`INSERT INTO generator_packages(actor_user_id,operation_key,operation_fingerprint,assessment_type,title,expected_count,source_package_id,mapping_ids,request_ids,canonical_package_id)
-        VALUES(${reviewer!.id},${randomUUID()},'TEST ONLY','TRYOUT','TEST ONLY generator provenance',30,${packageIds[0]!},${refs}::jsonb,${refs}::jsonb,${generated.id})`;
-      // Selected revision has a different ID from the generator's canonical package, same generated family.
-      expect(generated.id).not.toBe(packageIds[1]);
+      // Different parent codes and no generator lineage must not block publication.
       await ok(`admin/tryout-batches/${pairCheck.id}/publish`, 'POST', { expectedRevision: 1 });
       await ok(`admin/tryout-batches/${pairCheck.id}/cancel`, 'POST', {
         expectedRevision: 2,
@@ -3655,7 +3638,7 @@ describe.skipIf(!testUrl)(
       const [timing] = await owner<{ duration_seconds: number }[]>`
         SELECT EXTRACT(EPOCH FROM (deadline_at - started_at))::integer AS duration_seconds
         FROM assessment_attempts WHERE id=${attempts[0].id}`;
-      expect(timing?.duration_seconds).toBe(1800);
+      expect(timing?.duration_seconds).toBe(4500);
       const [assignment] =
         await owner`SELECT * FROM tryout_student_assignments WHERE batch_id=${activeId} AND student_id=${student!.id}`;
       expect(assignment!.package_id).toBe(
@@ -3672,7 +3655,7 @@ describe.skipIf(!testUrl)(
         attemptId: attempts[0].id,
         canResume: true,
         resultState: null,
-        durationSeconds: 1800,
+        durationSeconds: 4500,
       });
       for (const question of attempts[0].questions)
         await ok(
