@@ -1228,7 +1228,9 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
       classRequests.push(request.url());
   });
   await page.goto('/student');
-  await expect(page.locator('.sh-identity:visible').getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.sh-identity:visible').getByText('Siswa mandiri', { exact: true }),
+  ).toBeVisible();
   await page.goto(`/student/drill/${attemptId}`);
   await expect(page.getByText('Fixture: 1 + 1?')).toBeVisible();
   await page.goto('/student/pvp');
@@ -1240,7 +1242,9 @@ test('Mandiri keeps learning and global PvP access while class ranking stays res
   );
   await expect(page.getByRole('heading', { name: 'Peringkat belum tersedia' })).toBeVisible();
   await page.getByRole('button', { name: 'Kelas', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Gabung kelas untuk melihat peringkat' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Gabung kelas untuk melihat peringkat' }),
+  ).toBeVisible();
   expect(classRequests).toEqual([]);
   const joinClass = page.getByRole('link', { name: 'Gabung kelas', exact: true });
   await expect(joinClass).toHaveAttribute('href', '/student/profile#gabung-kelas');
@@ -1254,9 +1258,17 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Profil dan progres' }).getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'Profil dan progres' })
+      .getByText('Siswa mandiri', { exact: true }),
+  ).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Profil dan progres' }).getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'Profil dan progres' })
+      .getByText('Siswa mandiri', { exact: true }),
+  ).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {
@@ -1459,7 +1471,9 @@ for (const width of [320, 390, 1440])
     await expect(page.getByRole('heading', { name: 'Konfirmasi gabung kelas' })).toBeVisible();
     const join = page.getByRole('button', { name: 'Gabung kelas', exact: true });
     const cancel = page.getByRole('link', { name: 'Batal dan buka profil' });
-    const primaryBackground = await join.evaluate((element) => getComputedStyle(element).backgroundColor);
+    const primaryBackground = await join.evaluate(
+      (element) => getComputedStyle(element).backgroundColor,
+    );
     await expect(cancel).not.toHaveCSS('background-color', primaryBackground);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -1889,7 +1903,10 @@ test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and re
     page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
   ).toHaveCount(30);
   await page.getByRole('radio').first().check();
-  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute(
+    'aria-valuetext',
+    '1 dari 30 soal terisi lengkap dan tersimpan',
+  );
   const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
   const beforeSeconds = before[0]! * 60 + before[1]!;
   await page.reload();
@@ -1990,7 +2007,7 @@ for (const width of [390, 1440]) {
         fixture.calls.find((call) => call.method === 'PATCH')?.body?.questionVersionIds,
       ).toEqual(versionIds);
       await page
-        .getByRole('dialog', { name: 'Komposisi paket' })
+        .getByRole('dialog', { name: 'Pengaturan paket' })
         .getByRole('button', { name: 'Tutup dialog' })
         .click();
       await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
@@ -2849,8 +2866,9 @@ for (const width of [320, 768, 1280]) {
       await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toHaveCount(0);
       await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
       await expect(page).toHaveURL('/student/drill/' + attemptId + '/explanation');
-      await expect(page.getByRole('link', { name: 'Kembali ke hasil', exact: true }))
-        .toHaveAttribute('href', '/student/drill/' + attemptId + '/result');
+      await expect(
+        page.getByRole('link', { name: 'Kembali ke hasil', exact: true }),
+      ).toHaveAttribute('href', '/student/drill/' + attemptId + '/result');
       const report = page.getByRole('button', { name: 'Laporkan soal 1', exact: true });
       await report.click();
       const reportDialog = page.getByRole('dialog', { name: 'Laporkan soal 1', exact: true });

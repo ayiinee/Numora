@@ -534,9 +534,7 @@ test('invalid legacy questions explain repair and cannot be reviewed', async ({ 
     }),
   );
   await page.goto('/admin/assessments/pretest/' + pack.id);
-  await expect(
-    page.getByRole('table').getByText('Perlu diperbaiki', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('table').getByText('Belum lengkap', { exact: true })).toBeVisible();
   const row = page.getByRole('table').locator('tbody tr').first();
   await expect(row.getByRole('button', { name: 'Tinjau', exact: true })).toHaveCount(0);
   await expect(row.getByRole('link', { name: 'Perbaiki', exact: true })).toHaveAttribute(
@@ -609,7 +607,9 @@ test('dedicated question editor keeps preview and separates metadata and media',
   await page.getByRole('tab', { name: 'Media', exact: true }).click();
   await expect(page.getByText('Soal ini belum memiliki media.', { exact: true })).toBeVisible();
   await page.getByRole('tab', { name: 'Isi soal', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: 'Teks soal', exact: true })).toHaveValue('Soal baru $2 + 3$');
+  await expect(page.getByRole('textbox', { name: 'Teks soal', exact: true })).toHaveValue(
+    'Soal baru $2 + 3$',
+  );
   await expect(page.getByText('Catat keputusan review', { exact: true })).toHaveCount(0);
   for (const width of [1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
