@@ -16194,7 +16194,7 @@
               4500
             ],
             "deprecated": true,
-            "description": "Compatibility field for legacy clients. The server applies 1,800 seconds."
+            "description": "Compatibility field for legacy clients. The server applies 4,500 seconds."
           }
         },
         "required": [

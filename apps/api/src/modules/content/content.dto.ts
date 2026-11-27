@@ -323,7 +323,7 @@ export class AdminTryoutDraftsDto {
   @ApiProperty() total!: number;
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
 }
-const supportedTryoutPublishDurations = [TRYOUT_DURATION_SECONDS, 4500];
+const supportedTryoutPublishDurations = [1800, TRYOUT_DURATION_SECONDS];
 
 export class PublishTryoutPackageDto {
   @ApiPropertyOptional()
@@ -340,7 +340,7 @@ export class PublishTryoutPackageDto {
   @ApiPropertyOptional({
     enum: supportedTryoutPublishDurations,
     deprecated: true,
-    description: 'Compatibility field for legacy clients. The server applies 1,800 seconds.',
+    description: 'Compatibility field for legacy clients. The server applies 4,500 seconds.',
   })
   @IsOptional()
   @IsIn(supportedTryoutPublishDurations)

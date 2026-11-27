@@ -1,3 +1,5 @@
+**ENGINEERING DECISION - owner instruction, 26 November 2026:** New Tryout attempts receive 75 minutes (4,500 seconds), capped by batch/package close. Existing attempt deadlines stay pinned. Batch package selection/publication no longer requires matching parent/family codes or generator lineage. Content, distribution, scoring policy, wave pair identity, school access and balanced allocation gates remain. Pair selection does not certify IRT linking. Supersedes the 25 November duration and previous parent restrictions.
+
 **ENGINEERING DECISION — 26 November 2026:** pasangan Tryout generator/revisi boleh berbeda kode keluarga dari original jika relasi sumber generator durable cocok; gate publikasi/distribusi/policy tetap. Lihat docs/development/TRYOUT_SCHOOL_WAVES.md.
 
 **ENGINEERING DECISION - pemilik, 26 November 2026:** alokasi sekolah BALANCED_50_50 dilakukan saat start berdasarkan assignment attempt per batch/sekolah, termasuk batch existing. Publikasi tidak membekukan siswa; keanggotaan aktif diperiksa saat start. Sesi dan snapshot historis dipertahankan. [Aturan dan rollout](../development/TRYOUT_SCHOOL_WAVES.md).
