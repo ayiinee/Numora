@@ -36,6 +36,7 @@ supabase/.branches/
 *.log
 
 # generated
+apps/web/public/generator-demo-*.html
 apps/web/next-env.d.ts
 __pycache__/
 qa/scenarios/siswa/SIS-001/reports/581a3c97-fe69-40d3-af72-576b22033593/investigations/20261027-transactions-timeouts/summary.json

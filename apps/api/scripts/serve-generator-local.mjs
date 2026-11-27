@@ -22,6 +22,10 @@ import { R2MediaStorage } from '../dist/modules/content/r2-media.storage.js';
 import { MediaUploadsService } from '../dist/modules/content/media-uploads.service.js';
 import { MediaUploadsRepository } from '../dist/modules/content/media-uploads.repository.js';
 import { ContentPackagesController } from '../dist/modules/content/content-packages.controller.js';
+import { ContentLifecycleController } from '../dist/modules/content/content-lifecycle.controller.js';
+import { ContentLifecycleService } from '../dist/modules/content/content-lifecycle.service.js';
+import { TryoutVariantGenerationController } from '../dist/modules/content/tryout-variant-generation.controller.js';
+import { TryoutVariantGenerationService } from '../dist/modules/content/tryout-variant-generation.service.js';
 import { configureApplication } from '../dist/bootstrap.js';
 const fixture = JSON.parse(await readFile(process.env.GENERATOR_FIXTURE_FILE, 'utf8'));
 for (const name of ['TEST_COMPUTE_OWNER_URL', 'DATABASE_URL', 'COMPUTE_DATABASE_URL']) {
@@ -146,7 +150,13 @@ try {
   process.env.CORS_ORIGINS = webOrigin;
   const module = await Test.createTestingModule({
     imports: [IdentityModule, ConfigModule.forRoot({ ignoreEnvFile: true })],
-    controllers: [GeneratorController, GeneratorPackagesController, ContentPackagesController],
+    controllers: [
+      GeneratorController,
+      GeneratorPackagesController,
+      ContentPackagesController,
+      ContentLifecycleController,
+      TryoutVariantGenerationController,
+    ],
     providers: [
       GeneratorService,
       GeneratorPackagesService,
@@ -155,29 +165,35 @@ try {
       R2MediaStorage,
       MediaUploadsService,
       MediaUploadsRepository,
+      ContentLifecycleService,
+      TryoutVariantGenerationService,
     ],
   }).compile();
   app = module.createNestApplication({ logger: false });
   configureApplication(app);
   await app.listen(0, '127.0.0.1');
   const apiUrl = await app.getUrl();
-  web = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(webPort)], {
-    cwd: 'apps/web',
-    windowsHide: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: {
-      ...process.env,
-      NODE_ENV: 'development',
-      NUMORA_WEB_DIST_DIR: process.env.NUMORA_WEB_DIST_DIR ?? '.next-generator-handoff',
-      NUMORA_LOW_MEMORY: 'true',
-      NEXT_PUBLIC_API_URL: `${apiUrl}/api/v1`,
-      NEXT_PUBLIC_SUPABASE_URL: authUrl,
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
-      NEXT_PUBLIC_GENERATOR_DEMO: 'true',
-      NEXT_PUBLIC_GENERATOR_DEMO_QA_EMAIL: fixture.realQa?.email ?? '',
-      ...(!fixture.realQa ? { NEXT_PUBLIC_MAIN_API_URL: `${apiUrl}/api/v1` } : {}),
+  web = spawn(
+    process.execPath,
+    ['node_modules/next/dist/bin/next', 'dev', '-H', '127.0.0.1', '-p', String(webPort)],
+    {
+      cwd: 'apps/web',
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        NODE_ENV: 'development',
+        NUMORA_WEB_DIST_DIR: process.env.NUMORA_WEB_DIST_DIR ?? '.next-generator-handoff',
+        NUMORA_LOW_MEMORY: 'true',
+        NEXT_PUBLIC_API_URL: `${apiUrl}/api/v1`,
+        NEXT_PUBLIC_SUPABASE_URL: authUrl,
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
+        NEXT_PUBLIC_GENERATOR_DEMO: 'true',
+        NEXT_PUBLIC_GENERATOR_DEMO_QA_EMAIL: fixture.realQa?.email ?? '',
+        ...(!fixture.realQa ? { NEXT_PUBLIC_MAIN_API_URL: `${apiUrl}/api/v1` } : {}),
+      },
     },
-  });
+  );
   let log = '';
   web.stdout.on('data', (c) => {
     log += c;
@@ -192,6 +208,15 @@ try {
     } catch {}
     await new Promise((r) => setTimeout(r, 1000));
   }
+  const [source] = await owner`SELECT p.id FROM assessment_packages p
+    JOIN package_items i ON i.package_id=p.id WHERE i.question_version_id=${fixture.items[0].version}
+    AND p.assessment_type='TRYOUT' AND p.status='PUBLISHED' LIMIT 1`;
+  const destination =
+    process.env.GENERATOR_DEMO_VARIANT === 'true'
+      ? `/admin/assessments/tryout/${source?.id ?? ''}/variant/new`
+      : '/admin/content/generator';
+  if (process.env.GENERATOR_DEMO_VARIANT === 'true')
+    assert(source, 'Demo original package missing');
   const loginName = fixture.realQa ? 'admin/login' : 'generator-demo-' + randomUUID() + '.html';
   if (!fixture.realQa) {
     loginFile = 'apps/web/public/' + loginName;
@@ -199,7 +224,9 @@ try {
       loginFile,
       '<!doctype html><meta charset="utf-8"><title>Demo generator lokal</title><p>Memasuki demo lokal Super Admin TEST ONLY�</p><script>localStorage.setItem("sb-127-auth-token",' +
         JSON.stringify(JSON.stringify(actors.super)) +
-        ');location.replace("/admin/content/generator");</script>',
+        ');location.replace(' +
+        JSON.stringify(destination) +
+        ');</script>',
     );
   }
   let busy = false;

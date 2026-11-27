@@ -77,3 +77,34 @@ Konten, hasil, XP dan deadline attempt historis tidak dihitung ulang.
 **ENGINEERING DECISION ? instruksi pemilik:** penyuntingan soal paket memakai halaman khusus `/admin/content/versions/:id/edit`, terpisah dari halaman review/laporan. Tab Isi soal, Metadata dan Media mempertahankan draf lokal yang sama, dengan pratinjau pendamping desktop dan tombol pratinjau di layar kecil. Tautan kembali menuju paket asal. Perubahan belum disimpan diperingatkan ketika meninggalkan lewat tautan atau menutup/memuat ulang halaman.
 
 Penyimpanan memakai pemeriksaan dan API revisi impor existing, beserta pin versi sumber, revisi paket dan kunci idempotensi. Paket DRAFT menerima versi baru melalui target impor. Paket terbit tidak diubah: editor membuat versi soal baru di bank soal untuk dipakai pada revisi paket berikutnya. Soal arsip tetap terkunci. Review laporan tidak mencatat keputusan melalui editor ini.
+
+
+## Penerima batch - 27 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** form batch memisahkan sekolah penerima dan siswa Mandiri dalam panel responsif. Sekolah ditambahkan sebelum pilihan paketnya; setiap penerima menampilkan jumlah paket terpilih. Baris paket memuat nama, versi, checkbox dan target klik penuh. Mandiri menampilkan status akses; sekolah tanpa paket mendapat petunjuk memilih minimal satu paket. Kontrak, alokasi, akses dan penguncian setelah publikasi tetap mengikuti aturan existing.
+
+**ENGINEERING DECISION - penyempurnaan pemilik:** pemilihan sekolah memakai modal checklist dengan pencarian nama/kode dan pilih semua hasil. Pilihan baru berlaku setelah Terapkan; Batal tidak mengubah penerima. Pilihan paket sekolah existing dipertahankan, sekolah baru memakai semua paket batch. Baris paket dan tindakan hapus dipadatkan.
+
+## Generate varian: pemilihan anchor
+
+**ENGINEERING DECISION — instruksi UI pemilik, 27 November 2026.** Halaman
+`/admin/assessments/tryout/{packageId}/variant/new` memakai tiga tahap: pilih
+anchor, tinjau paket, dan hasil generate. Konfigurasi generator dibaca otomatis
+dari mapping approved per soal; detail kesiapan tersedia pada tahap tinjau.
+
+- Isi soal tampil langsung dengan renderer matematika existing. Disclosure
+  membuka opsi/pernyataan, kategori dan media privat melalui endpoint existing.
+- Pencarian, filter terpilih, hapus per anchor dan kosongkan pilihan bekerja lokal.
+  Checklist tidak meminta options ulang atau menyembunyikan daftar saat diklik.
+- Server memvalidasi ulang lima anchor dan 25 focal saat tinjau dan submit.
+  Approval, revisi sumber, versi soal dan digest tetap dipin. Paket hasil tetap DRAFT.
+- Retry payload sama mempertahankan operation key. Polling hanya selama GENERATING,
+  tanpa request status bertumpuk. Kegagalan menampilkan alasan dan kode kendala.
+- Perbaikan backend menyamakan pembacaan `approved_digest` dengan nama kolom SQL,
+  serta memeriksa fingerprint idempotensi setelah transaction lock.
+
+Regresi lokal: `pnpm --filter @tka/api test -- src/modules/content/tryout-variant-generation.spec.ts`
+dan `pnpm --filter @tka/web exec playwright test e2e/admin-tryout-variant.spec.ts`.
+Tes backend memakai SQL mock; tes browser memakai API fixture localhost. Hasilnya
+bukan bukti eksekusi generator AI atau acceptance production. Tidak ada perubahan
+kontrak API, skema, migrasi, scoring atau publikasi dari perombakan UI ini.

@@ -65,7 +65,10 @@ def main():
             file=target/'fixture.json';file.write_text(json.dumps(data,default=str))
             serviceenv={**env,'NUMORA_GENERATOR_ENABLED':'true','NUMORA_GENERATOR_V2_ENABLED':'true' if v2 else 'false','NUMORA_GENERATOR_TOKEN':fixtures.settings.token,'COMPUTE_DATABASE_URL':fixtures.compute_url,'COMPUTE_SERVICE_PRINCIPAL_ID':str(fixtures.principal)}
             log=(target/'service.log').open('w',encoding='utf8')
-            service=subprocess.Popen([sys.executable,'-B','-m','numora_service','--port',str(serviceport)],cwd=SERVICE,env=serviceenv,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+            command = ([sys.executable, '-B', str(ROOT/'scripts/serve-tryout-generator-demo.py'), str(serviceport)]
+                       if os.environ.get('GENERATOR_DEMO_VARIANT') == 'true'
+                       else [sys.executable,'-B','-m','numora_service','--port',str(serviceport)])
+            service=subprocess.Popen(command,cwd=SERVICE,env=serviceenv,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
             import httpx
             for _ in range(100):
                 try:

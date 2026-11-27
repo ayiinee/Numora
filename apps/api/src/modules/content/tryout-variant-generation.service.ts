@@ -47,7 +47,7 @@ type MappingRow = {
   original_hash: string;
   original_version: number;
   config_version: number;
-  approval_digest: string;
+  approved_digest: string;
   original_question_version_id: string;
 };
 type ProcessRow = {
@@ -125,7 +125,7 @@ export class TryoutVariantGenerationService {
           configVersion: row.config_version,
           originalQuestionVersionId: item.originalQuestionVersionId,
           configId: row.config_id,
-          approvalDigest: row.approval_digest,
+          approvalDigest: row.approved_digest,
         },
       ];
     });
@@ -276,7 +276,11 @@ export class TryoutVariantGenerationService {
       const previous = await tx<
         ProcessRow[]
       >`SELECT * FROM tryout_variant_generation_processes WHERE actor_user_id=${actor} AND operation_key=${body.operationKey}`;
-      if (previous[0]) return previous[0].id;
+      if (previous[0]) {
+        if (previous[0].operation_fingerprint !== fingerprint)
+          throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
+        return previous[0].id;
+      }
       const source = await this.rowSource(tx, packageId, body.expectedRevision);
       const processId = randomUUID();
       const requestIds: string[] = [];
@@ -392,7 +396,7 @@ export class TryoutVariantGenerationService {
       }
       const [created] = await tx<{ id: string }[]>`INSERT INTO assessment_packages
         (family_code,package_version,name,import_source,content_revision,assessment_type,purpose,chapter_id,level_id,variant_index,duration_seconds,is_demo,scoring_policy_version_id,status)
-        SELECT ${'VARIANT_' + id.replaceAll('-', '')},package_version,name || ${' · Varian'},jsonb_build_object('sourceNamespace','TRYOUT_VARIANT_GENERATOR','sourceName',name,'sourceReference',jsonb_build_object('processId',${id},'sourcePackageId',${locked.source_package_id})::text),1,assessment_type,purpose,chapter_id,level_id,variant_index,duration_seconds,false,scoring_policy_version_id,'DRAFT' FROM assessment_packages WHERE id=${locked.source_package_id} RETURNING id`;
+        SELECT ${'VARIANT_' + id.replaceAll('-', '')},package_version,name || ${' · Varian'},jsonb_build_object('sourceNamespace','TRYOUT_VARIANT_GENERATOR','sourceName',name,'sourceReference',jsonb_build_object('processId',${id}::text,'sourcePackageId',${locked.source_package_id}::text)::text),1,assessment_type,purpose,chapter_id,level_id,variant_index,duration_seconds,false,scoring_policy_version_id,'DRAFT' FROM assessment_packages WHERE id=${locked.source_package_id} RETURNING id`;
       const anchors = new Set(locked.anchor_question_version_ids);
       let generatedIndex = 0;
       for (const item of sourceRows) {

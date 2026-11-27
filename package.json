@@ -57,6 +57,7 @@
     "db:seed:scenarios": "dotenv -e .env -- pnpm --filter @tka/database db:seed:scenarios",
     "db:cleanup:development": "dotenv -e .env -- pnpm --filter @tka/database db:cleanup:development",
     "dev:generator": "node scripts/run-generator-demo.mjs",
+    "dev:variant-demo": "node scripts/run-generator-demo.mjs --variant",
     "data:curriculum:validate": "node scripts/validate-curriculum-indicators.mjs"
   },
   "devDependencies": {
