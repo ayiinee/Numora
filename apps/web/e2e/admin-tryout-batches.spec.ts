@@ -197,10 +197,21 @@ test('batch creation, school delegation and compact detail work across viewports
   await page.getByLabel('Tutup (WIB)', { exact: true }).fill('2099-01-07T20:00');
   const mandiri = page.getByRole('group', { name: 'Paket siswa Mandiri', exact: true });
   await expect(mandiri.getByRole('checkbox')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Pilih sekolah', exact: true }).click();
+  const schoolDialog = page.getByRole('dialog', { name: 'Pilih sekolah penerima' });
+  await schoolDialog.getByLabel('Cari sekolah').fill('School A');
+  await expect(schoolDialog.getByRole('checkbox')).toHaveCount(1);
+  await schoolDialog.getByRole('checkbox').check();
+  await schoolDialog.getByLabel('Cari sekolah').fill('School B');
+  await schoolDialog.getByRole('checkbox').check();
+  await schoolDialog.getByRole('button', { name: 'Batal', exact: true }).click();
+  await expect(page.getByRole('group', { name: schools[0]!.schoolName, exact: true })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Pilih sekolah', exact: true }).click();
+  await schoolDialog.getByRole('button', { name: 'Pilih semua hasil' }).click();
+  await schoolDialog.getByRole('button', { name: 'Terapkan pilihan' }).click();
   for (const school of schools) {
-    await page
-      .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
-      .selectOption(school.schoolId);
     const group = page.getByRole('group', { name: school.schoolName, exact: true });
     await expect(group.getByRole('checkbox', { checked: true })).toHaveCount(2);
   }
@@ -218,9 +229,9 @@ test('batch creation, school delegation and compact detail work across viewports
     .getByRole('button', { name: `Hapus sekolah ${schools[0]!.schoolName}` })
     .click();
   await expect(firstSchool).toHaveCount(0);
-  await page
-    .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
-    .selectOption(schools[0]!.schoolId);
+  await page.getByRole('button', { name: 'Pilih sekolah', exact: true }).click();
+  await schoolDialog.getByRole('checkbox', { name: schools[0]!.schoolName }).check();
+  await schoolDialog.getByRole('button', { name: 'Terapkan pilihan' }).click();
   await expect(firstSchool.getByRole('checkbox', { checked: true })).toHaveCount(2);
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });

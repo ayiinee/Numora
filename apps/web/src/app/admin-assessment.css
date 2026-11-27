@@ -2973,13 +2973,13 @@
   gap: 24px;
   min-width: 0;
 }
-.tryout-batch-school-recipients { display: grid; gap: 16px; min-width: 0; }
+.tryout-batch-school-recipients { display: grid; gap: 12px; min-width: 0; }
 .tryout-batch-school-heading,
 .tryout-batch-recipient-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .tryout-batch-school-heading h4 { margin: 0; flex: 1; }
 .tryout-batch-form fieldset.tryout-batch-recipient-card {
   display: block;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -2988,13 +2988,14 @@
 .tryout-batch-recipient-card p,
 .tryout-batch-recipient-status { margin: 0 0 12px; font-size: 13px; line-height: 1.6; color: var(--color-text-muted); }
 .tryout-batch-form .tryout-batch-mandiri { background: var(--color-surface-muted); }
-.tryout-batch-recipient-packages { display: grid; gap: 8px; margin-bottom: 12px; }
-.tryout-batch-form label.tryout-batch-package-check {
+.tryout-batch-recipient-packages { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 6px; }
+.tryout-batch-form label.tryout-batch-package-check,
+.tryout-batch-school-modal label.tryout-batch-package-check {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 48px;
-  padding: 12px;
+  padding: 8px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -3002,7 +3003,7 @@
 }
 .tryout-batch-package-check:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-light); }
 .tryout-batch-package-check:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; }
-.tryout-batch-form .tryout-batch-package-check input { width: 20px; height: 20px; margin: 0; flex: 0 0 20px; accent-color: var(--color-primary); }
+.tryout-batch-form .tryout-batch-package-check input, .tryout-batch-school-modal .tryout-batch-package-check input { width: 20px; height: 20px; margin: 0; flex: 0 0 20px; accent-color: var(--color-primary); }
 .tryout-batch-package-check > span { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
 .tryout-batch-package-check small { color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
 .tryout-batch-recipient-card .tryout-batch-recipient-warning { color: var(--color-danger); }
@@ -3487,3 +3488,10 @@
   .tryout-pdf-options li { margin: 3pt 0; }
   .tryout-pdf-answer { margin-top: 9pt !important; }
 }
+
+.tryout-batch-school-modal { display: grid; gap: 16px; }
+.tryout-batch-school-modal > label { display: grid; gap: 6px; }
+.tryout-batch-school-modal input[type='search'] { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.tryout-batch-school-list { display: grid; gap: 6px; max-height: 45vh; overflow-y: auto; padding: 4px; }
+.tryout-batch-recipient-status > span { flex: 1; }
+.tryout-batch-recipient-status button { min-height: 44px; padding: 6px 10px; }

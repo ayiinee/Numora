@@ -82,3 +82,5 @@ Penyimpanan memakai pemeriksaan dan API revisi impor existing, beserta pin versi
 ## Penerima batch - 27 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** form batch memisahkan sekolah penerima dan siswa Mandiri dalam panel responsif. Sekolah ditambahkan sebelum pilihan paketnya; setiap penerima menampilkan jumlah paket terpilih. Baris paket memuat nama, versi, checkbox dan target klik penuh. Mandiri menampilkan status akses; sekolah tanpa paket mendapat petunjuk memilih minimal satu paket. Kontrak, alokasi, akses dan penguncian setelah publikasi tetap mengikuti aturan existing.
+
+**ENGINEERING DECISION - penyempurnaan pemilik:** pemilihan sekolah memakai modal checklist dengan pencarian nama/kode dan pilih semua hasil. Pilihan baru berlaku setelah Terapkan; Batal tidak mengubah penerima. Pilihan paket sekolah existing dipertahankan, sekolah baru memakai semua paket batch. Baris paket dan tindakan hapus dipadatkan.

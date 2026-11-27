@@ -620,6 +620,14 @@ function BatchForm({
   const [pending, setPending] = useState(false);
   const [optionLoading, setOptionLoading] = useState(true);
   const [packageModalOpen, setPackageModalOpen] = useState(false);
+  const [schoolModalOpen, setSchoolModalOpen] = useState(false);
+  const [schoolQuery, setSchoolQuery] = useState('');
+  const [schoolSelection, setSchoolSelection] = useState<string[]>([]);
+  const visibleSchools = knownSchools.filter((school) =>
+    `${school.schoolName} ${school.schoolCode ?? ''}`
+      .toLocaleLowerCase()
+      .includes(schoolQuery.toLocaleLowerCase().trim()),
+  );
   const selectedPackages = form.packageIds.flatMap((id) =>
     knownPackages.filter((p) => p.id === id),
   );
@@ -895,35 +903,18 @@ function BatchForm({
                     <h4>Sekolah penerima</h4>
                     <Badge>{form.schools.length} sekolah</Badge>
                   </div>
-                  <label className="tryout-batch-school-picker">
-                    Tambahkan sekolah
-                    <select
-                      value=""
-                      disabled={!form.packageIds.length}
-                      onChange={(e) => {
-                        if (e.target.value)
-                          setForm({
-                            ...form,
-                            schools: [
-                              ...form.schools,
-                              {
-                                schoolId: e.target.value,
-                                packageIds: [...form.packageIds],
-                              },
-                            ],
-                          });
-                      }}
-                    >
-                      <option value="">Pilih sekolah</option>
-                      {knownSchools
-                        .filter((s) => !form.schools.some((old) => old.schoolId === s.schoolId))
-                        .map((s) => (
-                          <option key={s.schoolId} value={s.schoolId}>
-                            {s.schoolName} · {s.schoolCode ?? s.schoolId}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      setSchoolSelection(form.schools.map((school) => school.schoolId));
+                      setSchoolQuery('');
+                      setSearch('');
+                      setSchoolModalOpen(true);
+                    }}
+                  >
+                    Pilih sekolah
+                  </Button>
 
                   {!form.schools.length && (
                     <p className="tryout-batch-empty">
@@ -939,8 +930,21 @@ function BatchForm({
                       </legend>
                       <div className="tryout-batch-recipient-status">
                         <span>
-                          {s.packageIds?.length ?? 0} dari {selectedPackages.length} paket dipilih
+                          {s.packageIds?.length ?? 0}/{selectedPackages.length} paket
                         </span>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          aria-label={`Hapus sekolah ${knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ?? 'Sekolah'}`}
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              schools: form.schools.filter((old) => old.schoolId !== s.schoolId),
+                            })
+                          }
+                        >
+                          Hapus sekolah
+                        </Button>
                       </div>
                       {!s.packageIds?.length && (
                         <p className="tryout-batch-recipient-warning">
@@ -976,19 +980,6 @@ function BatchForm({
                           </label>
                         ))}
                       </div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        aria-label={`Hapus sekolah ${knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ?? 'Sekolah'}`}
-                        onClick={() =>
-                          setForm({
-                            ...form,
-                            schools: form.schools.filter((old) => old.schoolId !== s.schoolId),
-                          })
-                        }
-                      >
-                        Hapus sekolah
-                      </Button>
                     </fieldset>
                   ))}
                 </div>
@@ -1048,6 +1039,90 @@ function BatchForm({
           </footer>
         </fieldset>
       </form>
+      <Dialog
+        open={schoolModalOpen}
+        onClose={() => setSchoolModalOpen(false)}
+        title="Pilih sekolah penerima"
+      >
+        <div className="tryout-batch-school-modal">
+          <label>
+            Cari sekolah
+            <input
+              type="search"
+              value={schoolQuery}
+              placeholder="Nama atau kode sekolah"
+              onChange={(e) => {
+                setSchoolQuery(e.target.value);
+                setSearch(e.target.value);
+              }}
+            />
+          </label>
+          <div className="tryout-batch-school-heading">
+            <span role="status">{schoolSelection.length} sekolah dipilih</span>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={optionLoading || !visibleSchools.length}
+              onClick={() =>
+                setSchoolSelection([
+                  ...new Set([
+                    ...schoolSelection,
+                    ...visibleSchools.map((school) => school.schoolId),
+                  ]),
+                ])
+              }
+            >
+              Pilih semua hasil
+            </Button>
+          </div>
+          {optionLoading && <p role="status">Memuat sekolah...</p>}
+          {!optionLoading && !visibleSchools.length && <p>Tidak ada sekolah yang cocok.</p>}
+          <div className="tryout-batch-school-list">
+            {visibleSchools.map((school) => (
+              <label className="tryout-batch-package-check" key={school.schoolId}>
+                <input
+                  type="checkbox"
+                  checked={schoolSelection.includes(school.schoolId)}
+                  onChange={(e) =>
+                    setSchoolSelection(
+                      e.target.checked
+                        ? [...schoolSelection, school.schoolId]
+                        : schoolSelection.filter((id) => id !== school.schoolId),
+                    )
+                  }
+                />
+                <span>
+                  <strong>{school.schoolName}</strong>
+                  {school.schoolCode && <small>{school.schoolCode}</small>}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="admin-content-actions">
+            <Button
+              type="button"
+              onClick={() => {
+                setForm({
+                  ...form,
+                  schools: schoolSelection.map(
+                    (schoolId) =>
+                      form.schools.find((school) => school.schoolId === schoolId) ?? {
+                        schoolId,
+                        packageIds: [...form.packageIds],
+                      },
+                  ),
+                });
+                setSchoolModalOpen(false);
+              }}
+            >
+              Terapkan pilihan
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setSchoolModalOpen(false)}>
+              Batal
+            </Button>
+          </div>
+        </div>
+      </Dialog>
       <Dialog
         open={packageModalOpen}
         onClose={() => setPackageModalOpen(false)}
