@@ -628,6 +628,9 @@ function BatchForm({
       .toLocaleLowerCase()
       .includes(schoolQuery.toLocaleLowerCase().trim()),
   );
+  const allVisibleSchoolsSelected =
+    visibleSchools.length > 0 &&
+    visibleSchools.every((school) => schoolSelection.includes(school.schoolId));
   const selectedPackages = form.packageIds.flatMap((id) =>
     knownPackages.filter((p) => p.id === id),
   );
@@ -1064,15 +1067,21 @@ function BatchForm({
               variant="secondary"
               disabled={optionLoading || !visibleSchools.length}
               onClick={() =>
-                setSchoolSelection([
-                  ...new Set([
-                    ...schoolSelection,
-                    ...visibleSchools.map((school) => school.schoolId),
-                  ]),
-                ])
+                setSchoolSelection(
+                  allVisibleSchoolsSelected
+                    ? schoolSelection.filter(
+                        (id) => !visibleSchools.some((school) => school.schoolId === id),
+                      )
+                    : [
+                        ...new Set([
+                          ...schoolSelection,
+                          ...visibleSchools.map((school) => school.schoolId),
+                        ]),
+                      ],
+                )
               }
             >
-              Pilih semua hasil
+              {allVisibleSchoolsSelected ? 'Batalkan semua hasil' : 'Pilih semua hasil'}
             </Button>
           </div>
           {optionLoading && <p role="status">Memuat sekolah...</p>}

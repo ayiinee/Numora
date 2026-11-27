@@ -210,6 +210,16 @@ test('batch creation, school delegation and compact detail work across viewports
   );
   await page.getByRole('button', { name: 'Pilih sekolah', exact: true }).click();
   await schoolDialog.getByRole('button', { name: 'Pilih semua hasil' }).click();
+  await schoolDialog.getByRole('button', { name: 'Batalkan semua hasil' }).click();
+  await expect(schoolDialog.getByRole('checkbox', { checked: true })).toHaveCount(0);
+  await schoolDialog.getByRole('button', { name: 'Pilih semua hasil' }).click();
+  await schoolDialog.getByLabel('Cari sekolah').fill('School A');
+  await schoolDialog.getByRole('button', { name: 'Batalkan semua hasil' }).click();
+  await expect(schoolDialog.getByRole('checkbox')).not.toBeChecked();
+  await schoolDialog.getByLabel('Cari sekolah').fill('School B');
+  await expect(schoolDialog.getByRole('checkbox')).toBeChecked();
+  await schoolDialog.getByLabel('Cari sekolah').fill('');
+  await schoolDialog.getByRole('button', { name: 'Pilih semua hasil' }).click();
   await schoolDialog.getByRole('button', { name: 'Terapkan pilihan' }).click();
   for (const school of schools) {
     const group = page.getByRole('group', { name: school.schoolName, exact: true });
