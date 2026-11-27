@@ -37,12 +37,13 @@ class Fixtures(base.Fixtures):
                         chapter=one(db,"INSERT INTO chapters(code,slug,name,display_order) VALUES(%s,%s,'TEST ONLY TRYOUT',%s) RETURNING id",(key,key,len(scopes)+1))
                         sub=one(db,"INSERT INTO subchapters(chapter_id,code,slug,name,display_order) VALUES(%s,%s,%s,'TEST ONLY',1) RETURNING id",(chapter,key,key))
                         level=None
-                        parent=one(db,"INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(%s,1,'SHAFWAN MAU TRY OUT [LOCAL TEST]','TRYOUT') RETURNING id",(key,))
+                        name = 'Tryout Matematika [DEMO LOKAL]' if os.environ.get('GENERATOR_DEMO_VARIANT') == 'true' else 'SHAFWAN MAU TRY OUT [LOCAL TEST]'
+                        parent=one(db,"INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(%s,1,%s,'TRYOUT') RETURNING id",(key,name))
                         context=one(db,"INSERT INTO measurement_contexts(ecosystem,dimension,generation_package_id,scale_code) VALUES('TRYOUT','PACKAGE_GENERATION',%s,%s) RETURNING id",(parent,key))
                     comp=one(db,"INSERT INTO competencies(subchapter_id,code,description) VALUES(%s,%s,'TEST ONLY') RETURNING id",(sub,key))
                     scopes[scope_key]=(chapter,sub,level,context,comp)
                 chapter,sub,level,context,comp=scopes[scope_key]
-                family=one(db,'INSERT INTO questions(primary_competency_id,usage_type,chapter_id,subchapter_id) VALUES(%s,%s,%s,%s) RETURNING id',(comp,usage,chapter,sub))
+                family=one(db,'INSERT INTO questions(primary_competency_id,usage_type,chapter_id,subchapter_id,source_ref) VALUES(%s,%s,%s,%s,%s) RETURNING id',(comp,usage,chapter,sub,qid))
                 variant=one(db,"INSERT INTO question_variants(question_id,variant_code,kind,origin) VALUES(%s,'O','ORIGINAL','TEST ONLY') RETURNING id",(family,))
                 rubric=one(db,"INSERT INTO scoring_rubric_versions(code,version,question_type,maximum_score_category,definition,digest,status,approved_by_user_id,approved_at) VALUES(%s,1,%s,1,'{\"testOnly\":true}','TEST','SEALED',%s,now()) RETURNING id",(key,content['questionType'],self.actor))
                 version=one(db,"""INSERT INTO question_versions(variant_id,version_number,question_type,stem,options_or_statements,answer_key,explanation,media,difficulty,level_id,scoring_rubric_version_id,content_status,reviewed_by_user_id,reviewed_at)

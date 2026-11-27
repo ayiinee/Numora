@@ -1,5 +1,60 @@
 # Menjalankan alur generator yang sama
 
+## Demo alur anchor dan varian
+
+**ENGINEERING DECISION — permintaan pemilik, 27 November 2026:** satu paket
+Tryout lokal tersedia untuk mencoba UI anchor sampai penyimpanan DRAFT tanpa
+layanan cloud. Jalankan dari root Numora:
+
+```powershell
+pnpm dev:variant-demo
+```
+
+Buka tautan `DEMO_READY` di terminal. Login Super Admin fixture otomatis membuka
+halaman Generate varian untuk **Tryout Matematika [DEMO LOKAL]** pada port 3100.
+Pilih lima anchor, tinjau kesiapan, generate 25 soal, lalu simpan DRAFT. Isi soal
+dan generator memakai bank Tryout dari service lokal; bukan respons sukses palsu.
+Paket hasil dapat dibuka dan diperiksa. Publikasi mengikuti
+[validasi teknis Tryout](TRYOUT_SIMPLE_PUBLICATION.md).
+
+PostgreSQL, auth fixture, API, worker polling dan storage gambar memakai loopback.
+Launcher membuat database sementara baru, memakai migrator canonical dan role
+Main/compute terbatas. `.env` aplikasi dan database bersama tidak dipakai.
+Ctrl+C membersihkan database; hasil demo hilang. Restart menghasilkan tautan login
+baru dan mengisi ulang stok konseptual yang terbatas. Katalog dibatasi ke bank Tryout pertama; pin renderer, approval fixture,
+fingerprint dan validasi artifact tetap diperiksa. Ini bukan acceptance produksi.
+
+Persiapan sekali bila belum tersedia:
+
+```powershell
+python -m venv .tmp/generator-python
+.tmp/generator-python/Scripts/python.exe -m pip install -r ../varian-numora/requirements-service-test.txt -r ../varian-numora/requirements-image.txt
+```
+
+Launcher mendeteksi sibling `numora-ai-service` atau `varian-numora`, Python venv
+service atau `.tmp/generator-python`, serta PostgreSQL Windows 18 di Program Files.
+Override tersedia lewat `NUMORA_AI_SERVICE_PATH`, `PYTHON`, `POSTGRES_BIN`, dan
+`GENERATOR_DEMO_WEB_PORT`. Build dependency/API mengikuti persiapan di bawah.
+
+Pemeriksaan terhubung, setelah demo siap:
+
+```powershell
+node scripts/test-tryout-variant-demo.mjs "<tautan DEMO_READY>"
+```
+
+Pemeriksaan menggunakan browser dan endpoint nyata: 25 request, 30 item DRAFT,
+lima anchor identik dan seluruh item paket original tetap sama. Hasil serta
+screenshot berada di `.tmp/variant-demo-evidence`, tidak dikomit.
+
+Uji terhubung juga menemukan parameter `jsonb_build_object` tanpa tipe pada
+penyimpanan paket varian (`42P18`). Parameter identitas sekarang dicast ke `text`;
+metadata sumber tetap berupa ID proses dan paket yang sama.
+
+**ENGINEERING VERIFICATION — lokal, 27 November 2026:** pemeriksaan browser
+terhubung lulus dengan 5 anchor identik, 25 varian, 30 item DRAFT dan original
+tetap sama. Build API, tiga tes unit varian, lint/format JS/TS yang berubah dan
+pemeriksaan sintaks Python juga lulus. Tidak ada deployment atau migrasi bersama.
+
 **ENGINEERING DECISION:** generator paket memakai service Python terpisah. Demo lokal membuat PostgreSQL sementara, 30 sumber Tryout dari bank lokal dan role database terbatas; tidak menambahkan approval sintetis ke database bersama. Datanya dihapus ketika proses berhenti. Publikasi tetap mengikuti validasi konten asli.
 
 ## Mencoba Generate Variant Tryout tanpa production
