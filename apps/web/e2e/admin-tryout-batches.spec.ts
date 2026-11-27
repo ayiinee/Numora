@@ -188,7 +188,7 @@ test('batch creation, school delegation and compact detail work across viewports
     .boundingBox();
   expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
   await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
-  await expect(page.getByText(/Pilih subset paket per sekolah/)).toBeVisible();
+  await expect(page.getByText(/Pilih paket untuk setiap sekolah/)).toBeVisible();
   await expect(page.getByText(/Siswa boleh bergabung setelah publikasi/)).toBeVisible();
   await page.getByLabel('Nama gelombang', { exact: true }).fill('TEST wave');
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
@@ -204,6 +204,45 @@ test('batch creation, school delegation and compact detail work across viewports
     const group = page.getByRole('group', { name: school.schoolName, exact: true });
     await expect(group.getByRole('checkbox', { checked: true })).toHaveCount(2);
   }
+  await expect(mandiri.getByText('Akses dimatikan', { exact: true })).toBeVisible();
+  const mandiriChoice = mandiri.getByRole('checkbox').first();
+  await mandiriChoice.focus();
+  await page.keyboard.press('Space');
+  await expect(mandiri.getByText('Akses aktif', { exact: true })).toBeVisible();
+  await page.keyboard.press('Space');
+  const firstSchool = page.getByRole('group', { name: schools[0]!.schoolName, exact: true });
+  for (const checkbox of await firstSchool.getByRole('checkbox').all()) await checkbox.uncheck();
+  await expect(firstSchool.getByText('Pilih minimal satu paket untuk sekolah ini.')).toBeVisible();
+  for (const checkbox of await firstSchool.getByRole('checkbox').all()) await checkbox.check();
+  await firstSchool
+    .getByRole('button', { name: `Hapus sekolah ${schools[0]!.schoolName}` })
+    .click();
+  await expect(firstSchool).toHaveCount(0);
+  await page
+    .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
+    .selectOption(schools[0]!.schoolId);
+  await expect(firstSchool.getByRole('checkbox', { checked: true })).toHaveCount(2);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const recipients = page.getByRole('region', { name: 'Penerima Tryout', exact: true });
+    await expect(recipients).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    const checkboxBox = await mandiriChoice.boundingBox();
+    expect(checkboxBox!.width).toBe(20);
+    const labelBox = await mandiriChoice.locator('..').boundingBox();
+    expect(labelBox!.height).toBeGreaterThanOrEqual(44);
+  }
+  const recipientAccessibility = await new AxeBuilder({ page })
+    .include('[aria-labelledby="batch-recipients-title"]')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(recipientAccessibility.violations).toEqual([]);
+  await page.screenshot({
+    path: test.info().outputPath('batch-recipients-desktop.png'),
+    fullPage: true,
+  });
   await expect(mandiri.getByRole('checkbox').first()).toBeEnabled();
   await page.getByRole('button', { name: 'Simpan draft', exact: true }).click();
   await expect(

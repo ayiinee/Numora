@@ -886,104 +886,146 @@ function BatchForm({
               </header>
               <p className="tryout-batch-recipient-info">
                 {waveMode
-                  ? 'Pilih subset paket per sekolah dan untuk Mandiri. Paket dibagi rata saat siswa mulai. Siswa boleh bergabung setelah publikasi.'
-                  : 'Pilih subset paket per target. Akses Mandiri diatur terpisah.'}
+                  ? 'Pilih paket untuk setiap sekolah dan siswa Mandiri. Paket dibagi rata saat siswa mulai. Siswa boleh bergabung setelah publikasi.'
+                  : 'Pilih paket untuk setiap penerima. Akses Mandiri diatur terpisah.'}
               </p>
               <div className="tryout-batch-recipient-controls">
-                <fieldset>
-                  <legend>Paket siswa Mandiri</legend>
-                  <p>Kosong berarti akses dimatikan. Paket terpilih dibagi rata.</p>
-                  {selectedPackages.map((p) => (
-                    <label key={p.id}>
-                      <input
-                        type="checkbox"
-                        checked={form.mandiriPackageIds?.includes(p.id) ?? false}
-                        onChange={(e) =>
+                <div className="tryout-batch-school-recipients">
+                  <div className="tryout-batch-school-heading">
+                    <h4>Sekolah penerima</h4>
+                    <Badge>{form.schools.length} sekolah</Badge>
+                  </div>
+                  <label className="tryout-batch-school-picker">
+                    Tambahkan sekolah
+                    <select
+                      value=""
+                      disabled={!form.packageIds.length}
+                      onChange={(e) => {
+                        if (e.target.value)
                           setForm({
                             ...form,
-                            mandiriPackageIds: e.target.checked
-                              ? [...(form.mandiriPackageIds ?? []), p.id]
-                              : (form.mandiriPackageIds ?? []).filter((id) => id !== p.id),
+                            schools: [
+                              ...form.schools,
+                              {
+                                schoolId: e.target.value,
+                                packageIds: [...form.packageIds],
+                              },
+                            ],
+                          });
+                      }}
+                    >
+                      <option value="">Pilih sekolah</option>
+                      {knownSchools
+                        .filter((s) => !form.schools.some((old) => old.schoolId === s.schoolId))
+                        .map((s) => (
+                          <option key={s.schoolId} value={s.schoolId}>
+                            {s.schoolName} · {s.schoolCode ?? s.schoolId}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+
+                  {!form.schools.length && (
+                    <p className="tryout-batch-empty">
+                      Belum ada sekolah penerima. Tambahkan sekolah, lalu pilih paket yang dapat
+                      dikerjakan siswanya.
+                    </p>
+                  )}
+                  {form.schools.map((s) => (
+                    <fieldset className="tryout-batch-recipient-card" key={s.schoolId}>
+                      <legend>
+                        {knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ??
+                          'Sekolah'}
+                      </legend>
+                      <div className="tryout-batch-recipient-status">
+                        <span>
+                          {s.packageIds?.length ?? 0} dari {selectedPackages.length} paket dipilih
+                        </span>
+                      </div>
+                      {!s.packageIds?.length && (
+                        <p className="tryout-batch-recipient-warning">
+                          Pilih minimal satu paket untuk sekolah ini.
+                        </p>
+                      )}
+                      <div className="tryout-batch-recipient-packages">
+                        {selectedPackages.map((p) => (
+                          <label className="tryout-batch-package-check" key={p.id}>
+                            <input
+                              type="checkbox"
+                              checked={s.packageIds?.includes(p.id) ?? false}
+                              onChange={(e) =>
+                                setForm({
+                                  ...form,
+                                  schools: form.schools.map((old) =>
+                                    old.schoolId === s.schoolId
+                                      ? {
+                                          schoolId: old.schoolId,
+                                          packageIds: e.target.checked
+                                            ? [...(old.packageIds ?? []), p.id]
+                                            : (old.packageIds ?? []).filter((id) => id !== p.id),
+                                        }
+                                      : old,
+                                  ),
+                                })
+                              }
+                            />
+                            <span>
+                              <strong>{p.name}</strong>
+                              <small>Versi {p.packageVersion}</small>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        aria-label={`Hapus sekolah ${knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ?? 'Sekolah'}`}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            schools: form.schools.filter((old) => old.schoolId !== s.schoolId),
                           })
                         }
-                      />
-                      {p.name}
-                    </label>
+                      >
+                        Hapus sekolah
+                      </Button>
+                    </fieldset>
                   ))}
-                </fieldset>
-                {form.schools.map((s) => (
-                  <fieldset key={s.schoolId}>
-                    <legend>
-                      {knownSchools.find((k) => k.schoolId === s.schoolId)?.schoolName ?? 'Sekolah'}
-                    </legend>
-                    <p>Pilih 1–5 paket. Pembagian otomatis rata saat siswa mulai.</p>
+                </div>
+                <fieldset className="tryout-batch-recipient-card tryout-batch-mandiri">
+                  <legend>Paket siswa Mandiri</legend>
+                  <div className="tryout-batch-recipient-status">
+                    <Badge>
+                      {form.mandiriPackageIds?.length ? 'Akses aktif' : 'Akses dimatikan'}
+                    </Badge>
+                    <span>
+                      {form.mandiriPackageIds?.length ?? 0} dari {selectedPackages.length} paket
+                    </span>
+                  </div>
+                  <p>Siswa tanpa kelas aktif. Centang paket untuk membuka akses Mandiri.</p>
+                  <div className="tryout-batch-recipient-packages">
                     {selectedPackages.map((p) => (
-                      <label key={p.id}>
+                      <label className="tryout-batch-package-check" key={p.id}>
                         <input
                           type="checkbox"
-                          checked={s.packageIds?.includes(p.id) ?? false}
+                          checked={form.mandiriPackageIds?.includes(p.id) ?? false}
                           onChange={(e) =>
                             setForm({
                               ...form,
-                              schools: form.schools.map((old) =>
-                                old.schoolId === s.schoolId
-                                  ? {
-                                      schoolId: old.schoolId,
-                                      packageIds: e.target.checked
-                                        ? [...(old.packageIds ?? []), p.id]
-                                        : (old.packageIds ?? []).filter((id) => id !== p.id),
-                                    }
-                                  : old,
-                              ),
+                              mandiriPackageIds: e.target.checked
+                                ? [...(form.mandiriPackageIds ?? []), p.id]
+                                : (form.mandiriPackageIds ?? []).filter((id) => id !== p.id),
                             })
                           }
                         />
-                        {p.name}
+                        <span>
+                          <strong>{p.name}</strong>
+                          <small>Versi {p.packageVersion}</small>
+                        </span>
                       </label>
                     ))}
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        setForm({
-                          ...form,
-                          schools: form.schools.filter((old) => old.schoolId !== s.schoolId),
-                        })
-                      }
-                    >
-                      Hapus delegasi
-                    </Button>
-                  </fieldset>
-                ))}
-                <label>
-                  Tambahkan sekolah
-                  <select
-                    value=""
-                    disabled={!form.packageIds.length}
-                    onChange={(e) => {
-                      if (e.target.value)
-                        setForm({
-                          ...form,
-                          schools: [
-                            ...form.schools,
-                            {
-                              schoolId: e.target.value,
-                              packageIds: [...form.packageIds],
-                            },
-                          ],
-                        });
-                    }}
-                  >
-                    <option value="">Pilih sekolah</option>
-                    {knownSchools
-                      .filter((s) => !form.schools.some((old) => old.schoolId === s.schoolId))
-                      .map((s) => (
-                        <option key={s.schoolId} value={s.schoolId}>
-                          {s.schoolName} · {s.schoolCode ?? s.schoolId}
-                        </option>
-                      ))}
-                  </select>
-                </label>
+                  </div>
+                </fieldset>
               </div>
             </section>
           )}

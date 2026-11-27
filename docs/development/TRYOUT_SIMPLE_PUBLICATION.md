@@ -77,3 +77,8 @@ Konten, hasil, XP dan deadline attempt historis tidak dihitung ulang.
 **ENGINEERING DECISION ? instruksi pemilik:** penyuntingan soal paket memakai halaman khusus `/admin/content/versions/:id/edit`, terpisah dari halaman review/laporan. Tab Isi soal, Metadata dan Media mempertahankan draf lokal yang sama, dengan pratinjau pendamping desktop dan tombol pratinjau di layar kecil. Tautan kembali menuju paket asal. Perubahan belum disimpan diperingatkan ketika meninggalkan lewat tautan atau menutup/memuat ulang halaman.
 
 Penyimpanan memakai pemeriksaan dan API revisi impor existing, beserta pin versi sumber, revisi paket dan kunci idempotensi. Paket DRAFT menerima versi baru melalui target impor. Paket terbit tidak diubah: editor membuat versi soal baru di bank soal untuk dipakai pada revisi paket berikutnya. Soal arsip tetap terkunci. Review laporan tidak mencatat keputusan melalui editor ini.
+
+
+## Penerima batch - 27 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** form batch memisahkan sekolah penerima dan siswa Mandiri dalam panel responsif. Sekolah ditambahkan sebelum pilihan paketnya; setiap penerima menampilkan jumlah paket terpilih. Baris paket memuat nama, versi, checkbox dan target klik penuh. Mandiri menampilkan status akses; sekolah tanpa paket mendapat petunjuk memilih minimal satu paket. Kontrak, alokasi, akses dan penguncian setelah publikasi tetap mengikuti aturan existing.
