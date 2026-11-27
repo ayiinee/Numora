@@ -47,7 +47,7 @@ type MappingRow = {
   original_hash: string;
   original_version: number;
   config_version: number;
-  approval_digest: string;
+  approved_digest: string;
   original_question_version_id: string;
 };
 type ProcessRow = {
@@ -125,7 +125,7 @@ export class TryoutVariantGenerationService {
           configVersion: row.config_version,
           originalQuestionVersionId: item.originalQuestionVersionId,
           configId: row.config_id,
-          approvalDigest: row.approval_digest,
+          approvalDigest: row.approved_digest,
         },
       ];
     });
@@ -276,7 +276,11 @@ export class TryoutVariantGenerationService {
       const previous = await tx<
         ProcessRow[]
       >`SELECT * FROM tryout_variant_generation_processes WHERE actor_user_id=${actor} AND operation_key=${body.operationKey}`;
-      if (previous[0]) return previous[0].id;
+      if (previous[0]) {
+        if (previous[0].operation_fingerprint !== fingerprint)
+          throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
+        return previous[0].id;
+      }
       const source = await this.rowSource(tx, packageId, body.expectedRevision);
       const processId = randomUUID();
       const requestIds: string[] = [];
