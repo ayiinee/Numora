@@ -100,8 +100,16 @@ for (const width of [1280, 390]) {
       page.getByRole('checkbox', { name: 'Pilih soal 1 sebagai anchor', exact: true }),
     ).toHaveCount(0);
     await page.getByRole('searchbox', { name: 'Cari soal' }).fill('');
-    await page.getByText('Lihat soal lengkap & pilihan jawaban', { exact: true }).first().click();
+    const firstStem = page.getByText('Hitung hasil dari 1 + 12. Tentukan jawaban yang tepat.', {
+      exact: true,
+    });
+    await expect(firstStem).toHaveCount(1);
+    await page.getByText('Lihat pilihan jawaban', { exact: true }).first().click();
+    await expect(firstStem).toHaveCount(1);
     await expect(page.getByText('Pilihan jawaban contoh').first()).toBeVisible();
+    await page.getByText('Sembunyikan pilihan jawaban', { exact: true }).first().click();
+    await expect(page.getByText('Pilihan jawaban contoh').first()).toBeHidden();
+    await expect(firstStem).toBeVisible();
     for (let n = 1; n <= 5; n++)
       await page
         .getByRole('checkbox', { name: `Pilih soal ${n} sebagai anchor`, exact: true })

@@ -74,6 +74,7 @@ function QuestionContent({
 }) {
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
   const [pending, setPending] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState('');
   async function loadMedia() {
     if (pending) return;
@@ -115,10 +116,11 @@ function QuestionContent({
   );
   return (
     <>
-      <div className="tryout-variant-stem">{rich(question.stem.text, false)}</div>
+      <div className="tryout-variant-stem">{rich(question.stem.text, expanded)}</div>
       <details
         className="tryout-variant-detail"
         onToggle={(event) => {
+          setExpanded(event.currentTarget.open);
           if (
             event.currentTarget.open &&
             !media.length &&
@@ -130,9 +132,8 @@ function QuestionContent({
             void loadMedia();
         }}
       >
-        <summary>Lihat soal lengkap & pilihan jawaban</summary>
+        <summary>{expanded ? 'Sembunyikan pilihan jawaban' : 'Lihat pilihan jawaban'}</summary>
         {error && <p role="alert">{error}</p>}
-        {rich(question.stem.text)}
         {!!question.metadata.categories?.length && (
           <p>
             Kategori: {question.metadata.categories.map((category) => category.label).join(' · ')}
