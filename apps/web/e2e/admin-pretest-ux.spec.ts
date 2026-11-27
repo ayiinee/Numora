@@ -14,16 +14,16 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const)
     expect(fixture.calls.some((call) => call.path === 'admin/content/packages')).toBe(false);
     await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
     const confirm = page.getByRole('dialog', { name: 'Penerbitan paket' });
-    await expect(confirm.getByText(/Yakin ingin menerbitkan paket/)).toBeVisible();
+    await expect(confirm.getByText(/Paket yang akan diterbitkan/)).toBeVisible();
     await expect(confirm.getByLabel('Bukti persetujuan tim kurikulum')).toHaveCount(0);
     await expect(
-      confirm.getByRole('button', { name: 'Publikasikan paket', exact: true }),
+      confirm.getByRole('button', { name: 'Terbitkan paket', exact: true }),
     ).toBeEnabled();
-    await confirm.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
+    await confirm.getByRole('button', { name: 'Terbitkan paket', exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
     const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
-    await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
+    await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeDisabled();
     await publication.getByRole('button', { name: 'Tutup dialog' }).click();
     await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bisa dikerjakan' })).toBeVisible();
@@ -100,15 +100,17 @@ test('Tryout package publication delegates scheduling to Batch Tryout', async ({
   await page.goto(`/admin/assessments?type=TRYOUT&package=${id(9100)}`);
   await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
   const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
-  await expect(publication.getByRole('link', { name: 'Batch Tryout' })).toHaveAttribute(
-    'href',
-    '/admin/tryout-batches',
-  );
-  const publish = publication.getByRole('button', { name: 'Publikasikan paket', exact: true });
-  await expect(publish).toBeDisabled();
-  await page.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }).check();
+  await expect(publication.getByRole('link', { name: 'Batch Tryout' })).toHaveCount(0);
+  await expect(publication).toContainText('Paket yang akan diterbitkan');
+  const publish = publication.getByRole('button', { name: 'Terbitkan paket', exact: true });
+  await expect(publish).toBeEnabled();
+  await expect(
+    publication.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }),
+  ).toHaveCount(0);
+  await expect(publication.getByLabel('Bukti persetujuan tim kurikulum')).toHaveCount(0);
   await publish.click();
-  await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
+  await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
+  await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toHaveCount(0);
   expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
     expectedRevision: 1,
   });

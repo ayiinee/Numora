@@ -582,6 +582,13 @@
       "when": 1795649413678,
       "tag": "0082_tryout_start_allocation_index",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1795661821760,
+      "tag": "0083_tryout_simple_publication_pools",
+      "breakpoints": true
     }
   ]
 }

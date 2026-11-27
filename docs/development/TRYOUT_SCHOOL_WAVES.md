@@ -1,3 +1,5 @@
+**ENGINEERING DECISION - owner instruction, 26 November 2026:** New Tryout attempts receive 75 minutes (4,500 seconds), capped by batch/package close. Existing attempt deadlines stay pinned. Batch package selection/publication no longer requires matching parent/family codes or generator lineage. Content, distribution, scoring policy, wave pair identity, school access and balanced allocation gates remain. Pair selection does not certify IRT linking. Supersedes the 25 November duration and previous parent restrictions.
+
 # Gelombang dan akses Tryout - 25 November 2026
 
 **ENGINEERING DECISION — perbaikan validasi pasangan, 26 November 2026:** kode keluarga impor bukan identitas pasangan original/varian. Paket generated dan revisi Kurikulumnya boleh berbeda family code dari original bila relasi sumber generator tersimpan menghubungkan pasangan tersebut. Backend memverifikasi relasi generator durable, bukan nama paket atau metadata bebas. Validasi publikasi, policy, distribusi dan pasangan gelombang tetap berlaku. Parent code sama tidak membuktikan linking/kelayakan statistik IRT.

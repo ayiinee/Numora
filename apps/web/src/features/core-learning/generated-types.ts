@@ -5,7 +5,7 @@ export type StudentTryoutBatchesDto = { "routingActive": boolean; "items": (Stud
 
 export type StudentTryoutBatchDto = { "startBlockedReason"?: string | null; "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "durationSeconds": number; "state": string; "schools": (StudentTryoutSchoolDto)[]; "mandiri": boolean; "attemptId": string | null; "attemptStatus": string | null; "resultState"?: "waiting" | "overdue" | "ready" | null; "canResume"?: boolean; };
 
-export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
+export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; "schoolCode"?: string; "packageIds"?: (string)[]; };
 
 export type StudentMaterialsDto = { "chapters": (MaterialChapterDto)[]; "recentChapterId": string | null; };
 

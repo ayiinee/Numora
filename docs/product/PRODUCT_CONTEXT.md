@@ -1,3 +1,7 @@
+**ENGINEERING DECISION - owner-approved redesign, 26 November 2026:** Tryout publication requires technical completeness only, without curriculum approval, manual item review, import history or scientific linking gates. Each new batch supports 1-5 packages with a subset per school/Mandiri, allocated evenly on start. Existing packages use the new checks; historical attempts/results stay pinned. See [Tryout redesign](../development/TRYOUT_SIMPLE_PUBLICATION.md).
+
+**ENGINEERING DECISION - owner instruction, 26 November 2026:** New Tryout attempts receive 75 minutes (4,500 seconds), capped by batch/package close. Existing attempt deadlines stay pinned. Batch package selection/publication no longer requires matching parent/family codes or generator lineage. Content, distribution, scoring policy, wave pair identity, school access and balanced allocation gates remain. Pair selection does not certify IRT linking. Supersedes the 25 November duration and previous parent restrictions.
+
 **ENGINEERING DECISION — 26 November 2026:** pasangan Tryout generator/revisi boleh berbeda kode keluarga dari original jika relasi sumber generator durable cocok; gate publikasi/distribusi/policy tetap. Lihat docs/development/TRYOUT_SCHOOL_WAVES.md.
 
 **ENGINEERING DECISION - pemilik, 26 November 2026:** alokasi sekolah BALANCED_50_50 dilakukan saat start berdasarkan assignment attempt per batch/sekolah, termasuk batch existing. Publikasi tidak membekukan siswa; keanggotaan aktif diperiksa saat start. Sesi dan snapshot historis dipertahankan. [Aturan dan rollout](../development/TRYOUT_SCHOOL_WAVES.md).
@@ -225,32 +229,27 @@ Peristiwa analitik tambahan v0.5 antara lain `user_type_changed` dan `star_earne
 
 **ENGINEERING DECISION — perbaikan akses, pemilik 7 Oktober 2026:** Publish Excel Tryout mengunci snapshot beserta scoring/blueprint pins secara atomik. Digest komposisi review dipertahankan sebagai compositionDigest; manifestDigest persetujuan mengikuti digest snapshot database. Distribusi paket Excel yang sudah direview/disetujui Admin tidak menunggu package_quality_results generator; jalur ini memeriksa 30 versi READY, provenance impor, persetujuan SEALED dan tetap menahan keputusan HOLD/RETIRED. Tidak membuat hasil statistik sintetis. Dua paket terbit tanpa attempt dipulihkan dengan backup; jadwal/histori attempt tidak diubah.
 
-
 ## Batch Tryout dan delegasi ? 10 November 2026
 
 **ENGINEERING DECISION ? persetujuan pemilik:** bank paket terpisah dari batch pelaksanaan. Batch memiliki judul, rentang mulai/tutup bebas dalam WIB, beberapa versi paket dan delegasi Mandiri/sekolah. Batch terbit boleh berjalan bersamaan. Siswa Mandiri tidak memiliki kelas aktif; sekolah tanpa delegasi tidak mendapat akses. Siswa multisekolah memilih satu sekolah yang sah saat mulai; assignment/attempt dikunci per siswa/batch. Beberapa penerima boleh memakai paket sama. Konfigurasi dapat direvisi sebelum mulai, terkunci saat mulai. Pembatalan sebelum mulai; stop dengan alasan saat berjalan. Durasi attempt sepuluh menit, dibatasi penutupan batch.
 
 **ENGINEERING DECISION:** delegasi adalah alokasi Admin, bukan randomisasi A/B. Paket historis, attempt dan XP tidak ditulis ulang. Aktivasi start berbasis batch terjadi setelah batch Admin pertama diterbitkan; endpoint start paket lama kemudian menolak start baru. Resume/histori tetap tersedia. Hasil multi-paket menunggu finalisasi seluruh batch dengan kontrak/policy sah; kegagalan tidak menghasilkan nilai buatan.
 
-## ENGINEERING DECISION � pemilik, 10 November 2026: publikasi Pretest sederhana
+## ENGINEERING DECISION � pemilik, 10 November 2026: publikasi Pretest sederhana
 
 Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetujuan Curriculum tambahan untuk paket Pretest. Sumber soal disiapkan Curriculum. Admin dapat langsung menerbitkan DRAFT yang lolos seluruh validasi server: jumlah 20, struktur/kunci/pembahasan, metadata/cakupan, provenance/media dan kompatibilitas scoring. Impor tetap menyimpan DRAFT, bukan publikasi otomatis. Masalah validasi tetap memblokir publikasi dan ditampilkan melalui checklist. Tidak mengubah aturan Drill/Tryout, penempatan Pretest, XP, paket terbit atau histori siswa. Snapshot/blueprint internal existing tetap dibuat secara transaksional saat publikasi; bukan langkah persetujuan manual baru.
-
 
 ## Automatic Pretest rubric - 10 November 2026
 
 **ENGINEERING DECISION - owner-approved plan:** Pretest imports use SEALED `PRETEST_PGK_PARTIAL_V1` rubrics validated by the scoring engine. Unchanged content with an invalid rubric creates a new version. `POST /api/v1/admin/content/packages/{id}/prepare-scoring` accepts `expectedRevision`, requires Content Admin and a DRAFT Pretest package. One audited transaction replaces only affected question-version references, preserving content, answers, order and count. Repeats at the current revision create no versions; stale revisions are rejected. Published packages, attempts, results and historical policy pins remain unchanged. Preparation does not publish. Scoring problems link to preparation rather than content editing.
 
-
 ## Fallback paket utama - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.
 
-
 ## Delegasi batch terbit - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** penerima sekolah/Mandiri dapat diubah selama batch belum berakhir atau dibatalkan, termasuk saat berjalan. Perubahan hanya memengaruhi start baru. Daftar versi paket, paket utama, isi, jadwal mulai dan attempt existing tetap dipin. Mutasi khusus penerima memakai Content capability, expectedRevision, row lock, transaksi dan audit; batch tutup/batal ditolak.
-
 
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 

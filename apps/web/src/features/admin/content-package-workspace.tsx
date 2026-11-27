@@ -59,6 +59,7 @@ export function ContentPackageWorkspace({
   urlContext = false,
   mode = 'picker',
   packageId,
+  backHref,
 }: {
   token: string;
   disabled: boolean;
@@ -70,6 +71,7 @@ export function ContentPackageWorkspace({
   urlContext?: boolean;
   mode?: 'picker' | 'create' | 'detail';
   packageId?: string;
+  backHref?: string;
 }) {
   const url = useAdminUrl();
   const router = useRouter();
@@ -99,15 +101,23 @@ export function ContentPackageWorkspace({
   const [reload, setReload] = useState(0);
   const [selectionRetry, setSelectionRetry] = useState(0);
   const [notes, setNotes] = useState('');
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaError, setMediaError] = useState('');
+  const mediaRequest = useRef(0);
   const [inspectingId, setInspectingId] = useState<string | null>(null);
+  const [metadataId, setMetadataId] = useState<string | null>(null);
+  const [questionSearch, setQuestionSearch] = useState('');
+  const [completenessFilter, setCompletenessFilter] = useState('ALL');
   const [reviewStep, setReviewStep] = useState<1 | 2 | 3 | 4>(1);
   const [compositionOpen, setCompositionOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsName, setSettingsName] = useState('');
   const [approvalReference, setApprovalReference] = useState('');
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [publishConfirmed, setPublishConfirmed] = useState(false);
   const [informationOpen, setInformationOpen] = useState<'access' | 'readiness' | null>(null);
   const [publicationOpen, setPublicationOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
   const [variantAvailable, setVariantAvailable] = useState<boolean | null>(null);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
@@ -249,6 +259,8 @@ export function ContentPackageWorkspace({
   useEffect(() => {
     setNotes('');
     setInspectingId(null);
+    setQuestionSearch('');
+    setCompletenessFilter('ALL');
     setArchiveConfirmed(false);
     setApprovalReference('');
     setApprovalConfirmed(false);
@@ -317,29 +329,56 @@ export function ContentPackageWorkspace({
     setOffset(0);
     setMedia([]);
   };
-  const loadMedia = () =>
-    void run(async () => {
-      if (!detail?.items.length) return;
-      const links = await Promise.all(
-        detail.items.map(async (item) => {
-          const result = await getContentVersionMedia(token, item.questionVersionId);
-          return result.items
-            .filter((asset) => asset.status === 'READY' && asset.url && asset.expiresAt)
-            .map((asset) => ({
-              instanceId: item.questionVersionId,
-              assetId: asset.assetId,
-              altText: asset.altText,
-              url: asset.url!,
-              expiresAt: asset.expiresAt!,
-            }));
-        }),
-      );
-      setMedia(links.flat());
-    });
+  const loadMedia = async () => {
+    const item = detail?.items.find((item) => item.questionVersionId === inspectingId);
+    const request = ++mediaRequest.current;
+    setMediaError('');
+    if (
+      !item?.question ||
+      !(
+        item.question.metadata.assetManifest.length ||
+        [
+          item.question.stem.text,
+          item.question.explanation.text,
+          ...item.question.options.map((option) => option.content.text),
+        ].some((text) => text.includes('[[asset:'))
+      )
+    ) {
+      setMediaLoading(false);
+      return;
+    }
+    setMediaLoading(true);
+    try {
+      const result = await getContentVersionMedia(token, item.questionVersionId);
+      if (request !== mediaRequest.current) return;
+      const links = result.items
+        .filter((asset) => asset.status === 'READY' && asset.url && asset.expiresAt)
+        .map((asset) => ({
+          instanceId: item.questionVersionId,
+          assetId: asset.assetId,
+          altText: asset.altText,
+          url: asset.url!,
+          expiresAt: asset.expiresAt!,
+        }));
+      setMedia((previous) => [
+        ...previous.filter((asset) => asset.instanceId !== item.questionVersionId),
+        ...links,
+      ]);
+    } catch (cause) {
+      if (request !== mediaRequest.current) return;
+      reportAccessError(cause);
+      setMediaError('Gambar belum dapat dimuat. Coba muat ulang gambar.');
+    } finally {
+      if (request === mediaRequest.current) setMediaLoading(false);
+    }
+  };
   useEffect(() => {
     if (inspectingId && detail) void loadMedia();
-    // Reload links when reviewer changes question; signed links remain server-authorized.
-  }, [inspectingId, detail?.id]);
+    return () => {
+      mediaRequest.current++;
+    };
+    // Signed media is fetched only for the selected question, without blocking navigation.
+  }, [inspectingId, detail?.id, detail?.contentRevision]);
   const locked = busy || disabled || detailLoading;
   const printableTryout =
     detail?.assessmentType === 'TRYOUT' &&
@@ -373,14 +412,158 @@ export function ContentPackageWorkspace({
         return sub?.status !== 'ARCHIVED' && (!chapter || sub?.parentId === chapter);
       })(),
   );
+  const compactTryout = mode === 'detail' && initialUsage === 'TRYOUT';
+  const searchText = questionSearch.trim().toLocaleLowerCase('id-ID');
+  const visibleQuestions =
+    detail?.items.filter(
+      (item) =>
+        (completenessFilter === 'ALL' ||
+          (completenessFilter === 'COMPLETE') ===
+            Boolean(item.question && !item.validationIssues?.length)) &&
+        (!searchText ||
+          [
+            item.question?.stem.text.replace(/<[^>]*>/g, ' '),
+            item.question?.externalId,
+            item.questionVersionId,
+          ].some((value) => value?.toLocaleLowerCase('id-ID').includes(searchText))),
+    ) ?? [];
+  const inspectingItem = detail?.items.find((item) => item.questionVersionId === inspectingId);
+  const questionValid = Boolean(
+    inspectingItem?.question && !inspectingItem.validationIssues?.length,
+  );
+  const generatorAction =
+    detail?.assessmentType === 'TRYOUT' &&
+    detail.status === 'PUBLISHED' &&
+    detail.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
+    (variantAvailable === true ? (
+      <Link
+        className="button-link"
+        href={`/admin/assessments/tryout/${encodeURIComponent(detail.id)}/variant/new`}
+      >
+        Generate varian
+      </Link>
+    ) : (
+      <Button
+        variant="secondary"
+        disabled
+        title="Mapping generator belum lengkap untuk 25 focal soal."
+      >
+        {variantAvailable === null ? 'Memeriksa generator…' : 'Generate varian'}
+      </Button>
+    ));
+  const packageActions = detail && (
+    <div className="assessment-header-actions">
+      {detail.assessmentType === 'TRYOUT' && (
+        <Button
+          variant="secondary"
+          disabled={!printableTryout}
+          onClick={printTryout}
+          title={
+            printableTryout
+              ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
+              : 'Lengkapi seluruh soal paket sebelum mengekspor'
+          }
+        >
+          Export PDF
+        </Button>
+      )}
+      <Button onClick={() => setPublicationOpen(true)}>
+        {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
+      </Button>
+
+      {compactTryout ? (
+        <>
+          <Button
+            variant="secondary"
+            popoverTarget="tryout-package-actions"
+            className="tryout-package-more"
+            aria-label="Tindakan lainnya"
+            title="Tindakan lainnya"
+          >
+            <span aria-hidden="true">⋯</span>
+          </Button>
+          <div
+            id="tryout-package-actions"
+            popover="auto"
+            className="tryout-package-menu"
+            aria-label="Tindakan paket lainnya"
+            onClick={(event) => {
+              if ((event.target as HTMLElement).closest('button, a'))
+                event.currentTarget.hidePopover();
+            }}
+          >
+            <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
+              Komposisi paket
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSettingsName(detail.name);
+                setSettingsOpen(true);
+              }}
+            >
+              Pengaturan
+            </Button>
+
+            {['DRAFT', 'PUBLISHED', 'CLOSED'].includes(detail.status) && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setArchiveConfirmed(false);
+                  setArchiveOpen(true);
+                }}
+              >
+                Arsipkan paket
+              </Button>
+            )}
+
+            {generatorAction}
+          </div>
+        </>
+      ) : (
+        <>
+          <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
+            Komposisi paket
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setSettingsName(detail.name);
+              setSettingsOpen(true);
+            }}
+          >
+            Pengaturan
+          </Button>
+
+          {generatorAction}
+        </>
+      )}
+    </div>
+  );
   return (
     <Card
       id="paket-soal"
       className={
-        mode === 'detail' ? 'content-import-card assessment-detail-card' : 'content-import-card'
+        mode === 'detail'
+          ? `content-import-card assessment-detail-card${compactTryout ? ' tryout-package-detail' : ''}`
+          : 'content-import-card'
       }
-      style={embedded ? { border: 0, boxShadow: 'none', paddingTop: 0 } : undefined}
+      style={
+        compactTryout
+          ? { border: 0, boxShadow: 'none', padding: 0 }
+          : embedded
+            ? { border: 0, boxShadow: 'none', paddingTop: 0 }
+            : undefined
+      }
     >
+      {compactTryout && (
+        <div className="tryout-package-toolbar">
+          <Link className="assessment-back-link" href={backHref ?? assessmentPath('TRYOUT')}>
+            ← Kembali ke daftar
+          </Link>
+          {packageActions}
+        </div>
+      )}
       {mode === 'picker' && (
         <>
           <h2>{urlContext ? 'Daftar paket' : 'Tujuan & paket soal'}</h2>
@@ -633,7 +816,9 @@ export function ContentPackageWorkspace({
             </label>
           )}
           {usage === 'TRYOUT' && (
-            <p>Tryout dapat memuat soal lintas bab. Blueprint Curriculum menentukan komposisi.</p>
+            <p>
+              Tryout memuat 30 soal. Lengkapi soal, jawaban dan pembahasan untuk menerbitkan paket.
+            </p>
           )}
           <label>
             Kode sumber stabil
@@ -683,47 +868,7 @@ export function ContentPackageWorkspace({
                   }[detail.status] ?? detail.status}
                 </Badge>
               </div>
-              <div className="assessment-header-actions">
-                {detail.assessmentType === 'TRYOUT' &&
-                  detail.status === 'PUBLISHED' &&
-                  detail.source?.sourceNamespace !== 'TRYOUT_VARIANT_GENERATOR' &&
-                  (variantAvailable === true ? (
-                    <Link
-                      className="button-link"
-                      href={`/admin/assessments/tryout/${encodeURIComponent(detail.id)}/variant/new`}
-                    >
-                      Generate varian paket
-                    </Link>
-                  ) : (
-                    <Button variant="secondary" disabled title="Mapping generator belum lengkap untuk 25 focal soal.">
-                      {variantAvailable === null ? 'Memeriksa generator…' : 'Generate varian paket'}
-                    </Button>
-                  ))}
-                {detail.assessmentType === 'TRYOUT' && (
-                  <Button
-                    variant="secondary"
-                    disabled={!printableTryout}
-                    onClick={printTryout}
-                    title={
-                      printableTryout
-                        ? 'Cetak soal, pilihan jawaban, dan kunci jawaban'
-                        : 'Lengkapi seluruh soal paket sebelum mengekspor'
-                    }
-                  >
-                    Export PDF
-                  </Button>
-                )}
-                <Button variant="secondary" onClick={() => setCompositionOpen(true)}>
-                  Komposisi paket
-                </Button>
-                <Button variant="secondary" onClick={() => { setSettingsName(detail.name); setCompositionOpen(true); }}>
-                  Pengaturan
-                </Button>
-                <Button onClick={() => setPublicationOpen(true)}>
-                  {detail.status === 'DRAFT' ? 'Penerbitan' : 'Kelola publikasi'}
-                </Button>
-
-              </div>
+              {!compactTryout && packageActions}
             </header>
             <div className="assessment-detail-metrics">
               <div>
@@ -735,12 +880,12 @@ export function ContentPackageWorkspace({
               </div>
               <div>
                 <span>
-                  {detail.assessmentType === 'PRETEST' ? 'Isi soal valid' : 'Soal ditinjau'}
+                  {detail.assessmentType !== 'DRILL' ? 'Isi soal lengkap' : 'Soal ditinjau'}
                 </span>
                 <strong>
                   {
                     detail.items.filter((item) =>
-                      detail.assessmentType === 'PRETEST'
+                      detail.assessmentType !== 'DRILL'
                         ? item.question && !item.validationIssues?.length
                         : item.reviewedAt,
                     ).length
@@ -762,11 +907,11 @@ export function ContentPackageWorkspace({
               <strong>Versi ini belum punya sumber impor.</strong>
               <p>
                 Paket lama yang sudah diterbitkan tetap terkunci agar histori siswa aman. Buat versi
-                perbaikan melalui sumber impor, lalu validasi, review, dan terbitkan versi baru.
+                perbaikan melalui sumber impor, lalu pemeriksaan, review, dan terbitkan versi baru.
               </p>
             </div>
           )}
-          {detail.assessmentType !== 'PRETEST' &&
+          {detail.assessmentType === 'DRILL' &&
             detail.status === 'DRAFT' &&
             detail.items.some((item) => !item.reviewedAt) && (
               <div className="assessment-inline-warning" role="status">
@@ -787,84 +932,189 @@ export function ContentPackageWorkspace({
                           );
                           completed++;
                         } catch (cause) {
-                          const reason = cause instanceof Error ? cause.message : 'validasi gagal';
+                          const reason =
+                            cause instanceof Error ? cause.message : 'pemeriksaan gagal';
                           throw Error(
                             `Bulk review berhenti pada soal ${item.displayOrder}. ${completed} soal berhasil ditinjau; perbaiki soal ini lalu jalankan lagi. Alasan: ${reason}`,
                           );
                         }
                       }
                       await choose(detail.id);
-                      setNotice('Semua soal valid berhasil ditandai sudah ditinjau.');
+                      setNotice('Semua soal lengkap berhasil ditandai sudah ditinjau.');
                     })
                   }
                 >
-                  {busy ? 'Meninjau soal…' : 'Tinjau semua soal valid'}
+                  {busy ? 'Meninjau soal…' : 'Tinjau semua soal lengkap'}
                 </Button>
                 {detail.items.some((item) => !item.question) && (
-                  <small>Lengkapi soal yang belum lolos validasi sebelum bulk review.</small>
+                  <small>Lengkapi soal yang belum lolos pemeriksaan sebelum bulk review.</small>
                 )}
               </div>
             )}
           <Dialog
-            open={compositionOpen}
-            onClose={() => setCompositionOpen(false)}
+            open={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
             pending={locked}
-            title="Komposisi paket"
+            title="Pengaturan paket"
             className="admin-management-dialog assessment-settings-dialog"
           >
             <div className="assessment-detail-workspace assessment-detail-settings-body">
-              <label>Nama paket<input aria-label="Nama paket" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></label>
-              <Button variant="secondary" onClick={() => void run(async () => { await updateContentPackage(token, detail.id, { name: settingsName, expectedRevision: detail.contentRevision, questionVersionIds: detail.items.map((item) => item.questionVersionId) }); await choose(detail.id); })}>Simpan nama</Button>
-              <p>
-                {[
-                  detail.chapterName,
-                  detail.subchapterName,
-                  detail.levelNumber ? `Level ${detail.levelNumber}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ') || 'Lintas bab'}
-              </p>
-              <p>
-                Sumber:{' '}
-                {detail.source
-                  ? `${detail.source.sourceName} · ${detail.source.sourceReference}`
-                  : 'Sumber belum diisi.'}
-              </p>
-              <details className="assessment-distribution">
-                <summary>Komposisi soal</summary>
-                <p>
-                  Jumlah soal menurut materi, tingkat kesulitan, dan jenis jawaban. Satu soal dapat
-                  terhitung dalam beberapa kelompok.
-                </p>
-                <dl>
-                  {detail.distribution.map((entry) => (
-                    <div key={entry.dimension + ':' + entry.value}>
-                      <dt>
-                        {{
-                          chapter: 'Bab',
-                          subchapter: 'Subbab',
-                          competency: 'Indikator',
-                          difficulty: 'Kesulitan',
-                          format: 'Jenis soal',
-                        }[entry.dimension] ?? entry.dimension}
-                        :{' '}
-                        {{
-                          EASY: 'Mudah',
-                          MEDIUM: 'Sedang',
-                          HARD: 'Sulit',
-                          SINGLE_CHOICE: 'Pilihan tunggal',
-                          MULTIPLE_CHOICE_MULTIPLE_ANSWER: 'Pilihan lebih dari satu',
-                          CATEGORY: 'Kategori',
-                        }[entry.value] ??
-                          curriculum.find((item) => item.code === entry.value)?.name ??
-                          entry.value}
-                      </dt>
-                      <dd>{entry.count} soal</dd>
-                    </div>
-                  ))}
-                </dl>
-              </details>{' '}
+              <div className="assessment-package-rename">
+                <label>
+                  Nama paket
+                  <input
+                    aria-label="Nama paket"
+                    value={settingsName}
+                    onChange={(e) => setSettingsName(e.target.value)}
+                  />
+                </label>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    void run(async () => {
+                      await updateContentPackage(token, detail.id, {
+                        name: settingsName,
+                        expectedRevision: detail.contentRevision,
+                        questionVersionIds: detail.items.map((item) => item.questionVersionId),
+                      });
+                      await choose(detail.id);
+                    })
+                  }
+                >
+                  Simpan nama
+                </Button>
+              </div>
+              <div className="assessment-settings-overview">
+                <div className="assessment-settings-left">
+                  <section className="assessment-settings-summary" aria-label="Ringkasan paket">
+                    <h3>Ringkasan paket</h3>
+                    <dl className="assessment-package-metadata">
+                      <div>
+                        <dt>Status paket</dt>
+                        <dd>
+                          <Badge variant={detail.status === 'PUBLISHED' ? 'success' : 'default'}>
+                            {{
+                              DRAFT: 'Draf',
+                              PUBLISHED: 'Diterbitkan',
+                              CLOSED: 'Ditutup',
+                              ARCHIVED: 'Arsip',
+                            }[detail.status] ?? detail.status}
+                          </Badge>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Cakupan materi</dt>
+                        <dd>
+                          {[
+                            detail.chapterName,
+                            detail.subchapterName,
+                            detail.levelNumber ? `Level ${detail.levelNumber}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ') ||
+                            (detail.distribution.some((entry) => entry.dimension === 'chapter')
+                              ? `${detail.distribution.filter((entry) => entry.dimension === 'chapter').length} bab — rincian di Komposisi paket`
+                              : 'Cakupan bab belum tercatat')}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Versi paket</dt>
+                        <dd>
+                          Versi {detail.packageVersion} · Revisi {detail.contentRevision}
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
+                  <section className="assessment-package-origin" aria-label="Catatan asal paket">
+                    <h3>Catatan asal paket</h3>
+                    <p>Catatan yang disimpan saat paket dibuat atau diimpor.</p>
+                    {detail.source ? (
+                      <dl className="assessment-package-metadata">
+                        <div>
+                          <dt>Sumber</dt>
+                          <dd>{detail.source.sourceName}</dd>
+                        </div>
+                        <div>
+                          <dt>Catatan referensi</dt>
+                          <dd>{detail.source.sourceReference}</dd>
+                        </div>
+                      </dl>
+                    ) : (
+                      <p>Sumber belum diisi.</p>
+                    )}
+                  </section>
+                </div>
+                {detail.assessmentType === 'TRYOUT' && <PackageAvailability detail={detail} />}
+              </div>
             </div>
+          </Dialog>
+          <Dialog
+            open={compositionOpen}
+            onClose={() => setCompositionOpen(false)}
+            title="Komposisi paket"
+            className="admin-management-dialog assessment-settings-dialog"
+          >
+            <section className="assessment-distribution" aria-label="Komposisi soal">
+              <p>
+                <strong>Total: {detail.items.length} soal</strong>
+              </p>
+              <p>Setiap bagian menunjukkan rincian dari total soal yang sama.</p>
+              <div className="assessment-composition-groups">
+                {[false, true].map((subchapterColumn) => (
+                  <div className="assessment-composition-column" key={String(subchapterColumn)}>
+                    {Array.from(new Set(detail.distribution.map((entry) => entry.dimension)))
+                      .filter((dimension) => (dimension === 'subchapter') === subchapterColumn)
+                      .map((dimension) => (
+                        <section
+                          className="assessment-composition-group"
+                          key={dimension}
+                          aria-label={
+                            {
+                              chapter: 'Bab',
+                              subchapter: 'Subbab',
+                              competency: 'Indikator',
+                              difficulty: 'Kesulitan',
+                              format: 'Jenis soal',
+                            }[dimension] ?? dimension
+                          }
+                        >
+                          <h3>
+                            {{
+                              chapter: 'Bab',
+                              subchapter: 'Subbab',
+                              competency: 'Indikator',
+                              difficulty: 'Kesulitan',
+                              format: 'Jenis soal',
+                            }[dimension] ?? dimension}
+                          </h3>
+                          <dl>
+                            {detail.distribution
+                              .filter((entry) => entry.dimension === dimension)
+                              .map((entry) => (
+                                <div key={entry.value}>
+                                  <dt>
+                                    {{
+                                      EASY: 'Mudah',
+                                      MEDIUM: 'Sedang',
+                                      HARD: 'Sulit',
+                                      SINGLE_CHOICE: 'Pilihan tunggal',
+                                      MULTIPLE_CHOICE_MULTIPLE_ANSWER: 'Pilihan lebih dari satu',
+                                      CATEGORY: 'Kategori',
+                                    }[entry.value] ??
+                                      curriculum.find((item) => item.code === entry.value)?.name ??
+                                      entry.value}
+                                  </dt>
+                                  <dd>{entry.count} soal</dd>
+                                </div>
+                              ))}
+                          </dl>
+                        </section>
+                      ))}
+                  </div>
+                ))}
+              </div>
+              {detail.distribution.length === 0 && <p>Data komposisi belum tersedia.</p>}
+            </section>
           </Dialog>
           <div className="assessment-detail-layout">
             <section className="assessment-detail-questions" aria-label="Soal dan review paket">
@@ -876,7 +1126,26 @@ export function ContentPackageWorkspace({
                       {detail.items.length}
                     </span>
                   </h3>
-                </div>{' '}
+                </div>
+                <div className="assessment-question-filters">
+                  <input
+                    className="assessment-question-search"
+                    type="search"
+                    aria-label="Cari soal berdasarkan teks atau kode"
+                    placeholder="Cari teks atau kode soal..."
+                    value={questionSearch}
+                    onChange={(event) => setQuestionSearch(event.target.value)}
+                  />
+                  <select
+                    aria-label="Filter kelengkapan soal"
+                    value={completenessFilter}
+                    onChange={(event) => setCompletenessFilter(event.target.value)}
+                  >
+                    <option value="ALL">Semua kelengkapan</option>
+                    <option value="COMPLETE">Lengkap</option>
+                    <option value="INCOMPLETE">Belum lengkap</option>
+                  </select>
+                </div>
                 {(urlContext || mode === 'detail') &&
                   detail.source &&
                   detail.status === 'DRAFT' &&
@@ -897,8 +1166,10 @@ export function ContentPackageWorkspace({
                 </div>
               )}
               <p className="assessment-table-hint">
-                Buka detail soal untuk memeriksa isi, jawaban, dan pembahasan. Pretest divalidasi
-                otomatis saat diterbitkan.
+                Buka detail soal untuk memeriksa isi, jawaban, dan pembahasan.{' '}
+                {detail.assessmentType === 'TRYOUT'
+                  ? 'Kelengkapan Tryout diperiksa otomatis saat diterbitkan.'
+                  : 'Pretest diperiksa otomatis saat diterbitkan.'}
               </p>
               {detail.items.length > 0 && (
                 <div className="assessment-table-scroll">
@@ -907,39 +1178,60 @@ export function ContentPackageWorkspace({
                       <tr>
                         <th scope="col">No.</th>
                         <th scope="col">Soal</th>
-                        {detail.assessmentType !== 'PRETEST' && <th scope="col">Kelengkapan</th>}
+                        {detail.assessmentType === 'DRILL' && <th scope="col">Kelengkapan</th>}
                         <th scope="col">
-                          {detail.assessmentType === 'PRETEST' ? 'Validasi' : 'Tinjauan'}
+                          {detail.assessmentType !== 'DRILL' ? 'Pemeriksaan' : 'Tinjauan'}
                         </th>
-                        {detail.assessmentType === 'PRETEST' && <th scope="col">Masalah</th>}
+                        {detail.assessmentType !== 'DRILL' && <th scope="col">Masalah</th>}
                         <th scope="col">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {detail.items.map((item) => (
-                        <tr key={item.questionVersionId}>
+                      {visibleQuestions.map((item) => (
+                        <tr
+                          key={item.questionVersionId}
+                          className="assessment-question-clickable"
+                          onClick={(event) => {
+                            if (
+                              (event.target as HTMLElement).closest(
+                                'button, a, input, select, textarea',
+                              )
+                            )
+                              return;
+                            setInspectingId(item.questionVersionId);
+                            setNotes('');
+                            setReviewStep(1);
+                          }}
+                        >
                           <td>{item.displayOrder}</td>
                           <td>
-                            <strong>
-                              {item.question?.externalId ?? 'Soal ' + item.displayOrder}
-                            </strong>
+                            <div className="assessment-question-preview">
+                              {item.question ? (
+                                <ContentRichText
+                                  text={item.question.stem.text}
+                                  media={[]}
+                                  renderMedia={false}
+                                  retry={loadMedia}
+                                />
+                              ) : (
+                                'Data soal perlu diperiksa'
+                              )}
+                            </div>
                             <small>
-                              {item.question
-                                ? item.question.stem.text.replace(/<[^>]*>/g, '').slice(0, 100)
-                                : 'Data soal perlu diperiksa'}
+                              Kode soal: {item.question?.externalId ?? item.questionVersionId}
                             </small>
                           </td>
-                          {detail.assessmentType !== 'PRETEST' && (
+                          {detail.assessmentType === 'DRILL' && (
                             <td>
                               <Badge variant={item.question ? 'success' : 'warning'}>
-                                {item.question ? 'Isi terbaca' : 'Perlu diperbaiki'}
+                                {item.question ? 'Isi terbaca' : 'Belum lengkap'}
                               </Badge>
                             </td>
                           )}
                           <td>
                             <Badge
                               variant={
-                                detail.assessmentType === 'PRETEST'
+                                detail.assessmentType !== 'DRILL'
                                   ? item.question && !item.validationIssues?.length
                                     ? 'success'
                                     : 'warning'
@@ -948,16 +1240,16 @@ export function ContentPackageWorkspace({
                                     : 'default'
                               }
                             >
-                              {detail.assessmentType === 'PRETEST'
+                              {detail.assessmentType !== 'DRILL'
                                 ? item.question && !item.validationIssues?.length
-                                  ? 'Aman'
-                                  : 'Perlu diperbaiki'
+                                  ? 'Lengkap'
+                                  : 'Belum lengkap'
                                 : item.reviewedAt
                                   ? 'Sudah ditinjau'
                                   : 'Belum ditinjau'}
                             </Badge>
                           </td>
-                          {detail.assessmentType === 'PRETEST' && (
+                          {detail.assessmentType !== 'DRILL' && (
                             <td>
                               {item.validationIssues?.length || !item.question ? (
                                 <ul>
@@ -974,52 +1266,198 @@ export function ContentPackageWorkspace({
                             </td>
                           )}
                           <td>
-                            {detail.assessmentType === 'PRETEST' &&
-                            (item.validationIssues?.length || !item.question) ? (
-                              <>
-                                {detail.status === 'DRAFT' && item.scoringRepairRequired ? (
-                                  <Button
-                                    variant="secondary"
-                                    disabled={locked}
-                                    onClick={prepareScoring}
-                                  >
-                                    {busy
-                                      ? 'Menyiapkan penilaian...'
-                                      : 'Siapkan penilaian otomatis'}
-                                  </Button>
-                                ) : (
-                                  <Link
-                                    className="numora-button numora-button--secondary assessment-repair-button"
-                                    href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
-                                  >
-                                    Perbaiki
-                                  </Link>
-                                )}
-                              </>
-                            ) : (
+                            <div className="assessment-question-actions">
+                              {detail.assessmentType !== 'DRILL' &&
+                              (item.validationIssues?.length || !item.question) ? (
+                                <>
+                                  {detail.status === 'DRAFT' && item.scoringRepairRequired ? (
+                                    <Button
+                                      variant="secondary"
+                                      disabled={locked}
+                                      onClick={prepareScoring}
+                                    >
+                                      {busy
+                                        ? 'Menyiapkan penilaian...'
+                                        : 'Siapkan penilaian otomatis'}
+                                    </Button>
+                                  ) : (
+                                    <Link
+                                      className="numora-button numora-button--secondary assessment-repair-button"
+                                      href={`/admin/content/versions/${item.questionVersionId}/edit?package=${encodeURIComponent(detail.id)}`}
+                                    >
+                                      Perbaiki
+                                    </Link>
+                                  )}
+                                </>
+                              ) : (
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => {
+                                    setInspectingId(item.questionVersionId);
+                                    setNotes('');
+                                    setReviewStep(1);
+                                  }}
+                                >
+                                  {detail.assessmentType !== 'DRILL' ? 'Lihat soal' : 'Tinjau'}
+                                </Button>
+                              )}
                               <Button
                                 variant="secondary"
-                                onClick={() => {
-                                  setInspectingId(item.questionVersionId);
-                                  setNotes('');
-                                  setReviewStep(1);
-                                }}
+                                onClick={() => setMetadataId(item.questionVersionId)}
                               >
-                                {detail.assessmentType === 'PRETEST' ? 'Lihat soal' : 'Tinjau'}
+                                Metadata
                               </Button>
-                            )}
+                            </div>
                           </td>
                         </tr>
                       ))}
+                      {visibleQuestions.length === 0 && (
+                        <tr>
+                          <td colSpan={5}>Tidak ada soal yang cocok. Coba teks atau kode lain.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               )}
               <Dialog
+                open={Boolean(metadataId)}
+                onClose={() => setMetadataId(null)}
+                title="Metadata soal"
+                className="admin-management-dialog assessment-metadata-dialog"
+              >
+                {detail.items
+                  .filter((item) => item.questionVersionId === metadataId)
+                  .map((item) => {
+                    const q = item.question;
+                    const m = q?.metadata;
+                    const groups = [
+                      {
+                        title: 'Identitas soal',
+                        rows: [
+                          ['Nomor dalam paket', item.displayOrder],
+                          ['Kode soal', q?.externalId],
+                          [
+                            'Jenis soal',
+                            q
+                              ? {
+                                  SINGLE_CHOICE: 'Pilihan tunggal',
+                                  MULTIPLE_CHOICE_MULTIPLE_ANSWER: 'Pilihan lebih dari satu',
+                                  CATEGORY: 'Kategori',
+                                }[q.type]
+                              : null,
+                          ],
+                          [
+                            'Status konten',
+                            { DRAFT: 'Draf', READY: 'Siap', REVISION: 'Revisi', ARCHIVED: 'Arsip' }[
+                              item.contentStatus
+                            ] ?? item.contentStatus,
+                          ],
+                        ],
+                      },
+                      {
+                        title: 'Materi dan tingkat kesulitan',
+                        rows: [
+                          ['Bab', m?.chapterName ?? q?.chapterCode],
+                          ['Subbab', m?.subchapterName ?? q?.subchapterCode],
+                          ['Indikator', m?.competencyName ?? q?.competencyCode],
+                          ['Level sumber', m?.sourceLevelNumber],
+                          [
+                            'Kesulitan',
+                            q?.difficulty
+                              ? { EASY: 'Mudah', MEDIUM: 'Sedang', HARD: 'Sulit' }[q.difficulty]
+                              : null,
+                          ],
+                        ],
+                      },
+                      {
+                        title: 'Asal data',
+                        rows: [
+                          ['Lembar sumber', m?.sourceSheet],
+                          ['Baris sumber', m?.sourceRowNumber],
+                          ['Urutan sumber', m?.sourceOrder],
+                          ['ID soal sumber', m?.sourceQuestionId],
+                        ],
+                      },
+                      {
+                        title: 'Referensi teknis',
+                        rows: [
+                          ['ID soal', item.questionId],
+                          ['ID versi soal', item.questionVersionId],
+                          ['Kode bab', q?.chapterCode],
+                          ['Kode subbab', q?.subchapterCode],
+                          ['Kode indikator', q?.competencyCode],
+                          ['Jumlah media', m?.assetManifest.length],
+                          [
+                            'Kategori jawaban',
+                            m?.categories?.map((category) => category.label).join(', '),
+                          ],
+                        ],
+                      },
+                    ];
+                    return (
+                      <div key={item.questionVersionId}>
+                        <p>
+                          Soal {item.displayOrder} · {q?.externalId ?? 'Kode belum tersedia'}
+                        </p>
+                        <div className="assessment-metadata-grid">
+                          {groups.map((group) => (
+                            <section key={group.title}>
+                              <h3>{group.title}</h3>
+                              <dl>
+                                {group.rows.map(([label, value]) => (
+                                  <div key={label}>
+                                    <dt>{label}</dt>
+                                    <dd>
+                                      {value === null || value === undefined || value === ''
+                                        ? 'Belum tercatat'
+                                        : value}
+                                    </dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            </section>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </Dialog>
+              <Dialog
                 open={Boolean(inspectingId)}
                 onClose={() => setInspectingId(null)}
                 pending={locked}
-                title="Pemeriksaan soal"
+                title="Detail soal"
+                actions={
+                  inspectingId ? (
+                    <>
+                      {detail.assessmentType === 'TRYOUT' && (
+                        <Button
+                          variant="secondary"
+                          disabled={locked || questionValid}
+                          onClick={() =>
+                            void run(async () => {
+                              await choose(detail.id);
+                              await loadMedia();
+                            })
+                          }
+                        >
+                          {questionValid
+                            ? 'Pemeriksaan lulus'
+                            : busy
+                              ? 'Memeriksa…'
+                              : 'Pemeriksaan soal'}
+                        </Button>
+                      )}
+                      <Link
+                        className="button-link"
+                        href={`/admin/content/versions/${inspectingId}/edit?package=${encodeURIComponent(detail.id)}`}
+                      >
+                        Edit soal
+                      </Link>
+                    </>
+                  ) : undefined
+                }
                 className="admin-management-dialog assessment-question-dialog"
               >
                 <div className="assessment-detail-workspace">
@@ -1069,36 +1507,44 @@ export function ContentPackageWorkspace({
                       Berikutnya
                     </Button>
                   </div>
-                  {detail.items.some(
-                    (item) => {
-                      const question = item.question;
-                      return Boolean(
-                        item.questionVersionId === inspectingId &&
-                          question &&
-                          (question.metadata.assetManifest.length ||
-                            question.stem.text.includes('[[asset:') ||
-                            question.explanation.text.includes('[[asset:')),
-                      );
-                    },
-                  ) && (
-                    <Button variant="secondary" onClick={loadMedia} disabled={locked}>
-                      Muat gambar
-                    </Button>
+                  {detail.assessmentType !== 'TRYOUT' && (
+                    <nav className="assessment-review-steps" aria-label="Tahap pemeriksaan soal">
+                      {['Isi soal', 'Media', 'Pemeriksaan', 'Keputusan'].map((label, i) => (
+                        <button
+                          type="button"
+                          key={label}
+                          className={reviewStep === i + 1 ? 'is-active' : ''}
+                          aria-current={reviewStep === i + 1 ? 'step' : undefined}
+                          onClick={() => setReviewStep((i + 1) as 1 | 2 | 3 | 4)}
+                        >
+                          {i + 1}. {label}
+                        </button>
+                      ))}
+                    </nav>
                   )}
-                  <nav className="assessment-review-steps" aria-label="Tahap pemeriksaan soal">
-                    {(['Isi soal', 'Media', 'Validasi', 'Keputusan'] as const).map((label, i) => (
-                      <button
-                        type="button"
-                        key={label}
-                        className={reviewStep === i + 1 ? 'is-active' : ''}
-                        aria-current={reviewStep === i + 1 ? 'step' : undefined}
-                        onClick={() => setReviewStep((i + 1) as 1 | 2 | 3 | 4)}
+                  {mediaError && (
+                    <div role="alert">
+                      <p>{mediaError}</p>
+                      <Button variant="secondary" onClick={loadMedia} disabled={mediaLoading}>
+                        Muat ulang gambar
+                      </Button>
+                    </div>
+                  )}
+                  {detail.assessmentType === 'TRYOUT' &&
+                    !!inspectingItem?.validationIssues?.length && (
+                      <section
+                        className="assessment-question-problem"
+                        aria-label="Perlu diperbaiki"
                       >
-                        {i + 1}. {label}
-                      </button>
-                    ))}
-                  </nav>
-                  {reviewStep === 2 && (
+                        <h3>Perlu diperbaiki</h3>
+                        <ul>
+                          {inspectingItem.validationIssues.map((issue) => (
+                            <li key={issue}>{issue}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+                  {detail.assessmentType !== 'TRYOUT' && reviewStep === 2 && (
                     <section className="assessment-review-step-panel">
                       <h3>Media soal</h3>
                       {(() => {
@@ -1116,7 +1562,7 @@ export function ContentPackageWorkspace({
                             {assets.map((asset) => (
                               <li key={asset.assetId}>
                                 <strong>{asset.assetId}</strong>
-                                <span>{ready.has(asset.assetId) ? 'Siap' : 'Perlu diperbaiki'}</span>
+                                <span>{ready.has(asset.assetId) ? 'Siap' : 'Belum lengkap'}</span>
                                 <small>{asset.altText}</small>
                               </li>
                             ))}
@@ -1126,13 +1572,13 @@ export function ContentPackageWorkspace({
                         );
                       })()}
                       <Button variant="secondary" onClick={loadMedia} disabled={locked}>
-                        Validasi dan muat ulang media
+                        Pemeriksaan dan muat ulang media
                       </Button>
                     </section>
                   )}
-                  {reviewStep === 3 && (
+                  {detail.assessmentType !== 'TRYOUT' && reviewStep === 3 && (
                     <section className="assessment-review-step-panel">
-                      <h3>Validasi soal</h3>
+                      <h3>Pemeriksaan soal</h3>
                       {(() => {
                         const selected = detail.items.find(
                           (item) => item.questionVersionId === inspectingId,
@@ -1140,211 +1586,209 @@ export function ContentPackageWorkspace({
                         const issues = selected?.validationIssues ?? [];
                         return issues.length ? (
                           <ul className="content-blocker-list">
-                            {issues.map((issue) => <li key={issue}><small>{issue}</small></li>)}
+                            {issues.map((issue) => (
+                              <li key={issue}>
+                                <small>{issue}</small>
+                              </li>
+                            ))}
                           </ul>
                         ) : (
-                          <p>Validasi isi soal lulus. Periksa kembali gambar, kunci, dan pembahasan.</p>
+                          <p>
+                            Pemeriksaan isi soal lulus. Periksa kembali gambar, kunci, dan
+                            pembahasan.
+                          </p>
                         );
                       })()}
-                      <Button variant="secondary" onClick={() => void choose(detail.id)} disabled={locked}>
-                        Validasi ulang
+                      <Button
+                        variant="secondary"
+                        onClick={() => void choose(detail.id)}
+                        disabled={locked}
+                      >
+                        Pemeriksaan ulang
                       </Button>
                     </section>
                   )}
-                  {(reviewStep === 1 || reviewStep === 4) && <ul className="monitoring-list assessment-detail-question-list">
-                    {detail.items
-                      .filter((item) => item.questionVersionId === inspectingId)
-                      .map((item) => (
-                        <li key={item.questionVersionId}>
-                          <div className="assessment-question-heading">
-                            <strong>Soal {item.displayOrder}</strong>
-                            <Badge variant={item.reviewedAt ? 'success' : 'warning'}>
-                              {detail.assessmentType === 'PRETEST'
-                                ? item.question && !item.validationIssues?.length
-                                  ? 'Aman'
-                                  : 'Perlu diperbaiki'
-                                : item.reviewedAt
-                                  ? 'Sudah ditinjau'
-                                  : 'Belum ditinjau'}
-                            </Badge>
-                          </div>
-                          <small className="assessment-question-code">
-                            Kode soal: {item.question?.externalId ?? item.questionVersionId}
-                          </small>
-                          {item.question ? (
-                            <>
-                              <Button variant="secondary" onClick={() => void loadMedia()}>Tampilkan gambar soal</Button>
-                              <ContentRichText
-                                text={item.question.stem.text}
-                                media={media}
-                                retry={loadMedia}
-                                renderBareMath
-                              />
-                              <ol>
-                                {item.question.options.map((o) => (
-                                  <li key={o.id}>
-                                    <strong>{o.id}.</strong>{' '}
+                  {(detail.assessmentType === 'TRYOUT' || reviewStep === 1 || reviewStep === 4) && (
+                    <ul className="monitoring-list assessment-detail-question-list">
+                      {detail.items
+                        .filter((item) => item.questionVersionId === inspectingId)
+                        .map((item) => (
+                          <li key={item.questionVersionId}>
+                            <div className="assessment-question-heading">
+                              <strong>Soal {item.displayOrder}</strong>
+                              <Badge variant={item.reviewedAt ? 'success' : 'warning'}>
+                                {detail.assessmentType !== 'DRILL'
+                                  ? item.question && !item.validationIssues?.length
+                                    ? 'Lengkap'
+                                    : 'Belum lengkap'
+                                  : item.reviewedAt
+                                    ? 'Sudah ditinjau'
+                                    : 'Belum ditinjau'}
+                              </Badge>
+                            </div>
+                            <small className="assessment-question-code">
+                              Kode soal: {item.question?.externalId ?? item.questionVersionId}
+                            </small>
+                            {item.question ? (
+                              <>
+                                <ContentRichText
+                                  text={item.question.stem.text}
+                                  media={media}
+                                  instanceId={item.questionVersionId}
+                                  mediaPending={mediaLoading}
+                                  retry={loadMedia}
+                                  renderBareMath
+                                />
+                                <ol>
+                                  {item.question.options.map((o) => (
+                                    <li key={o.id}>
+                                      <strong>{o.id}.</strong>{' '}
+                                      <ContentRichText
+                                        text={o.content.text}
+                                        media={media}
+                                        instanceId={item.questionVersionId}
+                                        mediaPending={mediaLoading}
+                                        retry={loadMedia}
+                                        renderBareMath
+                                      />
+                                    </li>
+                                  ))}
+                                </ol>
+                                <section
+                                  className="assessment-question-answer"
+                                  aria-label="Jawaban dan pembahasan"
+                                >
+                                  <h4>Kunci jawaban</h4>
+                                  <div>
+                                    <p>
+                                      <strong>Jawaban:</strong>{' '}
+                                      {Object.entries(item.question.answer)
+                                        .filter(([key]) => key !== 'type')
+                                        .map(([_key, value]) =>
+                                          typeof value === 'object' && value !== null
+                                            ? Array.isArray(value)
+                                              ? value.join(', ')
+                                              : Object.entries(value)
+                                                  .map(
+                                                    ([label, answer]) =>
+                                                      label + ': ' + String(answer),
+                                                  )
+                                                  .join('; ')
+                                            : String(value),
+                                        )
+                                        .join(' · ')}
+                                    </p>
+                                    <h4>Pembahasan</h4>
                                     <ContentRichText
-                                      text={o.content.text}
+                                      text={item.question.explanation.text}
                                       media={media}
+                                      instanceId={item.questionVersionId}
+                                      mediaPending={mediaLoading}
                                       retry={loadMedia}
                                       renderBareMath
                                     />
-                                  </li>
-                                ))}
-                              </ol>
-                              <details className="assessment-question-answer">
-                                <summary>Jawaban dan pembahasan</summary>
-                                <div>
-                                  <p>
-                                    <strong>Jawaban:</strong>{' '}
-                                    {Object.entries(item.question.answer)
-                                      .filter(([key]) => key !== 'type')
-                                      .map(([_key, value]) =>
-                                        typeof value === 'object' && value !== null
-                                          ? Array.isArray(value)
-                                            ? value.join(', ')
-                                            : Object.entries(value)
-                                                .map(
-                                                  ([label, answer]) =>
-                                                    label + ': ' + String(answer),
-                                                )
-                                                .join('; ')
-                                          : String(value),
-                                      )
-                                      .join(' ? ')}
-                                  </p>
-                                  <ContentRichText
-                                    text={item.question.explanation.text}
-                                    media={media}
-                                    retry={loadMedia}
-                                    renderBareMath
-                                  />
-                                </div>
-                              </details>
-                            </>
-                          ) : (
-                            <div className="assessment-question-problem">
-                              <h4>Soal belum bisa ditinjau</h4>
-                              <p>
-                                Data soal ini belum lolos validasi. Buka pemeriksaan versi untuk
-                                melihat isi, metadata, dan langkah revisinya. Menandai review belum
-                                dapat dilakukan sebelum data valid.
-                              </p>
-                              {detail.legacyPreparation ? (
-                                <Button
-                                  variant="secondary"
-                                  onClick={() => {
-                                    setInspectingId(null);
-                                    setCompositionOpen(true);
-                                  }}
-                                >
-                                  Lengkapi sumber untuk impor perbaikan
-                                </Button>
-                              ) : (
+                                  </div>
+                                </section>
+                              </>
+                            ) : (
+                              <div className="assessment-question-problem">
+                                <h4>Soal belum bisa ditinjau</h4>
+                                <p>
+                                  Data soal ini belum lolos pemeriksaan. Buka pemeriksaan versi
+                                  untuk melihat isi, metadata, dan langkah revisinya. Menandai
+                                  review belum dapat dilakukan sebelum data lengkap.
+                                </p>
+                                {detail.legacyPreparation ? (
+                                  <Button
+                                    variant="secondary"
+                                    onClick={() => {
+                                      setInspectingId(null);
+                                      setSettingsName(detail.name);
+                                      setSettingsOpen(true);
+                                    }}
+                                  >
+                                    Lengkapi sumber untuk impor perbaikan
+                                  </Button>
+                                ) : (
+                                  <Link
+                                    className="numora-button numora-button--secondary"
+                                    href={`/admin/content/imports?mode=json&type=${detail.assessmentType}&package=${encodeURIComponent(detail.id)}`}
+                                  >
+                                    Perbaiki melalui impor
+                                  </Link>
+                                )}
                                 <Link
                                   className="numora-button numora-button--secondary"
-                                  href={`/admin/content/imports?mode=json&type=${detail.assessmentType}&package=${encodeURIComponent(detail.id)}`}
+                                  href={`/admin/content/versions/${item.questionVersionId}/edit?package=${encodeURIComponent(detail.id)}`}
                                 >
-                                  Perbaiki melalui impor
+                                  Periksa / perbaiki soal
                                 </Link>
-                              )}
-                              <Link
-                                className="numora-button numora-button--secondary"
-                                href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
-                              >
-                                Periksa / perbaiki soal
-                              </Link>
-                            </div>
-                          )}
-                          <p>
-                            {item.reviewedAt
-                              ? `Ditinjau pada ${new Date(item.reviewedAt).toLocaleString('id-ID')}`
-                              : 'Belum ditinjau'}{' '}
-                            · {item.contentStatus}
-                          </p>
-                          {item.question && (
-                            <Link
-                              href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
-                            >
-                              Perbaiki soal
-                            </Link>
-                          )}
-                          <p className="assessment-question-removal-help">
-                            Mengeluarkan soal hanya mengubah isi paket ini. Soal tetap tersimpan di
-                            bank konten.
-                          </p>
-                          {detail.assessmentType !== 'PRETEST' && (
-                            <div className="assessment-question-review-note">
-                              {' '}
-                              <label>
-                                Catatan pemeriksaan soal ini
-                                <textarea
-                                  value={notes}
-                                  maxLength={1000}
-                                  rows={2}
-                                  placeholder="Catat hasil pemeriksaan materi, jawaban, dan pembahasan"
-                                  onChange={(event) => setNotes(event.target.value)}
-                                  disabled={locked || detail.status !== 'DRAFT'}
-                                />
-                              </label>
-                              <p className="assessment-review-help">
-                                Catatan ini hanya disimpan untuk soal yang sedang ditinjau.
-                              </p>
-                            </div>
-                          )}
-                          <div className="admin-content-actions">
-                            {detail.assessmentType !== 'PRETEST' && (
-                              <Button
-                                variant="secondary"
-                                disabled={locked || !item.question || detail.status !== 'DRAFT'}
-                                onClick={() =>
-                                  void run(async () => {
-                                    await reviewImportedQuestion(
-                                      token,
-                                      item.questionVersionId,
-                                      notes,
-                                      detail.id,
-                                    );
-                                    await choose(detail.id);
-                                    setNotice(`Soal ${item.displayOrder} ditandai sudah ditinjau.`);
-                                  })
-                                }
-                              >
-                                Tandai soal {item.displayOrder} sudah ditinjau
-                              </Button>
+                              </div>
                             )}
-                            {detail.assessmentType !== 'PRETEST' &&
-                              !item.reviewedAt &&
-                              detail.status === 'DRAFT' && (
-                                <small className="assessment-review-help">
-                                  {!item.question
-                                    ? 'Soal belum lolos validasi; buka Periksa / perbaiki soal.'
-                                    : 'Soal siap ditandai sudah ditinjau. Catatan opsional.'}
-                                </small>
+                            {detail.assessmentType !== 'TRYOUT' && (
+                              <p>
+                                {item.reviewedAt
+                                  ? `Ditinjau pada ${new Date(item.reviewedAt).toLocaleString('id-ID')}`
+                                  : 'Belum ditinjau'}{' '}
+                                · {item.contentStatus}
+                              </p>
+                            )}
+                            {detail.assessmentType === 'DRILL' && (
+                              <div className="assessment-question-review-note">
+                                {' '}
+                                <label>
+                                  Catatan pemeriksaan soal ini
+                                  <textarea
+                                    value={notes}
+                                    maxLength={1000}
+                                    rows={2}
+                                    placeholder="Catat hasil pemeriksaan materi, jawaban, dan pembahasan"
+                                    onChange={(event) => setNotes(event.target.value)}
+                                    disabled={locked || detail.status !== 'DRAFT'}
+                                  />
+                                </label>
+                                <p className="assessment-review-help">
+                                  Catatan ini hanya disimpan untuk soal yang sedang ditinjau.
+                                </p>
+                              </div>
+                            )}
+                            <div className="admin-content-actions">
+                              {detail.assessmentType === 'DRILL' && (
+                                <Button
+                                  variant="secondary"
+                                  disabled={locked || !item.question || detail.status !== 'DRAFT'}
+                                  onClick={() =>
+                                    void run(async () => {
+                                      await reviewImportedQuestion(
+                                        token,
+                                        item.questionVersionId,
+                                        notes,
+                                        detail.id,
+                                      );
+                                      await choose(detail.id);
+                                      setNotice(
+                                        `Soal ${item.displayOrder} ditandai sudah ditinjau.`,
+                                      );
+                                    })
+                                  }
+                                >
+                                  Tandai soal {item.displayOrder} sudah ditinjau
+                                </Button>
                               )}
-                            <Button
-                              variant="secondary"
-                              disabled={locked || detail.status !== 'DRAFT'}
-                              onClick={() =>
-                                void run(async () => {
-                                  await updateContentPackage(token, detail.id, {
-                                    name: detail.name,
-                                    expectedRevision: detail.contentRevision,
-                                    questionVersionIds: detail.items
-                                      .filter((i) => i.questionVersionId !== item.questionVersionId)
-                                      .map((i) => i.questionVersionId),
-                                  });
-                                  await choose(detail.id);
-                                })
-                              }
-                            >
-                              Keluarkan soal {item.displayOrder} dari paket
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                  </ul>}
+                              {detail.assessmentType === 'DRILL' &&
+                                !item.reviewedAt &&
+                                detail.status === 'DRAFT' && (
+                                  <small className="assessment-review-help">
+                                    {!item.question
+                                      ? 'Soal belum lolos pemeriksaan; buka Periksa / perbaiki soal.'
+                                      : 'Soal siap ditandai sudah ditinjau. Catatan opsional.'}
+                                  </small>
+                                )}
+                            </div>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                   {error && <p role="alert">{error}</p>}
                 </div>
               </Dialog>
@@ -1353,14 +1797,16 @@ export function ContentPackageWorkspace({
               className="assessment-detail-sidebar assessment-status-panels"
               aria-label="Kesiapan dan publikasi paket"
             >
-              <div className="assessment-information-actions">
-                <Button variant="secondary" onClick={() => setInformationOpen('access')}>
-                  <Icon name="users" width={18} height={18} /> Akses siswa
-                </Button>
-                <Button variant="secondary" onClick={() => setInformationOpen('readiness')}>
-                  <Icon name="clipboard" width={18} height={18} /> Syarat penerbitan
-                </Button>
-              </div>
+              {!compactTryout && (
+                <div className="assessment-information-actions">
+                  <Button variant="secondary" onClick={() => setInformationOpen('access')}>
+                    <Icon name="users" width={18} height={18} /> Akses siswa
+                  </Button>
+                  <Button variant="secondary" onClick={() => setInformationOpen('readiness')}>
+                    <Icon name="clipboard" width={18} height={18} /> Syarat penerbitan
+                  </Button>
+                </div>
+              )}
               <Dialog
                 open={informationOpen !== null}
                 onClose={() => setInformationOpen(null)}
@@ -1427,7 +1873,7 @@ export function ContentPackageWorkspace({
                           .
                         </p>
                       )}
-                    {detail.curriculumApproval && (
+                    {detail.assessmentType !== 'TRYOUT' && detail.curriculumApproval && (
                       <p>
                         Persetujuan tim kurikulum: {detail.curriculumApproval.reference} ·{' '}
                         {new Date(detail.curriculumApproval.approvedAt).toLocaleString('id-ID')}
@@ -1437,253 +1883,274 @@ export function ContentPackageWorkspace({
                 )}
               </Dialog>
               <Dialog
-                open={publicationOpen}
-                onClose={() => setPublicationOpen(false)}
+                open={publicationOpen || archiveOpen}
+                onClose={() => {
+                  setPublicationOpen(false);
+                  setArchiveOpen(false);
+                }}
                 pending={locked}
-                title="Penerbitan paket"
+                title={archiveOpen ? 'Arsipkan paket' : 'Penerbitan paket'}
                 className="admin-management-dialog assessment-publication-dialog"
               >
                 <section
                   className="assessment-detail-workspace assessment-detail-publication"
                   aria-label="Publikasi paket"
                 >
-                  <h3>
-                    {detail.status === 'DRAFT'
-                      ? detail.assessmentType === 'PRETEST'
-                        ? 'Terbitkan Pretest'
-                        : 'Persetujuan dan penerbitan'
-                      : 'Pengelolaan publikasi'}
-                  </h3>
-                  {detail.status === 'DRAFT' && detail.assessmentType !== 'PRETEST' && (
-                    <div className="content-import-card">
-                      <p className="assessment-publication-summary">
-                        {detail.readiness.canPublish
-                          ? 'Paket siap diterbitkan setelah konfirmasi.'
-                          : 'Paket belum siap diterbitkan. Perbaiki soal dan lengkapi syarat penerbitan terlebih dahulu.'}
-                      </p>
-                      <details className="assessment-approval-step">
-                        <summary>1. Simpan persetujuan tim kurikulum</summary>
-                        <div>
-                          <label>
-                            Bukti persetujuan tim kurikulum
-                            <input
-                              value={approvalReference}
-                              maxLength={1000}
-                              disabled={locked}
-                              onChange={(e) => setApprovalReference(e.target.value)}
-                              placeholder="Tautan dokumen atau referensi persetujuan"
-                            />
-                          </label>
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={approvalConfirmed}
-                              disabled={locked}
-                              onChange={(e) => setApprovalConfirmed(e.target.checked)}
-                            />
-                            Susunan paket, kesulitan, kunci dan pembahasan sudah disetujui tim
-                            kurikulum.
-                          </label>
-                          <Button
-                            variant="secondary"
-                            disabled={locked || !approvalReference.trim() || !approvalConfirmed}
-                            onClick={() =>
-                              void run(async () => {
-                                await approveContentPackage(token, detail.id, {
-                                  expectedRevision: detail.contentRevision,
-                                  reference: approvalReference,
-                                  confirmed: true,
-                                });
-                                await choose(detail.id);
-                              })
-                            }
-                          >
-                            Simpan persetujuan
-                          </Button>
+                  {!archiveOpen && (
+                    <>
+                      <h3>
+                        {detail.status === 'DRAFT'
+                          ? detail.assessmentType !== 'DRILL'
+                            ? 'Terbitkan paket'
+                            : 'Persetujuan dan penerbitan'
+                          : 'Pengelolaan publikasi'}
+                      </h3>
+                      {detail.status === 'DRAFT' && detail.assessmentType === 'DRILL' && (
+                        <div className="content-import-card">
+                          <p className="assessment-publication-summary">
+                            {detail.readiness.canPublish
+                              ? 'Paket siap diterbitkan setelah konfirmasi.'
+                              : 'Paket belum siap diterbitkan. Perbaiki soal dan lengkapi syarat penerbitan terlebih dahulu.'}
+                          </p>
+                          <details className="assessment-approval-step">
+                            <summary>1. Simpan persetujuan tim kurikulum</summary>
+                            <div>
+                              <label>
+                                Bukti persetujuan tim kurikulum
+                                <input
+                                  value={approvalReference}
+                                  maxLength={1000}
+                                  disabled={locked}
+                                  onChange={(e) => setApprovalReference(e.target.value)}
+                                  placeholder="Tautan dokumen atau referensi persetujuan"
+                                />
+                              </label>
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  checked={approvalConfirmed}
+                                  disabled={locked}
+                                  onChange={(e) => setApprovalConfirmed(e.target.checked)}
+                                />
+                                Susunan paket, kesulitan, kunci dan pembahasan sudah disetujui tim
+                                kurikulum.
+                              </label>
+                              <Button
+                                variant="secondary"
+                                disabled={locked || !approvalReference.trim() || !approvalConfirmed}
+                                onClick={() =>
+                                  void run(async () => {
+                                    await approveContentPackage(token, detail.id, {
+                                      expectedRevision: detail.contentRevision,
+                                      reference: approvalReference,
+                                      confirmed: true,
+                                    });
+                                    await choose(detail.id);
+                                  })
+                                }
+                              >
+                                Simpan persetujuan
+                              </Button>
+                            </div>
+                          </details>
+                          <div className="assessment-publish-step">
+                            <h4>2. Terbitkan paket</h4>
+                            <label>
+                              <input
+                                type="checkbox"
+                                checked={publishConfirmed}
+                                onChange={(event) => setPublishConfirmed(event.target.checked)}
+                                disabled={locked}
+                              />
+                              Saya telah memeriksa paket dan menyetujui publikasi versi ini.
+                            </label>
+                            <Button
+                              disabled={locked || !detail.readiness.canPublish || !publishConfirmed}
+                              onClick={() =>
+                                void run(async () => {
+                                  await publishContentPackage(token, detail.id, {
+                                    expectedRevision: detail.contentRevision,
+                                  });
+                                  await choose(detail.id);
+                                  setReload((n) => n + 1);
+                                })
+                              }
+                            >
+                              Publikasikan paket
+                            </Button>
+                          </div>
                         </div>
-                      </details>
-                      <div className="assessment-publish-step">
-                        <h4>2. Terbitkan paket</h4>
-                        {detail.assessmentType === 'TRYOUT' && (
+                      )}
+                      {detail.status === 'DRAFT' && detail.assessmentType !== 'DRILL' && (
+                        <div className="content-import-card">
+                          {publicationProblems.length > 0 ? (
+                            <div className="assessment-publication-problems" role="alert">
+                              <h4>Lengkapi paket sebelum diterbitkan</h4>
+                              <p>
+                                Tidak perlu menandai persetujuan. Setelah data diperbaiki, jalankan
+                                pemeriksaan ulang. Paket siap jika semua pemeriksaan otomatis lolos.
+                              </p>
+                              <ul>
+                                {publicationProblems.map((check) => (
+                                  <li key={check.code}>
+                                    <strong>{check.detail}</strong>
+                                    {check.code !== 'RUNTIME' && (
+                                      <p>
+                                        {checklistActions[check.code] ??
+                                          'Lengkapi data paket yang disebutkan di atas.'}
+                                      </p>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                              {detail.items
+                                .filter((item) => item.validationIssues?.length || !item.question)
+                                .map((item) => (
+                                  <section
+                                    className="assessment-publication-issue"
+                                    key={item.questionVersionId}
+                                  >
+                                    <h4>Soal {item.displayOrder}</h4>
+                                    <ul>
+                                      {(item.validationIssues?.length
+                                        ? item.validationIssues
+                                        : ['Isi atau metadata soal belum lengkap.']
+                                      ).map((issue) => (
+                                        <li key={issue}>{issue}</li>
+                                      ))}
+                                    </ul>
+                                    {item.scoringRepairRequired ? (
+                                      <Button disabled={locked} onClick={prepareScoring}>
+                                        {busy
+                                          ? 'Menyiapkan penilaian...'
+                                          : 'Siapkan penilaian otomatis'}
+                                      </Button>
+                                    ) : (
+                                      <Link
+                                        className="numora-button numora-button--secondary"
+                                        href={`/admin/content/versions/${item.questionVersionId}/edit?package=${encodeURIComponent(detail.id)}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                      >
+                                        Perbaiki
+                                      </Link>
+                                    )}
+                                  </section>
+                                ))}
+                              {detail.items.some((item) => !item.question) && (
+                                <p>
+                                  Soal yang perlu diperbaiki:{' '}
+                                  {detail.items
+                                    .filter((item) => !item.question)
+                                    .map((item) => item.displayOrder)
+                                    .join(', ')}
+                                  . Buka Kelola soal pada daftar soal.
+                                </p>
+                              )}
+                              <div className="admin-content-actions">
+                                <Button
+                                  disabled={locked}
+                                  onClick={() =>
+                                    void run(async () => {
+                                      await choose(detail.id);
+                                      setNotice('Pemeriksaan paket diperbarui.');
+                                    })
+                                  }
+                                >
+                                  {busy ? 'Memeriksa…' : 'Pemeriksaan ulang'}
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  disabled={locked}
+                                  onClick={() => setPublicationOpen(false)}
+                                >
+                                  Kembali ke paket
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="assessment-publish-step">
+                              <div className="assessment-publication-package">
+                                <span>Paket yang akan diterbitkan</span>
+                                <h4>{detail.name}</h4>
+                                <p>
+                                  Versi {detail.packageVersion} · {detail.items.length} soal
+                                </p>
+                              </div>
+                              <p>
+                                Isi dan penilaian versi ini akan dibekukan. Perubahan isi berikutnya
+                                dibuat sebagai revisi baru.
+                              </p>
+                              <div className="assessment-publication-actions">
+                                <Button
+                                  variant="secondary"
+                                  disabled={locked}
+                                  onClick={() => setPublicationOpen(false)}
+                                >
+                                  Batal
+                                </Button>
+                                <Button
+                                  disabled={locked}
+                                  onClick={() =>
+                                    void run(async () => {
+                                      await publishContentPackage(token, detail.id, {
+                                        expectedRevision: detail.contentRevision,
+                                        ...(detail.assessmentType === 'PRETEST'
+                                          ? { confirmed: true }
+                                          : {}),
+                                      });
+                                      await choose(detail.id);
+                                      setReload((n) => n + 1);
+                                      setPublicationOpen(false);
+                                    })
+                                  }
+                                >
+                                  {busy ? 'Menerbitkan...' : 'Terbitkan paket'}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {(archiveOpen || !compactTryout) &&
+                    ['DRAFT', 'PUBLISHED', 'CLOSED'].includes(detail.status) && (
+                      <>
+                        {archiveOpen && (
                           <p>
-                            Publikasi menyiapkan konten. Atur jadwal dan peserta melalui{' '}
-                            <Link href="/admin/tryout-batches">Batch Tryout</Link>.
+                            Arsipkan <strong>{detail.name}</strong>? Paket tidak lagi tersedia untuk
+                            distribusi baru. Histori pengerjaan tetap tersimpan.
                           </p>
                         )}
                         <label>
                           <input
                             type="checkbox"
-                            checked={publishConfirmed}
-                            onChange={(event) => setPublishConfirmed(event.target.checked)}
+                            checked={archiveConfirmed}
+                            onChange={(event) => setArchiveConfirmed(event.target.checked)}
                             disabled={locked}
                           />
-                          Saya telah memeriksa paket dan menyetujui publikasi versi ini.
+                          Saya memahami arsip menghentikan distribusi baru dan mempertahankan
+                          histori.
                         </label>
                         <Button
-                          disabled={locked || !detail.readiness.canPublish || !publishConfirmed}
+                          variant="secondary"
+                          disabled={locked || !archiveConfirmed}
                           onClick={() =>
                             void run(async () => {
-                              await publishContentPackage(token, detail.id, {
+                              await archiveContentPackage(token, detail.id, {
                                 expectedRevision: detail.contentRevision,
                               });
                               await choose(detail.id);
                               setReload((n) => n + 1);
+                              setArchiveOpen(false);
                             })
                           }
                         >
-                          Publikasikan paket
+                          Arsipkan paket
                         </Button>
-                      </div>
-                    </div>
-                  )}
-                  {detail.status === 'DRAFT' && detail.assessmentType === 'PRETEST' && (
-                    <div className="content-import-card">
-                      {publicationProblems.length > 0 ? (
-                        <div className="assessment-publication-problems" role="alert">
-                          <h4>Lengkapi paket sebelum diterbitkan</h4>
-                          <p>
-                            Tidak perlu menandai persetujuan. Setelah data diperbaiki, jalankan
-                            validasi ulang. Paket siap jika semua pemeriksaan otomatis lolos.
-                          </p>
-                          <ul>
-                            {publicationProblems.map((check) => (
-                              <li key={check.code}>
-                                <strong>{check.detail}</strong>
-                                {check.code !== 'RUNTIME' && (
-                                  <p>
-                                    {checklistActions[check.code] ??
-                                      'Lengkapi data paket yang disebutkan di atas.'}
-                                  </p>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                          {detail.items
-                            .filter((item) => item.validationIssues?.length || !item.question)
-                            .map((item) => (
-                              <section
-                                className="assessment-publication-issue"
-                                key={item.questionVersionId}
-                              >
-                                <h4>Soal {item.displayOrder}</h4>
-                                <ul>
-                                  {(item.validationIssues?.length
-                                    ? item.validationIssues
-                                    : ['Isi atau metadata soal belum lengkap.']
-                                  ).map((issue) => (
-                                    <li key={issue}>{issue}</li>
-                                  ))}
-                                </ul>
-                                {item.scoringRepairRequired ? (
-                                  <Button disabled={locked} onClick={prepareScoring}>
-                                    {busy
-                                      ? 'Menyiapkan penilaian...'
-                                      : 'Siapkan penilaian otomatis'}
-                                  </Button>
-                                ) : (
-                                  <Link
-                                    className="numora-button numora-button--secondary"
-                                    href={`/admin/content/versions/${item.questionVersionId}?package=${encodeURIComponent(detail.id)}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    Perbaiki
-                                  </Link>
-                                )}
-                              </section>
-                            ))}
-                          {detail.items.some((item) => !item.question) && (
-                            <p>
-                              Soal yang perlu diperbaiki:{' '}
-                              {detail.items
-                                .filter((item) => !item.question)
-                                .map((item) => item.displayOrder)
-                                .join(', ')}
-                              . Buka Kelola soal pada daftar soal.
-                            </p>
-                          )}
-                          <div className="admin-content-actions">
-                            <Button
-                              disabled={locked}
-                              onClick={() =>
-                                void run(async () => {
-                                  await choose(detail.id);
-                                  setNotice('Validasi paket diperbarui.');
-                                })
-                              }
-                            >
-                              {busy ? 'Memvalidasi…' : 'Validasi ulang'}
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              disabled={locked}
-                              onClick={() => setPublicationOpen(false)}
-                            >
-                              Kembali ke paket
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="assessment-publish-step">
-                          <p>
-                            Yakin ingin menerbitkan paket <strong>{detail.name}</strong> versi{' '}
-                            {detail.packageVersion}?
-                          </p>
-                          <Button
-                            disabled={locked}
-                            onClick={() =>
-                              void run(async () => {
-                                await publishContentPackage(token, detail.id, {
-                                  expectedRevision: detail.contentRevision,
-                                  confirmed: true,
-                                });
-                                await choose(detail.id);
-                                setReload((n) => n + 1);
-                                setPublicationOpen(false);
-                              })
-                            }
-                          >
-                            Publikasikan paket
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            disabled={locked}
-                            onClick={() => setPublicationOpen(false)}
-                          >
-                            Batal
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {['DRAFT', 'PUBLISHED', 'CLOSED'].includes(detail.status) && (
-                    <>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={archiveConfirmed}
-                          onChange={(event) => setArchiveConfirmed(event.target.checked)}
-                          disabled={locked}
-                        />
-                        Saya memahami arsip menghentikan distribusi baru dan mempertahankan histori.
-                      </label>
-                      <Button
-                        variant="secondary"
-                        disabled={locked || !archiveConfirmed}
-                        onClick={() =>
-                          void run(async () => {
-                            await archiveContentPackage(token, detail.id, {
-                              expectedRevision: detail.contentRevision,
-                            });
-                            await choose(detail.id);
-                            setReload((n) => n + 1);
-                          })
-                        }
-                      >
-                        Arsipkan paket
-                      </Button>
-                    </>
-                  )}
+                      </>
+                    )}
 
                   {error && <p role="alert">{error}</p>}
                   {detail.status === 'ARCHIVED' && (

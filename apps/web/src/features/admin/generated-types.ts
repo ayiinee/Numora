@@ -1,29 +1,29 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type TryoutBatchDto = { "waveId"?: string | null; "waveTitle"?: string | null; "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "delegationsEditable": boolean; "extendable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
+export type TryoutBatchDto = { "waveId"?: string | null; "waveTitle"?: string | null; "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "delegationsEditable": boolean; "extendable": boolean; "mandiriPackageId": string | null; "mandiriPackageIds"?: (string)[]; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
 
 export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; };
 
-export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "packageId": string; "allocationMode": "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId": string | null; };
+export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "schoolCode"?: string; "packageIds"?: (string)[]; "packageId": string; "allocationMode": "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId": string | null; };
 
-export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; "familyCode": string; "status": string; "usedBatchCount": number; "valid": boolean; };
+export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; "familyCode": string; "status": string; "usedBatchCount": number; "valid": boolean; "blockers"?: (string)[]; };
 
 export type TryoutBatchParticipantDto = { "packageId": string; "schoolId": string | null; "assigned": number; "completed": number; };
 
-export type SaveTryoutBatchDto = { "waveId"?: string | null; "newWaveTitle"?: string; "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "expectedRevision"?: number; };
+export type SaveTryoutBatchDto = { "waveId"?: string | null; "newWaveTitle"?: string; "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "mandiriPackageIds"?: (string)[]; "expectedRevision"?: number; };
 
-export type UpdateTryoutDelegationsDto = { "expectedRevision": number; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; };
+export type UpdateTryoutDelegationsDto = { "expectedRevision": number; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "mandiriPackageIds"?: (string)[]; };
 
 export type ExtendTryoutBatchDto = { "expectedRevision": number; "closesAt": string; };
 
-export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; "allocationMode"?: "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId"?: string | null; };
+export type TryoutDelegationInputDto = { "schoolId": string; "packageId"?: string; "packageIds"?: (string)[]; "allocationMode"?: "SINGLE_PACKAGE" | "BALANCED_50_50"; "variantPackageId"?: string | null; };
 
 export type TryoutBatchOptionsDto = { "waves"?: (TryoutWaveDto)[]; "packages": (TryoutBatchPackageDto)[]; "schools": (StudentTryoutSchoolDto)[]; "packageTotal": number; "schoolTotal": number; };
 
-export type TryoutWaveDto = { "id": string; "title": string; "originalPackageId": string; "variantPackageId": string; "packages": (TryoutBatchPackageDto)[]; };
+export type TryoutWaveDto = { "id": string; "title": string; "originalPackageId": string; "variantPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; };
 
-export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
+export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; "schoolCode"?: string; "packageIds"?: (string)[]; };
 
 export type ImportBodyDto = { "target"?: PackageTargetDto; "expectedSourceVersionId"?: string; "revisionReason"?: string; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
 
@@ -47,7 +47,9 @@ export type PackageSourceDto = { "sourceNamespace": string; "sourceName": string
 
 export type PackageCheckDto = { "code": string; "passed": boolean; "detail": string; };
 
-export type PackageValidationDto = { "packageId": string; "contentRevision": number; "canSaveDraft": boolean; "canPublish": boolean; "expectedCount": number; "actualCount": number; "blockers": (string)[]; "removedVersionIds": (string)[]; "checks": (PackageCheckDto)[]; };
+export type PackageValidationDto = { "issues"?: (TryoutTechnicalIssueDto)[]; "packageId": string; "contentRevision": number; "canSaveDraft": boolean; "canPublish": boolean; "expectedCount": number; "actualCount": number; "blockers": (string)[]; "removedVersionIds": (string)[]; "checks": (PackageCheckDto)[]; };
+
+export type TryoutTechnicalIssueDto = { "code": string; "questionNumber": number | null; "field": string; "message": string; };
 
 export type CreateContentPackageDto = { "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "chapterId"?: string; "levelId"?: string; "isDemo"?: boolean; "source": PackageSourceDto; };
 

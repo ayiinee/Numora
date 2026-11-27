@@ -72,7 +72,14 @@ export class PackageCheckDto {
   @ApiProperty() passed!: boolean;
   @ApiProperty() detail!: string;
 }
+export class TryoutTechnicalIssueDto {
+  @ApiProperty() code!: string;
+  @ApiProperty({ nullable: true, type: Number }) questionNumber!: number | null;
+  @ApiProperty() field!: string;
+  @ApiProperty() message!: string;
+}
 export class PackageValidationDto {
+  @ApiPropertyOptional({ type: [TryoutTechnicalIssueDto] }) issues?: TryoutTechnicalIssueDto[];
   @ApiProperty({ format: 'uuid' }) packageId!: string;
   @ApiProperty() contentRevision!: number;
   @ApiProperty() canSaveDraft!: boolean;

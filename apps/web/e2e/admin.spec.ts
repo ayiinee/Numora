@@ -1413,6 +1413,7 @@ test('Admin loading, pinned Tryout edits, report follow-up and logout remain exp
     });
   });
   await page.goto(`/admin/assessments/tryout/${pack.id}`);
+  await page.getByRole('button', { name: 'Tindakan lainnya', exact: true }).click();
   await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
   await page.getByLabel('Nama paket', { exact: true }).fill('DEMO Draf Revisi');
   await page.getByRole('button', { name: 'Simpan nama', exact: true }).click();

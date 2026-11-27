@@ -20,7 +20,15 @@ import {
 
 export class TryoutDelegationInputDto {
   @ApiProperty() @IsUUID() schoolId!: string;
-  @ApiProperty() @IsUUID() packageId!: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() packageId?: string;
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(5)
+  @ArrayUnique()
+  @IsUUID('all', { each: true })
+  packageIds?: string[];
   @ApiPropertyOptional({ enum: ['SINGLE_PACKAGE', 'BALANCED_50_50'], default: 'SINGLE_PACKAGE' })
   @IsOptional()
   @IsIn(['SINGLE_PACKAGE', 'BALANCED_50_50'])
@@ -41,7 +49,7 @@ export class SaveTryoutBatchDto {
   @ApiProperty({ type: [String] })
   @IsArray()
   @ArrayMinSize(1)
-  @ArrayMaxSize(100)
+  @ArrayMaxSize(5)
   @ArrayUnique()
   @IsUUID('all', { each: true })
   packageIds!: string[];
@@ -53,6 +61,13 @@ export class SaveTryoutBatchDto {
   @ValidateNested({ each: true })
   @Type(() => TryoutDelegationInputDto)
   schools!: TryoutDelegationInputDto[];
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @ArrayUnique()
+  @IsUUID('all', { each: true })
+  mandiriPackageIds?: string[];
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(1) expectedRevision?: number;
 }
 export class TryoutBatchRevisionDto {
@@ -67,6 +82,13 @@ export class UpdateTryoutDelegationsDto extends TryoutBatchRevisionDto {
   @ValidateNested({ each: true })
   @Type(() => TryoutDelegationInputDto)
   schools!: TryoutDelegationInputDto[];
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @ArrayUnique()
+  @IsUUID('all', { each: true })
+  mandiriPackageIds?: string[];
 }
 export class ExtendTryoutBatchDto extends TryoutBatchRevisionDto {
   @ApiProperty() @IsISO8601({ strict: true }) @Matches(/(?:Z|[+-]\d{2}:\d{2})$/) closesAt!: string;
@@ -90,6 +112,8 @@ export class TryoutBatchQueryDto {
 export class TryoutBatchSchoolDto {
   @ApiProperty() schoolId!: string;
   @ApiProperty() schoolName!: string;
+  @ApiPropertyOptional() schoolCode?: string;
+  @ApiPropertyOptional({ type: [String] }) packageIds?: string[];
   @ApiProperty() packageId!: string;
   @ApiProperty({ enum: ['SINGLE_PACKAGE', 'BALANCED_50_50'] }) allocationMode!: string;
   @ApiProperty({ nullable: true, type: String }) variantPackageId!: string | null;
@@ -102,6 +126,7 @@ export class TryoutBatchPackageDto {
   @ApiProperty() status!: string;
   @ApiProperty() usedBatchCount!: number;
   @ApiProperty() valid!: boolean;
+  @ApiPropertyOptional({ type: [String] }) blockers?: string[];
 }
 export class TryoutBatchParticipantDto {
   @ApiProperty() packageId!: string;
@@ -124,6 +149,7 @@ export class TryoutBatchDto {
   @ApiProperty() delegationsEditable!: boolean;
   @ApiProperty() extendable!: boolean;
   @ApiProperty({ nullable: true, type: String }) mandiriPackageId!: string | null;
+  @ApiPropertyOptional({ type: [String] }) mandiriPackageIds?: string[];
   @ApiProperty({ type: [TryoutBatchPackageDto] }) packages!: TryoutBatchPackageDto[];
   @ApiProperty({ type: [TryoutBatchSchoolDto] }) schools!: TryoutBatchSchoolDto[];
   @ApiProperty({ type: [TryoutBatchParticipantDto] }) participants!: TryoutBatchParticipantDto[];
@@ -140,6 +166,8 @@ export class StartTryoutBatchDto {
 export class StudentTryoutSchoolDto {
   @ApiProperty() schoolId!: string;
   @ApiProperty() schoolName!: string;
+  @ApiPropertyOptional() schoolCode?: string;
+  @ApiPropertyOptional({ type: [String] }) packageIds?: string[];
 }
 export class StudentTryoutBatchDto {
   @ApiPropertyOptional({ nullable: true, type: String }) startBlockedReason?: string | null;
@@ -168,7 +196,7 @@ export class TryoutWaveDto {
   @ApiProperty() id!: string;
   @ApiProperty() title!: string;
   @ApiProperty() originalPackageId!: string;
-  @ApiProperty() variantPackageId!: string;
+  @ApiProperty({ nullable: true, type: String }) variantPackageId!: string | null;
   @ApiProperty({ type: [TryoutBatchPackageDto] }) packages!: TryoutBatchPackageDto[];
 }
 export class TryoutBatchOptionsDto {

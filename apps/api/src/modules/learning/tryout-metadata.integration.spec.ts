@@ -511,15 +511,18 @@ describe.skipIf(!testUrl)(
         periodState: 'ongoing',
         eligible: true,
         questionCount: 30,
-        resultPendingReason: 'CONTENT_PENDING',
+        resultPendingReason: null,
       });
       expect(all.find((pack) => pack.id === olderId)).toMatchObject({
         state: 'unavailable',
         periodState: 'unavailable',
         eligible: false,
       });
-      for (const id of [blankId, shortId, revisionId, mismatchId, noBlueprintId, noApprovalId])
+      for (const id of [blankId, shortId])
         expect(all.find((pack) => pack.id === id)?.resultPendingReason).toBe('CONTENT_PENDING');
+      // Editorial status and academic provenance do not block technically complete Tryout packages.
+      for (const id of [revisionId, mismatchId, noBlueprintId, noApprovalId])
+        expect(all.find((pack) => pack.id === id)?.resultPendingReason).toBeNull();
       for (const id of [noPolicyId, badPolicyId, mixedId])
         expect(all.find((pack) => pack.id === id)?.resultPendingReason).toBe('SCORING_PENDING');
       expect(all.find((pack) => pack.id === blankId)?.questionCount).toBe(0);

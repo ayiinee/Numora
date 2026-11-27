@@ -61,9 +61,11 @@ function Assessments({ usage, mode = 'list', packageId, archived = false }: Prop
         />
       ) : (
         <>
-          <Link className="assessment-back-link" href={back}>
-            {mode === 'create' ? 'Batal' : '← Kembali ke daftar'}
-          </Link>
+          {!(usage === 'TRYOUT' && mode === 'detail') && (
+            <Link className="assessment-back-link" href={back}>
+              {mode === 'create' ? 'Batal' : '← Kembali ke daftar'}
+            </Link>
+          )}
           <ContentPackageWorkspace
             key={`${state.profile.id}:${usage}:${packageId ?? 'new'}`}
             token={state.session.access_token}
@@ -72,6 +74,7 @@ function Assessments({ usage, mode = 'list', packageId, archived = false }: Prop
             refreshKey={0}
             initialUsage={usage}
             mode={mode}
+            {...(usage === 'TRYOUT' && mode === 'detail' ? { backHref: back } : {})}
             {...(packageId ? { packageId } : {})}
           />
         </>
@@ -408,7 +411,7 @@ function AssessmentTable({
                         </td>
 
                         <td>
-                          <div className="assessment-row-actions">
+                          <div className={`assessment-row-actions${usage === 'TRYOUT' ? ' assessment-row-actions--inline' : ''}`}>
                             <Link
                               className="numora-button numora-button--secondary assessment-manage-button"
                               href={href}
@@ -423,11 +426,11 @@ function AssessmentTable({
                                   className="numora-button numora-button--secondary assessment-manage-button"
                                   href={`/admin/assessments/tryout/${encodeURIComponent(pack.id)}/variant/new`}
                                 >
-                                  Generate varian paket
+                                  Generate varian
                                 </Link>
                               ) : Object.hasOwn(variantAvailability, pack.id) ? (
                                 <Button variant="secondary" disabled title="Mapping generator belum lengkap untuk 25 focal soal.">
-                                  Generate varian paket
+                                  Generate varian
                                 </Button>
                               ) : (
                                 <Button variant="secondary" disabled>

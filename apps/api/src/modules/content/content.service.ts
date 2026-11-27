@@ -1,4 +1,4 @@
-import { approveEditorialPackage } from './editorial-package-approval';
+import { tryoutTechnicalIssues } from '@tka/database';
 import { compactDemoVersionIds, demoCatalogVersion } from './content-demo-catalog';
 import { decodeAssessmentContent } from '@tka/assessment-engine';
 import { presentFixtureText } from '@tka/database';
@@ -25,7 +25,6 @@ import {
   questionVersions,
   subchapters,
   videoSubchapterMappings,
-  tryoutBatches,
   tryoutBatchCloseAt,
   TRYOUT_DURATION_SECONDS,
 } from '@tka/database';
@@ -979,11 +978,15 @@ export class ContentService {
         .from(packageItems)
         .where(eq(packageItems.packageId, id))
         .orderBy(asc(packageItems.displayOrder));
+      const issues = await tryoutTechnicalIssues(tx, id);
+      if (issues.length) throw new ConflictException({ code: 'TRYOUT_PACKAGE_INCOMPLETE', issues });
       const pins = await this.readiness.items(
         tx,
         items.map((item) => item.questionVersionId),
         30,
         policy,
+        undefined,
+        actor,
       );
       for (const pin of pins)
         await tx
@@ -1000,12 +1003,6 @@ export class ContentService {
             ),
           );
       const closeAt = tryoutBatchCloseAt(releaseAt);
-      const approval = await approveEditorialPackage(
-        tx,
-        actor,
-        row,
-        body.curriculumApprovalReference,
-      );
       await tx
         .update(assessmentPackages)
         .set({
@@ -1014,16 +1011,9 @@ export class ContentService {
           releaseAt,
           closeAt,
           durationSeconds: TRYOUT_DURATION_SECONDS,
-          ...approval,
+          frozenAt: now,
         })
         .where(eq(assessmentPackages.id, id));
-      await tx.insert(tryoutBatches).values({
-        packageId: id,
-        startsAt: releaseAt,
-        closesAt: closeAt,
-        cutoffAt: closeAt,
-        resultDueAt: new Date(closeAt.getTime() + 72 * 60 * 60 * 1000),
-      });
       return { id };
     });
   }

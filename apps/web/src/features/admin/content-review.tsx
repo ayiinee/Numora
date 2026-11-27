@@ -6,6 +6,7 @@ import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { createPreview, importContent, validateImport } from './content-preview-api';
+import { ManualQuestionFields } from './manual-question-fields';
 import { ContentPayload } from './content-payload';
 import { contentStatusLabel } from './content-question-format';
 import { ContentBlockers } from './content-blockers';
@@ -394,7 +395,8 @@ function Review({ id }: { id: string }) {
                   </div>
                   {detail.sourceNamespace && (
                     <p className="assessment-media-note">
-                      Gambar ditampilkan dari signed URL privat. Link kedaluwarsa dapat dimuat ulang.
+                      Gambar ditampilkan dari signed URL privat. Link kedaluwarsa dapat dimuat
+                      ulang.
                     </p>
                   )}
                   {media.some((asset) => asset.status !== 'READY') && (
@@ -408,35 +410,44 @@ function Review({ id }: { id: string }) {
                             {detail.sourceNamespace && <a href="#perbaikan-soal">Ganti gambar</a>}
                           </p>
                         ))}
-                      {detail.sourceNamespace && media.some((asset) => asset.status !== 'READY') && (
-                        <MediaUpload
-                          token={token}
-                          initialExternalId={String(previewPayload.externalId ?? detail.id)}
-                          initialAssetId={media.find((asset) => asset.status !== 'READY')?.assetId ?? ''}
-                          onVerified={(receipt) => {
-                            const next = JSON.parse(JSON.stringify(previewPayload)) as Record<string, unknown>;
-                            const metadata = (next.metadata ?? {}) as Record<string, unknown>;
-                            const manifest = Array.isArray(metadata.assetManifest)
-                              ? metadata.assetManifest.map((asset) =>
-                                  asset && typeof asset === 'object' &&
-                                  (asset as Record<string, unknown>).assetId === receipt.assetId
-                                    ? { ...(asset as Record<string, unknown>), ...receipt }
+                      {detail.sourceNamespace &&
+                        media.some((asset) => asset.status !== 'READY') && (
+                          <MediaUpload
+                            token={token}
+                            initialExternalId={String(previewPayload.externalId ?? detail.id)}
+                            initialAssetId={
+                              media.find((asset) => asset.status !== 'READY')?.assetId ?? ''
+                            }
+                            onVerified={(receipt) => {
+                              const next = JSON.parse(JSON.stringify(previewPayload)) as Record<
+                                string,
+                                unknown
+                              >;
+                              const metadata = (next.metadata ?? {}) as Record<string, unknown>;
+                              const manifest = Array.isArray(metadata.assetManifest)
+                                ? metadata.assetManifest.map((asset) =>
+                                    asset &&
+                                    typeof asset === 'object' &&
+                                    (asset as Record<string, unknown>).assetId === receipt.assetId
+                                      ? { ...(asset as Record<string, unknown>), ...receipt }
+                                      : asset,
+                                  )
+                                : [];
+                              next.metadata = { ...metadata, assetManifest: manifest };
+                              setJson(JSON.stringify(next, null, 2));
+                              setMedia((current) =>
+                                current.map((asset) =>
+                                  asset.assetId === receipt.assetId
+                                    ? { ...asset, status: 'READY', url: null, reason: null }
                                     : asset,
-                                )
-                              : [];
-                            next.metadata = { ...metadata, assetManifest: manifest };
-                            setJson(JSON.stringify(next, null, 2));
-                            setMedia((current) =>
-                              current.map((asset) =>
-                                asset.assetId === receipt.assetId
-                                  ? { ...asset, status: 'READY', url: null, reason: null }
-                                  : asset,
-                              ),
-                            );
-                            setNotice('Media terverifikasi. Simpan revisi untuk menerapkan asset baru.');
-                          }}
-                        />
-                      )}
+                                ),
+                              );
+                              setNotice(
+                                'Media terverifikasi. Simpan revisi untuk menerapkan asset baru.',
+                              );
+                            }}
+                          />
+                        )}
                     </div>
                   )}
                   <ContentPayload
@@ -484,184 +495,5 @@ function Review({ id }: { id: string }) {
         </>
       )}
     </AdminFrame>
-  );
-}
-
-function ManualQuestionFields({
-  json,
-  disabled,
-  change,
-}: {
-  json: string;
-  disabled: boolean;
-  change: (json: string) => void;
-}) {
-  let payload: Record<string, unknown>;
-  try {
-    payload = JSON.parse(json);
-  } catch {
-    return <p>JSON belum valid. Perbaiki sintaks pada Data lengkap JSON untuk membuka formulir.</p>;
-  }
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const object = (value: unknown): Record<string, unknown> =>
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : {};
-  const text = (value: unknown) => (typeof value === 'string' ? value : '');
-  const update = (values: Record<string, unknown>) =>
-    change(JSON.stringify({ ...payload, ...values }, null, 2));
-  const options = Array.isArray(payload.options) ? payload.options.map(object) : [];
-  const answer = object(payload.answer);
-  return (
-    <fieldset disabled={disabled} className="excel-question-editor">
-      <legend>Isi soal</legend>
-      {(['stem', 'explanation'] as const).map((key) => {
-        const content = object(payload[key]);
-        const value = typeof payload[key] === 'string' ? text(payload[key]) : text(content.text);
-        return (
-          <label key={key}>
-            {key === 'stem' ? 'Teks soal' : 'Pembahasan'}
-            {!value.trim() && <small> — Wajib dilengkapi</small>}
-            <textarea
-              required
-              maxLength={8000}
-              value={value}
-              onChange={(e) => update({ [key]: { ...content, text: e.target.value } })}
-            />
-          </label>
-        );
-      })}
-      {options.map((option, index) => {
-        const content = object(option.content);
-        return (
-          <label key={index}>
-            Pilihan/pernyataan {text(option.id)}
-            <textarea
-              required
-              value={text(content.text)}
-              onChange={(e) =>
-                update({
-                  options: options.map((o, i) =>
-                    i === index ? { ...o, content: { ...content, text: e.target.value } } : o,
-                  ),
-                })
-              }
-            />
-          </label>
-        );
-      })}
-      {payload.type === 'SINGLE_CHOICE' && (
-        <label>
-          Kunci jawaban
-          <select
-            required
-            value={text(answer.optionId)}
-            onChange={(e) => update({ answer: { ...answer, optionId: e.target.value } })}
-          >
-            <option value="">Pilih jawaban benar</option>
-            {options.map((o) => (
-              <option key={text(o.id)} value={text(o.id)}>
-                {text(o.id)}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      {payload.type === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' && (
-        <fieldset>
-          <legend>Jawaban benar (pilih semua yang sesuai)</legend>
-          {options.map((o) => {
-            const id = text(o.id),
-              ids = Array.isArray(answer.optionIds) ? answer.optionIds : [];
-            return (
-              <label key={id}>
-                <input
-                  type="checkbox"
-                  checked={ids.includes(id)}
-                  onChange={(e) =>
-                    update({
-                      answer: {
-                        ...answer,
-                        optionIds: e.target.checked ? [...ids, id] : ids.filter((v) => v !== id),
-                      },
-                    })
-                  }
-                />
-                {id}
-              </label>
-            );
-          })}
-        </fieldset>
-      )}
-      {payload.type === 'CATEGORY' && (
-        <fieldset>
-          <legend>Kunci kategori tiap pernyataan</legend>
-          {options.map((o) => {
-            const id = text(o.id),
-              mapping = object(answer.categoryByStatementId);
-            const metadata = object(payload.metadata);
-            const categories = Array.isArray(metadata.categories)
-              ? metadata.categories.map(object)
-              : [];
-            return (
-              <label key={id}>
-                Pernyataan {id}
-                <select
-                  required
-                  value={text(mapping[id])}
-                  onChange={(e) =>
-                    update({
-                      answer: {
-                        ...answer,
-                        categoryByStatementId: { ...mapping, [id]: e.target.value },
-                      },
-                    })
-                  }
-                >
-                  <option value="">Pilih kategori</option>
-                  {categories.map((c) => (
-                    <option key={text(c.id)} value={text(c.id)}>
-                      {text(c.label) || text(c.id)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            );
-          })}
-        </fieldset>
-      )}
-      <label>
-        Kesulitan
-        <select
-          required
-          value={text(payload.difficulty)}
-          onChange={(e) => update({ difficulty: e.target.value })}
-        >
-          <option value="">Pilih kesulitan</option>
-          <option value="EASY">Mudah</option>
-          <option value="MEDIUM">Sedang</option>
-          <option value="HARD">Sulit</option>
-        </select>
-      </label>
-      {(['chapterCode', 'subchapterCode', 'competencyCode'] as const).map((key) => (
-        <label key={key}>
-          {
-            {
-              chapterCode: 'Kode bab',
-              subchapterCode: 'Kode subbab',
-              competencyCode: 'Kode indikator',
-            }[key]
-          }
-          <input
-            value={text(payload[key])}
-            onChange={(e) => update({ [key]: e.target.value || null })}
-          />
-        </label>
-      ))}
-      <p>
-        Perubahan kode materi harus sesuai struktur materi existing. Jika server meminta identitas
-        baru, revisi ini tidak boleh mengubah keluarga soal lama.
-      </p>
-    </fieldset>
   );
 }

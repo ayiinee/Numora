@@ -1,3 +1,4 @@
+import { ensureTryoutRubric } from '../content/tryout-rubric';
 import { TryoutBatchesService } from './tryout-batches.service';
 import { presentFixtureText } from '@tka/database';
 import { randomInt } from 'node:crypto';
@@ -21,6 +22,7 @@ import {
   assessmentAttempts,
   assessmentPackages,
   packageRuntimeEligibility,
+  tryoutTechnicalIssues,
   attemptAnswers,
   attemptItems,
   classMemberships,
@@ -106,7 +108,7 @@ export class TryoutService {
         packageId: packageItems.packageId,
         total: count(packageItems.id),
         versions: count(questionVersions.id),
-        ready: sql<number>`count(*) filter (where ${questionVersions.contentStatus}='READY')::integer`,
+        ready: sql<number>`count(*) filter (where ${questionVersions.contentStatus}<>'ARCHIVED')::integer`,
         nonSingle: sql<number>`count(*) filter (where ${questionVersions.questionType}<>'SINGLE_CHOICE')::integer`,
       })
       .from(packageItems)
@@ -126,30 +128,22 @@ export class TryoutService {
     const packs = await db
       .select({
         id: assessmentPackages.id,
-        curriculumApproval: assessmentPackages.curriculumApproval,
-        blueprintVersionId: assessmentPackages.blueprintVersionId,
-        frozenAt: assessmentPackages.frozenAt,
-        manifestDigest: assessmentPackages.manifestDigest,
         scoringPolicyVersionId: assessmentPackages.scoringPolicyVersionId,
+        technicallyReady:
+          sql<boolean>`not exists(select 1 from public.tryout_package_issues(${assessmentPackages.id}) where code <> 'SCORING')`.mapWith(
+            Boolean,
+          ),
       })
       .from(assessmentPackages)
       .where(inArray(assessmentPackages.id, packageIds));
-    const eligible = packs.filter(
-      (pack) =>
-        pack.curriculumApproval &&
-        pack.blueprintVersionId &&
-        pack.frozenAt &&
-        pack.curriculumApproval.manifestDigest === pack.manifestDigest,
-    );
+    const eligible = packs.filter((pack) => pack.technicallyReady);
     const stats =
       statistics ??
       (await this.itemStatistics(
         eligible.map((pack) => pack.id),
         db,
       ));
-    const ready = eligible.filter(
-      (pack) => stats.get(pack.id)?.versions === 30 && stats.get(pack.id)?.ready === 30,
-    );
+    const ready = eligible;
     const policyIds = [
       ...new Set(
         ready.flatMap((pack) => (pack.scoringPolicyVersionId ? [pack.scoringPolicyVersionId] : [])),
@@ -689,11 +683,19 @@ export class TryoutService {
       if (
         !items.length ||
         items.length !== 30 ||
-        items.some((item) => item.contentStatus !== 'READY' || item.questionStatus !== 'READY')
+        items.some(
+          (item) => item.contentStatus === 'ARCHIVED' || item.questionStatus === 'ARCHIVED',
+        )
       )
         throw new ServiceUnavailableException(
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
+      const technicalIssues = await tryoutTechnicalIssues(tx, packageId);
+      if (technicalIssues.length)
+        throw new ServiceUnavailableException({
+          code: 'TRYOUT_PACKAGE_INCOMPLETE',
+          issues: technicalIssues,
+        });
       items.forEach(decodeRuntimeQuestion);
       if (
         policy?.policyCode === TRYOUT_PARTIAL_POLICY &&
@@ -702,13 +704,16 @@ export class TryoutService {
         for (const item of items) {
           if (item.questionType === 'SINGLE_CHOICE') continue;
           const rubricId = item.rubricVersionId ?? item.versionRubricVersionId;
-          const [rubric] = rubricId
+          let [rubric] = rubricId
             ? await tx
                 .select()
                 .from(scoringRubricVersions)
                 .where(eq(scoringRubricVersions.id, rubricId))
                 .for('share')
             : [];
+          if (!rubric)
+            rubric =
+              (await ensureTryoutRubric(tx, studentId, decodeRuntimeQuestion(item))) ?? undefined;
           try {
             validateTryoutPartialRubric(decodeRuntimeQuestion(item), rubric);
           } catch {

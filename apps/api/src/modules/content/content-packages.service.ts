@@ -1,3 +1,4 @@
+import { ensureTryoutRubric } from './tryout-rubric';
 import { hasPretestRubric, ensurePretestRubric } from './pretest-rubric';
 import { presentFixtureText } from '@tka/database';
 import {
@@ -16,6 +17,7 @@ import {
 import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import {
   allowSyntheticContent,
+  tryoutTechnicalIssues,
   assessmentPackages,
   assessmentAttempts,
   auditLogs,
@@ -501,19 +503,17 @@ export class ContentPackagesService {
         contentStatus: r.version.contentStatus,
         reviewedAt: r.version.reviewedAt?.toISOString() ?? null,
         reviewedByUserId: r.version.reviewedByUserId,
-        question: structuralErrors(
-          q,
-          false,
-          p.assessmentType === 'TRYOUT',
-          p.assessmentType === 'PRETEST',
-        ).length
-          ? null
-          : (q as unknown as ExcelQuestionDto),
+        question:
+          p.assessmentType === 'TRYOUT'
+            ? (q as unknown as ExcelQuestionDto)
+            : structuralErrors(q, false, false, p.assessmentType === 'PRETEST').length
+              ? null
+              : (q as unknown as ExcelQuestionDto),
       };
     });
     const structurallyValid = items.every((i) => i.question !== null);
     const checked =
-      items.length && structurallyValid && p.source
+      p.assessmentType !== 'TRYOUT' && items.length && structurallyValid && p.source
         ? (
             await this.importer.validateWithin(
               tx,
@@ -644,10 +644,9 @@ export class ContentPackagesService {
           )
             scoringRepairs.add(r.version.id);
           if (
+            p.assessmentType === 'PRETEST' &&
             content.type !== 'SINGLE_CHOICE' &&
-            (p.assessmentType === 'PRETEST'
-              ? scoringRepairs.has(r.version.id)
-              : !r.version.scoringRubricVersionId)
+            scoringRepairs.has(r.version.id)
           )
             issues.push(
               'Aturan penilaian belum sesuai. Untuk Pretest Draft, tekan Siapkan penilaian otomatis.',
@@ -683,9 +682,38 @@ export class ContentPackagesService {
             )} belum dapat digunakan siswa. Lihat rincian masalah pada masing-masing soal.`,
     });
     // Pretest publication validates content automatically; editorial steps are not prerequisites.
-    if (p.assessmentType === 'PRETEST') {
+    if (['PRETEST', 'TRYOUT'].includes(p.assessmentType)) {
       for (let i = checks.length - 1; i >= 0; i--)
         if (['REVIEW', 'BLUEPRINT'].includes(checks[i]!.code)) checks.splice(i, 1);
+    }
+    const technicalIssues =
+      p.assessmentType === 'TRYOUT' ? await tryoutTechnicalIssues(tx, id) : [];
+    if (p.assessmentType === 'TRYOUT') {
+      for (const r of rows)
+        for (const message of runtimeIssues.get(r.version.id) ?? [])
+          technicalIssues.push({
+            code: 'RUNTIME',
+            questionNumber: r.item.displayOrder,
+            field: 'content',
+            message,
+          });
+      checks.splice(0, checks.length, {
+        code: 'TECHNICAL',
+        passed: !technicalIssues.length,
+        detail: technicalIssues.length
+          ? technicalIssues
+              .map((i) => `${i.questionNumber ? `Soal ${i.questionNumber}: ` : ''}${i.message}`)
+              .join(' ')
+          : '30 soal lengkap dan dapat dimainkan.',
+      });
+      for (const item of items) {
+        const issues = technicalIssues.filter((i) => i.questionNumber === item.displayOrder);
+        if (issues.length)
+          runtimeIssues.set(
+            item.questionVersionId,
+            issues.map((i) => i.message),
+          );
+      }
     }
     const canPublish = p.status === 'DRAFT' && checks.every((c) => c.passed);
     const distribution: ContentPackageDetailDto['distribution'] = [];
@@ -758,6 +786,7 @@ export class ContentPackagesService {
         contentRevision: p.contentRevision,
         canSaveDraft: p.status === 'DRAFT' && (checked?.canImportDraft ?? false),
         canPublish,
+        ...(p.assessmentType === 'TRYOUT' ? { issues: technicalIssues } : {}),
         expectedCount: packageCounts[p.assessmentType],
         actualCount: items.length,
         checks,
@@ -804,6 +833,11 @@ export class ContentPackagesService {
     actor: string,
   ) {
     const p = await packageContext(tx, id, true);
+    if (p.assessmentType === 'TRYOUT')
+      throw new ConflictException({
+        code: 'TRYOUT_APPROVAL_NOT_REQUIRED',
+        detail: 'Tryout memakai pemeriksaan teknis. Gunakan Terbitkan paket.',
+      });
     assertDraftRevision(p, body.expectedRevision);
     const detail = await this.detailWithin(tx, id);
     const invalid = detail.readiness.checks.filter(
@@ -894,7 +928,10 @@ export class ContentPackagesService {
         .where(eq(packageItems.packageId, id))
         .orderBy(asc(questions.id))
         .for('update', { of: questions });
-      if (body.confirmed === true || p.assessmentType === 'PRETEST') {
+      if (
+        p.assessmentType !== 'TRYOUT' &&
+        (body.confirmed === true || p.assessmentType === 'PRETEST')
+      ) {
         const current = await this.detailWithin(tx, id);
         if (
           current.readiness.checks.some(
@@ -940,7 +977,10 @@ export class ContentPackagesService {
       if (!detail.readiness.canPublish)
         throw new ConflictException({
           code: 'PACKAGE_NOT_READY',
-          detail: 'Paket belum lengkap, ditinjau, atau disetujui; periksa checklist.',
+          detail:
+            p.assessmentType === 'TRYOUT'
+              ? 'Lengkapi isi soal, kunci, pembahasan dan media.'
+              : 'Paket belum lengkap, ditinjau, atau disetujui; periksa checklist.',
           blockers: detail.readiness.blockers,
         });
       const policyCode =
@@ -1043,29 +1083,64 @@ export class ContentPackagesService {
             detail: 'Arsipkan paket aktif sebelum menerbitkan revisi level.',
           });
       }
-      await tx
-        .update(questionVersions)
-        .set({ contentStatus: 'READY' })
-        .where(
-          inArray(
-            questionVersions.id,
-            detail.items.map((i) => i.questionVersionId),
-          ),
-        );
-      await tx
-        .update(questions)
-        .set({ status: 'READY' })
-        .where(
-          inArray(
-            questions.id,
-            detail.items.map((i) => i.questionId),
-          ),
-        );
+      if (p.assessmentType !== 'TRYOUT') {
+        await tx
+          .update(questionVersions)
+          .set({ contentStatus: 'READY' })
+          .where(
+            inArray(
+              questionVersions.id,
+              detail.items.map((i) => i.questionVersionId),
+            ),
+          );
+        await tx
+          .update(questions)
+          .set({ status: 'READY' })
+          .where(
+            inArray(
+              questions.id,
+              detail.items.map((i) => i.questionId),
+            ),
+          );
+      }
+      if (p.assessmentType === 'TRYOUT') {
+        for (const item of detail.items) {
+          const [version] = await tx
+            .select()
+            .from(questionVersions)
+            .where(eq(questionVersions.id, item.questionVersionId));
+          const rubric = await ensureTryoutRubric(tx, actor, decodeAssessmentContent(version!));
+          if (rubric)
+            await tx
+              .update(packageItems)
+              .set({
+                rubricVersionId: rubric.id,
+                maximumScoreCategory: rubric.maximumScoreCategory,
+              })
+              .where(
+                and(
+                  eq(packageItems.packageId, id),
+                  eq(packageItems.questionVersionId, item.questionVersionId),
+                ),
+              );
+        }
+        await tx.insert(auditLogs).values({
+          actorUserId: actor,
+          action: 'tryout_technical_validation_passed',
+          entityType: 'assessment_package',
+          entityId: id,
+          metadata: {
+            validatorVersion: 'TRYOUT_TECHNICAL_V1',
+            contentRevision: p.contentRevision,
+          },
+        });
+      }
       await tx
         .update(assessmentPackages)
         .set({
           status: 'PUBLISHED',
-          ...(['PRETEST', 'TRYOUT'].includes(p.assessmentType)
+          ...(p.assessmentType === 'TRYOUT' ? { frozenAt: now } : {}),
+          ...(p.assessmentType === 'PRETEST'
             ? {
                 frozenAt: now,
                 curriculumApproval: sql`jsonb_set(jsonb_set(${assessmentPackages.curriculumApproval}, '{compositionDigest}', ${assessmentPackages.curriculumApproval}->'manifestDigest'), '{manifestDigest}', to_jsonb(irt_compute.payload_digest(jsonb_build_object('packageId', ${id}::uuid, 'blueprintVersionId', ${assessmentPackages.blueprintVersionId}, 'scoringPolicyVersionId', ${policy.id}::uuid, 'items', (select jsonb_agg(to_jsonb(i) order by i.display_order,i.id) from public.package_items i where i.package_id=${id}::uuid)))))`,
@@ -1350,4 +1425,3 @@ export class ContentPackagesService {
     );
   }
 }
-

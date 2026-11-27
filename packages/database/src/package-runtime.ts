@@ -56,20 +56,17 @@ export function packageRuntimeEligibility() {
     and exists (select 1 from public.assessment_blueprint_versions b
       where b.id = ${p.blueprintVersionId} and b.status = 'SEALED'))`;
   // V2 routing is deliberately not activated by the schema migration.
-  return sql`(${p.distributionArmId} is null and ${allowSyntheticContent() ? sql`(${p.isDemo} or ${approved})` : approved})`;
+  // Tryout metadata remains readable when content/scoring becomes unavailable;
+  // distribution and new starts separately require the technical gate below.
+  return sql`((${p.assessmentType}='TRYOUT' and ${p.purpose}='REGULAR' and ${allowSyntheticContent() ? sql`true` : sql`not ${p.isDemo}`}) or (${p.assessmentType}<>'TRYOUT' and ${p.distributionArmId} is null and ${allowSyntheticContent() ? sql`(${p.isDemo} or ${approved})` : approved}))`;
 }
 
-/** Reviewed Admin Excel Tryout: statistical generator quality is a separate pipeline. */
+/** Technical completeness only; import/review/academic provenance is not a runtime gate. */
 export function tryoutDistributionEligibility() {
   const p = assessmentPackages;
-  const packageId = sql.raw('"assessment_packages"."id"');
-  return sql`(public.package_can_distribute(${packageId}) or (
- ${p.assessmentType}='TRYOUT' and ${p.purpose}='REGULAR' and ${p.status}='PUBLISHED'
- and ${packageRuntimeEligibility()}
- and (select count(*) from public.package_items i where i.package_id=${packageId})=30
- and not exists(select 1 from public.package_items i join public.question_versions v on v.id=i.question_version_id where i.package_id=${packageId} and (v.content_status<>'READY' or v.reviewed_at is null or not exists(select 1 from public.content_import_versions imported where imported.question_version_id=v.id)))
- and not exists(select 1 from public.package_items i join public.item_distribution_decisions d on d.question_version_id=i.question_version_id where i.package_id=${packageId} and d.state in ('HOLD','RETIRED') and not exists(select 1 from public.item_distribution_decisions newer where newer.question_version_id=d.question_version_id and newer.context_id=d.context_id and newer.purpose=d.purpose and (newer.created_at,newer.id)>(d.created_at,d.id)))
- ))`;
+  return sql`(${p.assessmentType}='TRYOUT' and ${p.purpose}='REGULAR'
+    and ${p.status}='PUBLISHED' and (${allowSyntheticContent() ? sql`true` : sql`not ${p.isDemo}`})
+    and not exists(select 1 from public.tryout_package_issues(${p.id})))`;
 }
 
 /** Original Pretest needs academic review, not a generated-variant calibration result. */

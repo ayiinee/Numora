@@ -11628,6 +11628,15 @@
           },
           "schoolName": {
             "type": "string"
+          },
+          "schoolCode": {
+            "type": "string"
+          },
+          "packageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -13069,6 +13078,12 @@
           },
           "valid": {
             "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -13089,6 +13104,15 @@
           },
           "schoolName": {
             "type": "string"
+          },
+          "schoolCode": {
+            "type": "string"
+          },
+          "packageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "packageId": {
             "type": "string"
@@ -13182,6 +13206,12 @@
             "type": "string",
             "nullable": true
           },
+          "mandiriPackageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "packages": {
             "type": "array",
             "items": {
@@ -13260,7 +13290,8 @@
             "type": "string"
           },
           "variantPackageId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "packages": {
             "type": "array",
@@ -13321,6 +13352,12 @@
           "packageId": {
             "type": "string"
           },
+          "packageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "allocationMode": {
             "type": "string",
             "enum": [
@@ -13335,8 +13372,7 @@
           }
         },
         "required": [
-          "schoolId",
-          "packageId"
+          "schoolId"
         ]
       },
       "SaveTryoutBatchDto": {
@@ -13372,6 +13408,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TryoutDelegationInputDto"
+            }
+          },
+          "mandiriPackageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
           "expectedRevision": {
@@ -13411,6 +13453,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TryoutDelegationInputDto"
+            }
+          },
+          "mandiriPackageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         },
@@ -14530,6 +14578,30 @@
           "question"
         ]
       },
+      "TryoutTechnicalIssueDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "questionNumber": {
+            "type": "number",
+            "nullable": true
+          },
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "questionNumber",
+          "field",
+          "message"
+        ]
+      },
       "PackageCheckDto": {
         "type": "object",
         "properties": {
@@ -14552,6 +14624,12 @@
       "PackageValidationDto": {
         "type": "object",
         "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutTechnicalIssueDto"
+            }
+          },
           "packageId": {
             "type": "string",
             "format": "uuid"
@@ -16194,7 +16272,7 @@
               4500
             ],
             "deprecated": true,
-            "description": "Compatibility field for legacy clients. The server applies 1,800 seconds."
+            "description": "Compatibility field for legacy clients. The server applies 4,500 seconds."
           }
         },
         "required": [
