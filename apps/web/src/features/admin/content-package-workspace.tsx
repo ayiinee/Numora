@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Card, Dialog, Icon } from '@tka/ui';
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { AdminPagination } from './admin-pagination';
 import { AdminMessage } from './admin-presentation';
 import { useAdminAccessError } from './admin-workspace';
@@ -121,6 +122,10 @@ export function ContentPackageWorkspace({
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
   const [variantAvailable, setVariantAvailable] = useState<boolean | null>(null);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
+  const [printMedia, setPrintMedia] = useState<PreviewMediaDto[]>([]);
+  const [printing, setPrinting] = useState(false);
+  const printRunning = useRef(false);
+  const printSection = useRef<HTMLElement>(null);
   const running = useRef(false);
   const selectionRequest = useRef(0);
   const selectionContext = useRef('');
@@ -385,18 +390,92 @@ export function ContentPackageWorkspace({
     detail.items.length > 0 &&
     detail.items.length === detail.readiness.expectedCount &&
     detail.items.every((item) => item.question);
-  const printTryout = () => {
-    if (!printableTryout) return;
-    const previousTitle = document.title;
-    document.title = `${detail.name} - Soal`;
-    const restore = () => {
-      document.title = previousTitle;
-      window.removeEventListener('afterprint', restore);
-    };
-    window.addEventListener('afterprint', restore, { once: true });
-    window.print();
-    // Some browsers do not emit afterprint for cancelled dialogs.
-    window.setTimeout(restore, 1000);
+  const printTryout = async () => {
+    if (!printableTryout || printRunning.current) return;
+    printRunning.current = true;
+    setPrinting(true);
+    setError('');
+    try {
+      const links: PreviewMediaDto[] = [];
+      for (const item of detail.items) {
+        const question = item.question!;
+        const text = [
+          question.stem.text,
+          ...question.options.map((option) => option.content.text),
+        ].join('\n');
+        if (
+          !question.metadata.assetManifest.length &&
+          !text.includes('[[asset:') &&
+          !text.includes('[Gambar ')
+        )
+          continue;
+        const result = await getContentVersionMedia(token, item.questionVersionId);
+        links.push(
+          ...result.items.flatMap((asset) =>
+            asset.status === 'READY' && asset.url && asset.expiresAt
+              ? [
+                  {
+                    instanceId: item.questionVersionId,
+                    assetId: asset.assetId,
+                    altText: asset.altText,
+                    url: asset.url,
+                    expiresAt: asset.expiresAt,
+                  },
+                ]
+              : [],
+          ),
+        );
+      }
+      flushSync(() => setPrintMedia(links));
+      const section = printSection.current!;
+      const printContext = `${detail.id}:${detail.contentRevision}`;
+      if (section?.dataset.context !== printContext)
+        throw Error('Paket berubah selama persiapan PDF. Coba export kembali.');
+      if (
+        section.querySelector('.content-media-message') ||
+        /\[Gambar [A-Za-z0-9_-]+ [^\]]+\]/.test(section.textContent ?? '')
+      )
+        throw Error(
+          'Ada gambar soal yang belum tersedia. Periksa media soal lalu coba export kembali.',
+        );
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await Promise.race([
+          Promise.all([...section.querySelectorAll('img')].map((image) => image.decode())),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(
+              () => reject(Error('Waktu pemuatan gambar habis. Coba export kembali.')),
+              30000,
+            );
+          }),
+        ]);
+        await document.fonts.ready;
+        if (printSection.current !== section || section.dataset.context !== printContext)
+          throw Error('Paket berubah selama persiapan PDF. Coba export kembali.');
+      } finally {
+        clearTimeout(timer);
+      }
+      const previousTitle = document.title;
+      document.title = `${detail.name} - Soal`;
+      const restore = () => {
+        document.title = previousTitle;
+        window.removeEventListener('afterprint', restore);
+      };
+      window.addEventListener('afterprint', restore, { once: true });
+      window.print();
+      // Some browsers do not emit afterprint for cancelled dialogs.
+      window.setTimeout(restore, 1000);
+    } catch (cause) {
+      reportAccessError(cause);
+      setError(
+        cause instanceof Error
+          ? `Export PDF gagal: ${cause.message}`
+          : 'Export PDF gagal. Coba kembali.',
+      );
+    } finally {
+      printRunning.current = false;
+      setPrinting(false);
+    }
   };
   const publicationProblems =
     detail?.readiness.checks.filter(
@@ -456,7 +535,7 @@ export function ContentPackageWorkspace({
       {detail.assessmentType === 'TRYOUT' && (
         <Button
           variant="secondary"
-          disabled={!printableTryout}
+          disabled={!printableTryout || printing}
           onClick={printTryout}
           title={
             printableTryout
@@ -464,7 +543,7 @@ export function ContentPackageWorkspace({
               : 'Lengkapi seluruh soal paket sebelum mengekspor'
           }
         >
-          Export PDF
+          {printing ? 'Menyiapkan gambar PDF…' : 'Export PDF'}
         </Button>
       )}
       <Button onClick={() => setPublicationOpen(true)}>
@@ -2163,7 +2242,12 @@ export function ContentPackageWorkspace({
         </div>
       )}
       {detail?.assessmentType === 'TRYOUT' && (
-        <section className="tryout-pdf-print" aria-label="Soal Tryout untuk dicetak">
+        <section
+          ref={printSection}
+          data-context={`${detail.id}:${detail.contentRevision}`}
+          className="tryout-pdf-print"
+          aria-label="Soal Tryout untuk dicetak"
+        >
           <h1>{detail.name}</h1>
           {detail.items.map((item, index) =>
             item.question ? (
@@ -2171,8 +2255,9 @@ export function ContentPackageWorkspace({
                 <h2>{index + 1}. Soal</h2>
                 <ContentRichText
                   text={item.question.stem.text}
-                  media={media}
-                  retry={loadMedia}
+                  media={printMedia}
+                  instanceId={item.questionVersionId}
+                  retry={printTryout}
                   renderBareMath
                 />
                 <ol className="tryout-pdf-options" type="A">
@@ -2181,8 +2266,9 @@ export function ContentPackageWorkspace({
                       <strong>{option.id}.</strong>{' '}
                       <ContentRichText
                         text={option.content.text}
-                        media={media}
-                        retry={loadMedia}
+                        media={printMedia}
+                        instanceId={item.questionVersionId}
+                        retry={printTryout}
                         renderBareMath
                       />
                     </li>

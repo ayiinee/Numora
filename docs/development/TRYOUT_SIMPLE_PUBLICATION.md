@@ -71,13 +71,11 @@ IRT tetap memakai analisis dan fallback existing, dengan hasil paling lambat
 72 jam setelah tutup batch. Jangan membuat theta/linking atau approval palsu.
 Konten, hasil, XP dan deadline attempt historis tidak dihitung ulang.
 
-
 ## Editor soal paket ? 26 November 2026
 
 **ENGINEERING DECISION ? instruksi pemilik:** penyuntingan soal paket memakai halaman khusus `/admin/content/versions/:id/edit`, terpisah dari halaman review/laporan. Tab Isi soal, Metadata dan Media mempertahankan draf lokal yang sama, dengan pratinjau pendamping desktop dan tombol pratinjau di layar kecil. Tautan kembali menuju paket asal. Perubahan belum disimpan diperingatkan ketika meninggalkan lewat tautan atau menutup/memuat ulang halaman.
 
 Penyimpanan memakai pemeriksaan dan API revisi impor existing, beserta pin versi sumber, revisi paket dan kunci idempotensi. Paket DRAFT menerima versi baru melalui target impor. Paket terbit tidak diubah: editor membuat versi soal baru di bank soal untuk dipakai pada revisi paket berikutnya. Soal arsip tetap terkunci. Review laporan tidak mencatat keputusan melalui editor ini.
-
 
 ## Penerima batch - 27 November 2026
 
@@ -108,3 +106,16 @@ dan `pnpm --filter @tka/web exec playwright test e2e/admin-tryout-variant.spec.t
 Tes backend memakai SQL mock; tes browser memakai API fixture localhost. Hasilnya
 bukan bukti eksekusi generator AI atau acceptance production. Tidak ada perubahan
 kontrak API, skema, migrasi, scoring atau publikasi dari perombakan UI ini.
+
+## Perbaikan media export PDF - 28 November 2026
+
+**ENGINEERING DECISION - perbaikan bug:** export mengambil signed media sendiri
+melalui API versi soal, terpisah dari cache preview. Identitas gambar memakai
+pasangan questionVersionId dan assetId; assetId boleh sama antarsoal.
+Dialog cetak dibuka setelah gambar berhasil didekode dan font siap. Media hilang,
+gagal dimuat atau melewati batas tunggu membatalkan export dengan pesan error;
+admin dapat mencoba lagi. Tidak mengubah konten, publikasi atau histori.
+
+Regresi: `pnpm --filter @tka/web exec playwright test e2e/admin-tryout-pdf.spec.ts`.
+Fixture browser menguji export tanpa preview, assetId sama dengan gambar berbeda,
+gambar lambat, kegagalan gambar dan retry. Ini bukan acceptance produksi.
